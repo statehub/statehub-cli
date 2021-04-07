@@ -6,8 +6,9 @@
 use std::fmt;
 use std::str;
 
+use crate::location::{InvalidRegion, Location};
+
 use super::*;
-use crate::location::Location;
 
 mod aws;
 mod azure;

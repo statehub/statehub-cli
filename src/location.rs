@@ -5,6 +5,8 @@
 
 use std::str::FromStr;
 
+use thiserror::Error;
+
 use crate::v1;
 
 #[derive(Debug)]
@@ -30,9 +32,8 @@ impl FromStr for Location {
                 aws, azure
             )),
             (Err(aws), Err(azure)) => {
-                let aws = aws.into_inner();
-                let _azure = azure.into_inner();
-                Err(format!("I cannot parse location '{}'", aws))
+                let error = format!("{} or {}", aws, azure);
+                Err(error)
             }
         }
     }
@@ -42,4 +43,25 @@ pub(crate) trait CloudLocation {
     const PREFIX: &'static str;
 
     fn as_str(&self) -> &'static str;
+}
+
+#[derive(Debug, Error)]
+#[error(r#"Invalid {vendor} region "{region}""#)]
+pub struct InvalidRegion {
+    vendor: String,
+    region: String,
+}
+
+impl InvalidRegion {
+    pub(crate) fn aws(region: impl ToString) -> Self {
+        let vendor = "AWS".to_string();
+        let region = region.to_string();
+        Self { vendor, region }
+    }
+
+    pub(crate) fn azure(region: impl ToString) -> Self {
+        let vendor = "Azure".to_string();
+        let region = region.to_string();
+        Self { vendor, region }
+    }
 }

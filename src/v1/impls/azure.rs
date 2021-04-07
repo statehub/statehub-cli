@@ -6,8 +6,6 @@
 use std::fmt;
 use std::str;
 
-use thiserror::Error;
-
 use super::*;
 
 impl AzureRegion {
@@ -30,7 +28,7 @@ impl AzureRegion {
 }
 
 impl str::FromStr for AzureRegion {
-    type Err = InvalidAzureRegion;
+    type Err = InvalidRegion;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let text = s.strip_prefix(Self::PREFIX).unwrap_or(s);
@@ -45,7 +43,7 @@ impl str::FromStr for AzureRegion {
             "uksouth" => Ok(Self::UkSouth),
             "westeurope" => Ok(Self::WestEurope),
             "westus2" => Ok(Self::WestUs2),
-            other => Err(other.into()),
+            other => Err(InvalidRegion::azure(other)),
         }
     }
 }
@@ -57,22 +55,5 @@ impl fmt::Display for AzureRegion {
         } else {
             self.as_str().fmt(f)
         }
-    }
-}
-
-#[derive(Debug, Error)]
-#[error(r#"Invalid Azure Location "{0}""#)]
-pub struct InvalidAzureRegion(String);
-
-impl InvalidAzureRegion {
-    pub fn into_inner(self) -> String {
-        self.0
-    }
-}
-
-impl From<&str> for InvalidAzureRegion {
-    fn from(location: &str) -> Self {
-        let location = location.to_string();
-        Self(location)
     }
 }

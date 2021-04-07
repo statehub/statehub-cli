@@ -6,8 +6,6 @@
 use std::fmt;
 use std::str;
 
-use thiserror::Error;
-
 use super::*;
 
 impl AwsRegion {
@@ -35,7 +33,7 @@ impl AwsRegion {
 }
 
 impl str::FromStr for AwsRegion {
-    type Err = InvalidAwsRegion;
+    type Err = InvalidRegion;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let text = s.strip_prefix(Self::PREFIX).unwrap_or(s);
@@ -56,7 +54,7 @@ impl str::FromStr for AwsRegion {
             "us-east-2" => Ok(Self::UsEast2),
             "us-west-1" => Ok(Self::UsWest1),
             "us-west-2" => Ok(Self::UsWest2),
-            other => Err(other.into()),
+            other => Err(InvalidRegion::aws(other)),
         }
     }
 }
@@ -68,22 +66,5 @@ impl fmt::Display for AwsRegion {
         } else {
             self.as_str().fmt(f)
         }
-    }
-}
-
-#[derive(Debug, Error)]
-#[error(r#"Invalid AWS Region "{0}""#)]
-pub struct InvalidAwsRegion(String);
-
-impl InvalidAwsRegion {
-    pub fn into_inner(self) -> String {
-        self.0
-    }
-}
-
-impl From<&str> for InvalidAwsRegion {
-    fn from(region: &str) -> Self {
-        let region = region.to_string();
-        Self(region)
     }
 }
