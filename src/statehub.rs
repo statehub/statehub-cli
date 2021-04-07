@@ -46,13 +46,13 @@ pub(crate) struct StateHub {
 
 #[derive(Debug, StructOpt)]
 enum Command {
-    #[structopt(about = "Create new state", alias = "create-st")]
+    #[structopt(about = "Create new state", aliases = &["create-st", "cs"])]
     CreateState {
         #[structopt(help = "State name")]
         state: v1::StateName,
         #[structopt(long, short, help = "Defalt owning cluster")]
         owner: Option<v1::ClusterName>,
-        #[structopt(help = "Location definition")]
+        #[structopt(long, short, help = "Location definition")]
         location: Vec<Location>,
     },
     #[structopt(about = "Create new state", aliases = &["list-state", "list-st", "ls"])]
