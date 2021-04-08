@@ -98,23 +98,27 @@ impl Api {
     }
 
     pub(crate) fn register_cluster(self) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-        Ok(Output::<String>::todo()).map(text).map(print)
+        // let text = |output| self.show(output);
+        // Ok(Output::<String>::todo()).map(text).map(print)
+        anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) fn unregister_cluster(self) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-        Ok(Output::<String>::todo()).map(text).map(print)
+        // let text = |output| self.show(output);
+        // Ok(Output::<String>::todo()).map(text).map(print)
+        anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) fn create_volume(self) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-        Ok(Output::<String>::todo()).map(text).map(print)
+        // let text = |output| self.show(output);
+        // Ok(Output::<String>::todo()).map(text).map(print)
+        anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) fn delete_volume(self) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-        Ok(Output::<String>::todo()).map(text).map(print)
+        // let text = |output| self.show(output);
+        // Ok(Output::<String>::todo()).map(text).map(print)
+        anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) fn add_location(
@@ -150,13 +154,15 @@ impl Api {
     }
 
     pub(crate) fn remove_location(self) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-        Ok(Output::<String>::todo()).map(text).map(print)
+        // let text = |output| self.show(output);
+        // Ok(Output::<String>::todo()).map(text).map(print)
+        anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) fn set_availability(self) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-        Ok(Output::<String>::todo()).map(text).map(print)
+        // let text = |output| self.show(output);
+        // Ok(Output::<String>::todo()).map(text).map(print)
+        anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) fn set_owner(
