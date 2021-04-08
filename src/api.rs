@@ -195,22 +195,6 @@ impl Api {
         format!("{}{}", self.base, path)
     }
 
-    // pub(crate) fn version(&self, _crates: bool) -> Result<String, anyhow::Error> {
-    //     self.get_version().map(Show::show)
-    // }
-
-    // fn get_job(&self, job_id: impl fmt::Display) -> ApiResult<latest::Job> {
-    //     self.get(format!("/internal/jobs/{}", job_id))
-    // }
-
-    // fn get_jobs(&self) -> ApiResult<Vec<latest::Job>> {
-    //     self.get("/internal/jobs")
-    // }
-
-    // fn get_version(&self) -> ApiResult<latest::InternalVersion> {
-    //     self.get("/internal/version")
-    // }
-
     fn inspect<T>(&self, output: &Output<T>)
     where
         T: fmt::Debug,
