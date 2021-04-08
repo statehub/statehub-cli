@@ -11,7 +11,7 @@ use inspector::ResultInspector;
 use serde::{de, ser};
 
 use crate::output::Output;
-// use crate::show::Show;
+use crate::show::Show;
 use crate::v1;
 
 pub(crate) type ApiResult<T> = Result<Output<T>, anyhow::Error>;
@@ -58,6 +58,8 @@ impl Api {
         owner: Option<v1::ClusterName>,
         locations: v1::Locations,
     ) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+
         let body = v1::State {
             name,
             storage_class: None,
@@ -65,54 +67,60 @@ impl Api {
             locations,
             allowed_clusters: None,
         };
-        let output = self.post::<_, _, v1::State>("/states", body)?;
-        let output = if self.json {
-            output.into_value()
-        } else if !self.raw {
-            output.into_typed()
-        } else {
-            output
-        };
-        println!("{:?}", output);
-        Ok(())
+        self.post::<_, _, v1::State>("/states", body)
+            .map(text)
+            .map(print)
     }
 
     pub(crate) fn list_states(self) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+
         self.get::<_, Vec<v1::State>>("/states")
-            .map(|states| println!("{:?}", states))
+            .map(text)
+            .map(print)
     }
 
     pub(crate) fn list_clusters(self) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+
         self.get::<_, Vec<v1::Cluster>>("/clusters")
-            .map(|states| println!("{:?}", states))
+            .map(text)
+            .map(print)
     }
 
     pub(crate) fn register_cluster(self) -> anyhow::Result<()> {
-        Ok(())
+        let text = |output| self.show(output);
+        Ok(Output::<String>::todo()).map(text).map(print)
     }
 
     pub(crate) fn unregister_cluster(self) -> anyhow::Result<()> {
-        Ok(())
+        let text = |output| self.show(output);
+        Ok(Output::<String>::todo()).map(text).map(print)
     }
 
     pub(crate) fn create_volume(self) -> anyhow::Result<()> {
-        Ok(())
+        let text = |output| self.show(output);
+        Ok(Output::<String>::todo()).map(text).map(print)
     }
 
     pub(crate) fn delete_volume(self) -> anyhow::Result<()> {
-        Ok(())
+        let text = |output| self.show(output);
+        Ok(Output::<String>::todo()).map(text).map(print)
     }
 
     pub(crate) fn add_location(self) -> anyhow::Result<()> {
-        Ok(())
+        let text = |output| self.show(output);
+        Ok(Output::<String>::todo()).map(text).map(print)
     }
 
     pub(crate) fn remove_location(self) -> anyhow::Result<()> {
-        Ok(())
+        let text = |output| self.show(output);
+        Ok(Output::<String>::todo()).map(text).map(print)
     }
 
     pub(crate) fn set_availability(self) -> anyhow::Result<()> {
-        Ok(())
+        let text = |output| self.show(output);
+        Ok(Output::<String>::todo()).map(text).map(print)
     }
 
     pub(crate) fn set_owner(
@@ -120,13 +128,14 @@ impl Api {
         state: v1::StateName,
         cluster: v1::ClusterName,
     ) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+
         let path = format!(
             "/states/{state}/owner/{cluster}",
             state = state,
             cluster = cluster,
         );
-        self.put::<_, v1::State>(path)
-            .map(|volume| println!("{:?}", volume))
+        self.put::<_, v1::State>(path).map(text).map(print)
     }
 
     pub(crate) fn unset_owner(
@@ -134,13 +143,16 @@ impl Api {
         state: v1::StateName,
         cluster: v1::ClusterName,
     ) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+
         let path = format!(
             "/states/{state}/owner/{cluster}",
             state = state,
             cluster = cluster,
         );
         self.del::<_, Option<(&str, &str)>, &str, &str, v1::State>(path, None)
-            .map(|volume| println!("{:?}", volume))
+            .map(text)
+            .map(print)
     }
 
     fn url(&self, path: impl fmt::Display) -> String {
@@ -236,6 +248,19 @@ impl Api {
             .inspect(|output| self.inspect(output))?;
         Ok(output)
     }
+
+    fn show<T>(&self, output: Output<T>) -> String
+    where
+        T: de::DeserializeOwned + ser::Serialize + Show,
+    {
+        if self.json {
+            output.into_value().show()
+        } else if !self.raw {
+            output.into_typed().show()
+        } else {
+            output.show()
+        }
+    }
 }
 
 trait Optionally {
@@ -258,4 +283,8 @@ impl Optionally for attohttpc::RequestBuilder {
     fn optionally_bearer_auth(self, token: Option<impl Into<String>>) -> Self {
         self.optionally(token, |this, token| this.bearer_auth(token))
     }
+}
+
+fn print(text: String) {
+    println!("{}", text);
 }

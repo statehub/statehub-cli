@@ -10,7 +10,7 @@ use attohttpc::{header::HeaderMap, StatusCode};
 use serde::{de, ser};
 use serde_json as json;
 
-// use crate::show::Show;
+use crate::show::Show;
 
 #[derive(Debug)]
 pub(crate) struct Output<T> {
@@ -30,6 +30,18 @@ impl<T> Output<T>
 where
     T: de::DeserializeOwned + ser::Serialize,
 {
+    pub(crate) fn todo() -> Self {
+        let status = StatusCode::OK;
+        let headers = HeaderMap::new();
+        let raw = String::from("NOT IMPLEMENTED YET").into_bytes();
+        let body = Body::<T>::Raw(raw);
+        Self {
+            status,
+            headers,
+            body,
+        }
+    }
+
     pub(crate) fn _is_typed(&self) -> bool {
         matches!(self.body, Body::Typed(_))
     }
@@ -98,18 +110,27 @@ impl<T> TryFrom<attohttpc::Response> for Output<T> {
     }
 }
 
-// impl<T> Show for Output<T>
-// where
-//     T: Show,
-// {
-//     fn show(self) -> String {
-//         match self {
-//             Self::Raw(text) => text,
-//             Self::Typed(data) => data.show(),
-//             Self::Value(value) => value.to_string(),
-//         }
-//     }
-// }
+impl<T> Show for Output<T>
+where
+    T: Show,
+{
+    fn show(self) -> String {
+        self.body.show()
+    }
+}
+
+impl<T> Show for Body<T>
+where
+    T: Show,
+{
+    fn show(self) -> String {
+        match self {
+            Self::Raw(text) => String::from_utf8_lossy(&text).into_owned(),
+            Self::Typed(data) => data.show(),
+            Self::Value(value) => value.to_string(),
+        }
+    }
+}
 
 pub(crate) trait IntoOutput {
     type Err;

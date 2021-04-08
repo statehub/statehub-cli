@@ -14,6 +14,12 @@ mod aws;
 mod azure;
 mod gcp;
 
+impl fmt::Display for State {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("State").field("name", &self.name).finish()
+    }
+}
+
 impl From<String> for StateName {
     fn from(name: String) -> Self {
         Self(name)
@@ -31,6 +37,12 @@ impl str::FromStr for StateName {
 
     fn from_str(text: &str) -> Result<Self, Self::Err> {
         Ok(text.to_string().into())
+    }
+}
+
+impl fmt::Display for Cluster {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Cluster").field("name", &self.name).finish()
     }
 }
 

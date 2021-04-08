@@ -20,6 +20,7 @@ use statehub::StateHub;
 mod api;
 mod location;
 mod output;
+mod show;
 mod statehub;
 pub mod v1;
 

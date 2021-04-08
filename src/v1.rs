@@ -19,7 +19,7 @@ pub struct State {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Cluster {
-    pub name: String,
+    pub name: ClusterName,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -88,8 +88,8 @@ pub enum GcpRegion {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Volume {
-    name: String,
-    size_gi: u64,
-    fs_type: String,
-    owner: Option<String>,
+    pub name: String,
+    pub size_gi: u64,
+    pub fs_type: String,
+    pub owner: Option<String>,
 }
