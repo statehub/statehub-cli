@@ -102,7 +102,6 @@ impl StateHub {
             self.raw,
             self.verbose,
         );
-        println!("{}", self.verbose);
         match self.command {
             Command::CreateState {
                 state,
