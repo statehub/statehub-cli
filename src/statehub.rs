@@ -55,8 +55,13 @@ enum Command {
         #[structopt(long, short, help = "Location definition")]
         location: Vec<Location>,
     },
-    #[structopt(about = "Create new state", aliases = &["list-state", "list-st", "ls"])]
+    #[structopt(about = "List available states", aliases = &["list-state", "list-st", "ls"])]
     ListStates,
+    #[structopt(about = "Show state details", aliases = &["show-s", "ss"])]
+    ShowState {
+        #[structopt(help = "State name")]
+        state: v1::StateName,
+    },
     #[structopt(about = "Register new cluster", aliases = &["list-cluster", "list-cl", "lc"])]
     ListClusters,
     #[structopt(about = "Register new cluster", aliases = &["register-cl", "rc"])]
@@ -112,6 +117,7 @@ impl StateHub {
                 api.create_state(state, owner, locations)
             }
             Command::ListStates => api.list_states(),
+            Command::ShowState { state } => api.show_state(state),
             Command::ListClusters => api.list_clusters(),
             Command::RegisterCluster => api.register_cluster(),
             Command::UnregisterCluster => api.unregister_cluster(),

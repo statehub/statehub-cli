@@ -80,6 +80,14 @@ impl Api {
             .map(print)
     }
 
+    pub(crate) fn show_state(self, state: v1::StateName) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+
+        let path = format!("/states/{state}", state = state);
+
+        self.get::<_, v1::State>(path).map(text).map(print)
+    }
+
     pub(crate) fn list_clusters(self) -> anyhow::Result<()> {
         let text = |output| self.show(output);
 
