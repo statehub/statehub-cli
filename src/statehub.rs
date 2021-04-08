@@ -72,8 +72,13 @@ enum Command {
     CreateVolume,
     #[structopt(about = "Manually delete existing volume")]
     DeleteVolume,
-    #[structopt(about = "Manually make state available in a specified location")]
-    AddLocation,
+    #[structopt(about = "Manually make state available in a specified location", aliases = &["add-l", "al"])]
+    AddLocation {
+        #[structopt(help = "State name")]
+        state: v1::StateName,
+        #[structopt(help = "Location definition")]
+        location: Location,
+    },
     #[structopt(about = "Manually make state unavailable in a specified location")]
     RemoveLocation,
     #[structopt(about = "Set state availability grade")]
@@ -123,7 +128,7 @@ impl StateHub {
             Command::UnregisterCluster => api.unregister_cluster(),
             Command::CreateVolume => api.create_volume(),
             Command::DeleteVolume => api.delete_volume(),
-            Command::AddLocation => api.add_location(),
+            Command::AddLocation { state, location } => api.add_location(state, location),
             Command::RemoveLocation => api.remove_location(),
             Command::SetAvailability => api.set_availability(),
             Command::SetOwner { state, cluster } => api.set_owner(state, cluster),

@@ -8,8 +8,9 @@ use std::convert::TryInto;
 use std::fmt;
 
 use inspector::ResultInspector;
-use serde::{de, ser};
+use serde::{de, ser, Serialize};
 
+use crate::location::Location;
 use crate::output::Output;
 use crate::show::Show;
 use crate::v1;
@@ -116,9 +117,36 @@ impl Api {
         Ok(Output::<String>::todo()).map(text).map(print)
     }
 
-    pub(crate) fn add_location(self) -> anyhow::Result<()> {
+    pub(crate) fn add_location(
+        self,
+        state: v1::StateName,
+        location: Location,
+    ) -> anyhow::Result<()> {
         let text = |output| self.show(output);
-        Ok(Output::<String>::todo()).map(text).map(print)
+
+        #[derive(Debug, Serialize)]
+        struct StateLocation {
+            region: String,
+        }
+
+        let (path, body) = match location {
+            Location::Aws(region) => (
+                format!("/states/{state}/locations/aws", state = state),
+                StateLocation {
+                    region: region.to_string(),
+                },
+            ),
+            Location::Azure(region) => (
+                format!("/states/{state}/locations/azure", state = state),
+                StateLocation {
+                    region: region.to_string(),
+                },
+            ),
+        };
+
+        self.post::<_, _, v1::State>(path, body)
+            .map(text)
+            .map(print)
     }
 
     pub(crate) fn remove_location(self) -> anyhow::Result<()> {
