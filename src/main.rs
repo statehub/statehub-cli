@@ -24,8 +24,9 @@ mod show;
 mod statehub;
 pub mod v1;
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
     pretty_env_logger::init_custom_env("STATEHUB_LOG");
-    StateHub::execute()
+    StateHub::execute().await
 }

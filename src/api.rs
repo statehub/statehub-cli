@@ -3,8 +3,6 @@
 // Use is subject to license terms.
 //
 
-use std::borrow::Borrow;
-use std::convert::TryInto;
 use std::fmt;
 
 use inspector::ResultInspector;
@@ -24,6 +22,7 @@ pub(crate) struct Api {
     json: bool,
     raw: bool,
     verbose: bool,
+    user_agent: String,
 }
 
 impl Api {
@@ -34,6 +33,7 @@ impl Api {
         raw: bool,
         verbose: bool,
     ) -> Self {
+        let user_agent = format!("{}/{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
         let endpoint = "endpoint";
 
         let base = if management.starts_with("http") {
@@ -50,10 +50,11 @@ impl Api {
             json,
             raw,
             verbose,
+            user_agent,
         }
     }
 
-    pub(crate) fn create_state(
+    pub(crate) async fn create_state(
         self,
         name: v1::StateName,
         owner: Option<v1::ClusterName>,
@@ -69,59 +70,61 @@ impl Api {
             allowed_clusters: None,
         };
         self.post::<_, _, v1::State>("/states", body)
+            .await
             .map(text)
             .map(print)
     }
 
-    pub(crate) fn list_states(self) -> anyhow::Result<()> {
+    pub(crate) async fn list_states(self) -> anyhow::Result<()> {
         let text = |output| self.show(output);
 
         self.get::<_, Vec<v1::State>>("/states")
+            .await
             .map(text)
             .map(print)
     }
 
-    pub(crate) fn show_state(self, state: v1::StateName) -> anyhow::Result<()> {
+    pub(crate) async fn show_state(self, state: v1::StateName) -> anyhow::Result<()> {
         let text = |output| self.show(output);
 
         let path = format!("/states/{state}", state = state);
-
-        self.get::<_, v1::State>(path).map(text).map(print)
+        self.get::<_, v1::State>(path).await.map(text).map(print)
     }
 
-    pub(crate) fn list_clusters(self) -> anyhow::Result<()> {
+    pub(crate) async fn list_clusters(self) -> anyhow::Result<()> {
         let text = |output| self.show(output);
 
         self.get::<_, Vec<v1::Cluster>>("/clusters")
+            .await
             .map(text)
             .map(print)
     }
 
-    pub(crate) fn register_cluster(self) -> anyhow::Result<()> {
+    pub(crate) async fn register_cluster(self) -> anyhow::Result<()> {
         // let text = |output| self.show(output);
         // Ok(Output::<String>::todo()).map(text).map(print)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
-    pub(crate) fn unregister_cluster(self) -> anyhow::Result<()> {
+    pub(crate) async fn unregister_cluster(self) -> anyhow::Result<()> {
         // let text = |output| self.show(output);
         // Ok(Output::<String>::todo()).map(text).map(print)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
-    pub(crate) fn create_volume(self) -> anyhow::Result<()> {
+    pub(crate) async fn create_volume(self) -> anyhow::Result<()> {
         // let text = |output| self.show(output);
         // Ok(Output::<String>::todo()).map(text).map(print)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
-    pub(crate) fn delete_volume(self) -> anyhow::Result<()> {
+    pub(crate) async fn delete_volume(self) -> anyhow::Result<()> {
         // let text = |output| self.show(output);
         // Ok(Output::<String>::todo()).map(text).map(print)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
-    pub(crate) fn add_location(
+    pub(crate) async fn add_location(
         self,
         state: v1::StateName,
         location: Location,
@@ -149,23 +152,24 @@ impl Api {
         };
 
         self.post::<_, _, v1::State>(path, body)
+            .await
             .map(text)
             .map(print)
     }
 
-    pub(crate) fn remove_location(self) -> anyhow::Result<()> {
+    pub(crate) async fn remove_location(self) -> anyhow::Result<()> {
         // let text = |output| self.show(output);
         // Ok(Output::<String>::todo()).map(text).map(print)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
-    pub(crate) fn set_availability(self) -> anyhow::Result<()> {
+    pub(crate) async fn set_availability(self) -> anyhow::Result<()> {
         // let text = |output| self.show(output);
         // Ok(Output::<String>::todo()).map(text).map(print)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
-    pub(crate) fn set_owner(
+    pub(crate) async fn set_owner(
         self,
         state: v1::StateName,
         cluster: v1::ClusterName,
@@ -177,10 +181,10 @@ impl Api {
             state = state,
             cluster = cluster,
         );
-        self.put::<_, v1::State>(path).map(text).map(print)
+        self.put::<_, v1::State>(path).await.map(text).map(print)
     }
 
-    pub(crate) fn unset_owner(
+    pub(crate) async fn unset_owner(
         self,
         state: v1::StateName,
         cluster: v1::ClusterName,
@@ -192,9 +196,7 @@ impl Api {
             state = state,
             cluster = cluster,
         );
-        self.del::<_, Option<(&str, &str)>, &str, &str, v1::State>(path, None)
-            .map(text)
-            .map(print)
+        self.del::<_, v1::State>(path).await.map(text).map(print)
     }
 
     fn url(&self, path: impl fmt::Display) -> String {
@@ -210,69 +212,90 @@ impl Api {
         }
     }
 
-    fn del<P, I, K, V, T>(&self, path: P, params: I) -> ApiResult<T>
-    where
-        P: fmt::Display,
-        T: de::DeserializeOwned + fmt::Debug,
-        I: IntoIterator,
-        I::Item: Borrow<(K, V)>,
-        K: AsRef<str>,
-        V: ToString,
-    {
-        let url = self.url(path);
-        let output = attohttpc::delete(url)
-            .optionally_bearer_auth(self.token.as_ref())
-            .params(params)
-            .send()?
-            .try_into()
-            .inspect(|output| self.inspect(output))?;
-        Ok(output)
-    }
-
-    fn get<P, T>(&self, path: P) -> ApiResult<T>
+    async fn del<P, T>(&self, path: P) -> ApiResult<T>
     where
         P: fmt::Display,
         T: de::DeserializeOwned + fmt::Debug,
     {
         let url = self.url(path);
-        let output = attohttpc::get(url)
+        let output = self
+            .client()?
+            .delete(url)
             .optionally_bearer_auth(self.token.as_ref())
-            .send()?
-            .try_into()
+            .send()
+            .await?
+            .bytes()
+            .await
+            .map(Output::Raw)
+            .inspect(|output| self.inspect(output))?;
+        Ok(output)
+    }
+
+    async fn get<P, T>(&self, path: P) -> ApiResult<T>
+    where
+        P: fmt::Display,
+        T: de::DeserializeOwned + fmt::Debug,
+    {
+        let url = self.url(path);
+        let output = self
+            .client()?
+            .get(url)
+            .optionally_bearer_auth(self.token.as_ref())
+            .send()
+            .await?
+            .bytes()
+            .await
+            .map(Output::Raw)
             .inspect(|output| self.inspect(output))?;
 
         Ok(output)
     }
 
-    fn post<P, T, U>(&self, path: P, body: T) -> ApiResult<U>
+    async fn post<P, T, U>(&self, path: P, body: T) -> ApiResult<U>
     where
         P: fmt::Display,
         T: ser::Serialize,
         U: de::DeserializeOwned + fmt::Debug,
     {
         let url = self.url(path);
-        let output = attohttpc::post(url)
+        let output = self
+            .client()?
+            .post(url)
             .optionally_bearer_auth(self.token.as_ref())
-            .json(&body)?
-            .send()?
-            .try_into()
+            .json(&body)
+            .send()
+            .await?
+            .bytes()
+            .await
+            .map(Output::Raw)
             .inspect(|output| self.inspect(output))?;
 
         Ok(output)
     }
 
-    fn put<P, T>(&self, path: P) -> ApiResult<T>
+    async fn put<P, T>(&self, path: P) -> ApiResult<T>
     where
         P: fmt::Display,
         T: de::DeserializeOwned + fmt::Debug,
     {
         let url = format!("{}{}", self.base, path);
-        let output = attohttpc::put(url)
+        let output = self
+            .client()?
+            .put(url)
             .optionally_bearer_auth(self.token.as_ref())
-            .send()?
-            .try_into()
+            .send()
+            .await?
+            .bytes()
+            .await
+            .map(Output::Raw)
             .inspect(|output| self.inspect(output))?;
         Ok(output)
+    }
+
+    fn client(&self) -> reqwest::Result<reqwest::Client> {
+        reqwest::Client::builder()
+            .user_agent(&self.user_agent)
+            .build()
     }
 
     fn show<T>(&self, output: Output<T>) -> String
@@ -290,7 +313,7 @@ impl Api {
 }
 
 trait Optionally {
-    fn optionally_bearer_auth(self, token: Option<impl Into<String>>) -> Self;
+    fn optionally_bearer_auth(self, token: Option<impl fmt::Display>) -> Self;
 
     fn optionally<T, F>(self, option: Option<T>, f: F) -> Self
     where
@@ -305,8 +328,8 @@ trait Optionally {
     }
 }
 
-impl Optionally for attohttpc::RequestBuilder {
-    fn optionally_bearer_auth(self, token: Option<impl Into<String>>) -> Self {
+impl Optionally for reqwest::RequestBuilder {
+    fn optionally_bearer_auth(self, token: Option<impl fmt::Display>) -> Self {
         self.optionally(token, |this, token| this.bearer_auth(token))
     }
 }

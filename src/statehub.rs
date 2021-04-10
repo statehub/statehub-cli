@@ -100,11 +100,11 @@ enum Command {
 }
 
 impl StateHub {
-    pub(crate) fn execute() -> anyhow::Result<()> {
-        Self::from_args().dispatch()
+    pub(crate) async fn execute() -> anyhow::Result<()> {
+        Self::from_args().dispatch().await
     }
 
-    fn dispatch(self) -> anyhow::Result<()> {
+    async fn dispatch(self) -> anyhow::Result<()> {
         let api = api::Api::new(
             self.management,
             self.token,
@@ -119,20 +119,20 @@ impl StateHub {
                 location,
             } => {
                 let locations = location.into();
-                api.create_state(state, owner, locations)
+                api.create_state(state, owner, locations).await
             }
-            Command::ListStates => api.list_states(),
-            Command::ShowState { state } => api.show_state(state),
-            Command::ListClusters => api.list_clusters(),
-            Command::RegisterCluster => api.register_cluster(),
-            Command::UnregisterCluster => api.unregister_cluster(),
-            Command::CreateVolume => api.create_volume(),
-            Command::DeleteVolume => api.delete_volume(),
-            Command::AddLocation { state, location } => api.add_location(state, location),
-            Command::RemoveLocation => api.remove_location(),
-            Command::SetAvailability => api.set_availability(),
-            Command::SetOwner { state, cluster } => api.set_owner(state, cluster),
-            Command::UnsetOwner { state, cluster } => api.unset_owner(state, cluster),
+            Command::ListStates => api.list_states().await,
+            Command::ShowState { state } => api.show_state(state).await,
+            Command::ListClusters => api.list_clusters().await,
+            Command::RegisterCluster => api.register_cluster().await,
+            Command::UnregisterCluster => api.unregister_cluster().await,
+            Command::CreateVolume => api.create_volume().await,
+            Command::DeleteVolume => api.delete_volume().await,
+            Command::AddLocation { state, location } => api.add_location(state, location).await,
+            Command::RemoveLocation => api.remove_location().await,
+            Command::SetAvailability => api.set_availability().await,
+            Command::SetOwner { state, cluster } => api.set_owner(state, cluster).await,
+            Command::UnsetOwner { state, cluster } => api.unset_owner(state, cluster).await,
         }
     }
 }
