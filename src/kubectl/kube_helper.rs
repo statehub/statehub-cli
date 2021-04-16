@@ -10,15 +10,7 @@ use kube::api::Resource;
 
 const K8S_TOPOLOGY_REGION: &str = "topology.kubernetes.io/region";
 
-trait ResourceExt {
-    fn region(&self) -> Option<&str>;
-    fn label(&self, label: impl AsRef<str>) -> Option<&str>;
-}
-
-impl<R> ResourceExt for R
-where
-    R: Resource,
-{
+trait ResourceExt: Resource {
     fn label(&self, label: impl AsRef<str>) -> Option<&str> {
         self.meta()
             .labels
@@ -31,6 +23,8 @@ where
         self.label(K8S_TOPOLOGY_REGION)
     }
 }
+
+impl<R> ResourceExt for R where R: Resource {}
 
 pub(super) fn group_nodes_by_region(
     nodes: impl IntoIterator<Item = Node>,
