@@ -5,6 +5,8 @@
 
 use std::collections::HashMap;
 
+use itertools::join;
+
 use crate::v1;
 
 pub(crate) trait Show {
@@ -77,20 +79,8 @@ impl Show for HashMap<Option<String>, Vec<String>> {
             } else {
                 String::from("No region")
             };
-            out += &format!("{}:    {}", region, nodes.show());
+            out += &format!("{}:    {}", region, join(nodes, ", "));
         }
         out
-    }
-}
-
-impl Show for Vec<String> {
-    fn show(self) -> String {
-        let mut text = self.into_iter();
-        let first = text.next();
-        if let Some(init) = first {
-            text.fold(init, |text, next| format!("{}, {}", text, next))
-        } else {
-            String::new()
-        }
     }
 }
