@@ -18,6 +18,7 @@ use location::Location;
 use statehub::StateHub;
 
 mod api;
+mod kubectl;
 mod location;
 mod output;
 mod show;

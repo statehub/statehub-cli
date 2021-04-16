@@ -6,6 +6,7 @@
 use structopt::StructOpt;
 
 use crate::api;
+use crate::kubectl::{self, Kubectl};
 use crate::v1;
 use crate::Location;
 
@@ -97,6 +98,12 @@ enum Command {
         #[structopt(help = "Cluster name")]
         cluster: v1::ClusterName,
     },
+    #[structopt(about = "List K8s nodes")]
+    ListNodes,
+    #[structopt(about = "List K8s pods")]
+    ListPods,
+    #[structopt(about = "List K8s node regions")]
+    ListRegions,
 }
 
 impl StateHub {
@@ -112,6 +119,7 @@ impl StateHub {
             self.raw,
             self.verbose,
         );
+
         match self.command {
             Command::CreateState {
                 state,
@@ -133,6 +141,9 @@ impl StateHub {
             Command::SetAvailability => api.set_availability().await,
             Command::SetOwner { state, cluster } => api.set_owner(state, cluster).await,
             Command::UnsetOwner { state, cluster } => api.unset_owner(state, cluster).await,
+            Command::ListNodes => Kubectl::list_nodes().await,
+            Command::ListPods => Kubectl::list_pods().await,
+            Command::ListRegions => kubectl::list_regions().await,
         }
     }
 }

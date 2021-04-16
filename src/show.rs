@@ -3,6 +3,8 @@
 // Use is subject to license terms.
 //
 
+use std::collections::HashMap;
+
 use crate::v1;
 
 pub(crate) trait Show {
@@ -63,4 +65,32 @@ pub(crate) fn volume(volume: v1::Volume) -> String {
     );
 
     out
+}
+
+impl Show for HashMap<Option<String>, Vec<String>> {
+    fn show(self) -> String {
+        let mut out = String::new();
+
+        for (region, nodes) in self {
+            let region = if let Some(region) = region {
+                region
+            } else {
+                String::from("No region")
+            };
+            out += &format!("{}:    {}", region, nodes.show());
+        }
+        out
+    }
+}
+
+impl Show for Vec<String> {
+    fn show(self) -> String {
+        let mut text = self.into_iter();
+        let first = text.next();
+        if let Some(init) = first {
+            text.fold(init, |text, next| format!("{}, {}", text, next))
+        } else {
+            String::new()
+        }
+    }
 }
