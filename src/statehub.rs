@@ -103,7 +103,10 @@ enum Command {
     #[structopt(about = "List K8s pods")]
     ListPods,
     #[structopt(about = "List K8s node regions")]
-    ListRegions,
+    ListRegions {
+        #[structopt(help = "Also list zones", long, short)]
+        zone: bool,
+    },
 }
 
 impl StateHub {
@@ -143,7 +146,7 @@ impl StateHub {
             Command::UnsetOwner { state, cluster } => api.unset_owner(state, cluster).await,
             Command::ListNodes => Kubectl::list_nodes().await,
             Command::ListPods => Kubectl::list_pods().await,
-            Command::ListRegions => kubectl::list_regions().await,
+            Command::ListRegions { zone } => kubectl::list_regions(zone).await,
         }
     }
 }

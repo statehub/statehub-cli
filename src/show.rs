@@ -79,7 +79,7 @@ impl Show for HashMap<Option<String>, Vec<String>> {
             } else {
                 String::from("No region")
             };
-            out += &format!("{}:    {}", region, join(nodes, ", "));
+            out += &format!("{}:    {}\n", region, join(nodes, ", "));
         }
         out
     }
