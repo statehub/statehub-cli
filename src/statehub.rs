@@ -3,6 +3,7 @@
 // Use is subject to license terms.
 //
 
+use serde::{de::DeserializeOwned, Serialize};
 use structopt::StructOpt;
 
 use crate::api;
@@ -10,12 +11,13 @@ use crate::kubectl::{self, Kubectl};
 use crate::show::Show;
 use crate::v1;
 use crate::Location;
+use crate::Output;
 
 const ABOUT: &str = "statehub CLI tool";
 
 #[derive(Debug, StructOpt)]
 #[structopt(about = ABOUT)]
-pub(crate) struct StateHub {
+pub(crate) struct Cli {
     #[structopt(
         help = "Management server URL or address",
         default_value = "https://api.statehub.io",
@@ -72,7 +74,10 @@ enum Command {
         name: String,
     },
     #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"])]
-    UnregisterCluster,
+    UnregisterCluster {
+        #[structopt(help = "Cluster name")]
+        name: String,
+    },
     #[structopt(about = "Manually create new volume")]
     CreateVolume,
     #[structopt(about = "Manually delete existing volume")]
@@ -113,13 +118,13 @@ enum Command {
     },
 }
 
-impl StateHub {
+impl Cli {
     pub(crate) async fn execute() -> anyhow::Result<()> {
         Self::from_args().dispatch().await
     }
 
     async fn dispatch(self) -> anyhow::Result<()> {
-        let api = api::Api::new(
+        let statehub = StateHub::new(
             self.management,
             self.token,
             self.json,
@@ -134,94 +139,211 @@ impl StateHub {
                 location,
             } => {
                 let locations = location.into();
-                api.create_state(state, owner, locations).await
+                statehub.create_state(state, owner, locations).await
             }
-            Command::ListStates => list_states(api).await,
-            Command::ShowState { state } => api.show_state(state).await,
-            Command::ListClusters => api.list_clusters().await,
-            Command::RegisterCluster { name } => register_cluster(api, name).await,
-            Command::UnregisterCluster => api.unregister_cluster().await,
-            Command::CreateVolume => api.create_volume().await,
-            Command::DeleteVolume => api.delete_volume().await,
-            Command::AddLocation { state, location } => add_location(api, state, location).await,
-            Command::RemoveLocation => api.remove_location().await,
-            Command::SetAvailability => api.set_availability().await,
-            Command::SetOwner { state, cluster } => api.set_owner(state, cluster).await,
-            Command::UnsetOwner { state, cluster } => api.unset_owner(state, cluster).await,
+            Command::ListStates => statehub.list_states().await,
+            Command::ShowState { state } => statehub.show_state(state).await,
+            Command::ListClusters => statehub.list_clusters().await,
+            Command::RegisterCluster { name } => statehub.register_cluster(name).await,
+            Command::UnregisterCluster { name } => statehub.unregister_cluster(name).await,
+            Command::CreateVolume => statehub.create_volume().await,
+            Command::DeleteVolume => statehub.delete_volume().await,
+            Command::AddLocation { state, location } => {
+                statehub.add_location(state, location).await
+            }
+            Command::RemoveLocation => statehub.remove_location().await,
+            Command::SetAvailability => statehub.set_availability().await,
+            Command::SetOwner { state, cluster } => statehub.set_owner(state, cluster).await,
+            Command::UnsetOwner { state, cluster } => statehub.unset_owner(state, cluster).await,
             Command::ListNodes => Kubectl::list_nodes().await,
             Command::ListPods => Kubectl::list_pods().await,
-            Command::ListRegions { zone } => list_regions(zone).await,
+            Command::ListRegions { zone } => statehub.list_regions(zone).await,
         }
     }
 }
 
-async fn list_states(api: api::Api) -> anyhow::Result<()> {
-    let text = |output| api.show(output);
-
-    api.get_states().await.map(text).map(print)
+pub(crate) struct StateHub {
+    api: api::Api,
+    json: bool,
+    raw: bool,
 }
 
-async fn register_cluster(api: api::Api, name: String) -> anyhow::Result<()> {
-    let text = |output| api.show(output);
+impl StateHub {
+    fn new(
+        management: String,
+        token: Option<String>,
+        json: bool,
+        raw: bool,
+        verbose: bool,
+    ) -> Self {
+        let api = api::Api::new(management, token, json, raw, verbose);
 
-    // Find where my nodes are located (no need for AZ just yet)
-    let locations = kubectl::get_regions(false)
-        .await?
-        .into_iter()
-        .map(|(region, nodes)| {
-            region.ok_or_else(|| anyhow::anyhow!("Cannot determine location for nodes {:?}", nodes))
-        })
-        .collect::<Result<Vec<_>, _>>()?
-        .into_iter()
-        .map(|region| region.parse())
-        .collect::<Result<Vec<Location>, _>>()
-        .map_err(anyhow::Error::msg)?;
+        Self { api, json, raw }
+    }
 
-    // Get all the states (user token allows to get all of them)
-    let states = api.get_states().await?;
+    pub(crate) async fn create_state(
+        &self,
+        name: v1::StateName,
+        owner: Option<v1::ClusterName>,
+        locations: v1::Locations,
+    ) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+        let state = v1::State {
+            name,
+            storage_class: None,
+            owner,
+            locations,
+            allowed_clusters: None,
+        };
+        self.api.create_state(state).await.map(text).map(print)
+    }
 
-    // Verify that all the states are available in all the locations
-    for state in states {
-        for location in &locations {
-            if !state.is_available_in(location) {
-                // need to extend the state to this location as well
-                add_location_helper(&api, &state.name, location).await?;
+    pub(crate) async fn show_state(self, state: v1::StateName) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+        self.api.show_state(state).await.map(text).map(print)
+    }
+
+    async fn list_states(&self) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+        self.api.get_states().await.map(text).map(print)
+    }
+
+    pub(crate) async fn list_clusters(&self) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+        self.api.list_clusters().await.map(text).map(print)
+    }
+
+    async fn register_cluster(&self, name: String) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+
+        // Find where my nodes are located (no need for AZ just yet)
+        let locations = kubectl::get_regions(false)
+            .await?
+            .into_iter()
+            .map(|(region, nodes)| {
+                region.ok_or_else(|| {
+                    anyhow::anyhow!("Cannot determine location for nodes {:?}", nodes)
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .map(|region| region.parse())
+            .collect::<Result<Vec<Location>, _>>()
+            .map_err(anyhow::Error::msg)?;
+
+        // Get all the states (user token allows to get all of them)
+        let states = self.api.get_states().await?;
+
+        // Verify that all the states are available in all the locations
+        for state in states {
+            for location in &locations {
+                if !state.is_available_in(location) {
+                    // need to extend the state to this location as well
+                    self.add_location_helper(&state.name, location).await?;
+                }
             }
         }
+
+        self.api.register_cluster(name).await.map(text).map(print)
     }
 
-    api.register_cluster(name).await.map(text).map(print)
-}
-
-async fn add_location(
-    api: api::Api,
-    state: v1::StateName,
-    location: Location,
-) -> anyhow::Result<()> {
-    add_location_helper(&api, &state, &location).await
-}
-
-async fn add_location_helper(
-    api: &api::Api,
-    state: &v1::StateName,
-    location: &Location,
-) -> anyhow::Result<()> {
-    match location {
-        Location::Aws(region) => api
-            .add_aws_location(state.clone(), *region)
-            .await
-            .map(|_aws| ()),
-        Location::Azure(region) => api
-            .add_azure_location(state.clone(), *region)
-            .await
-            .map(|_azure| ()),
+    async fn unregister_cluster(&self, _name: String) -> anyhow::Result<()> {
+        // let text = |output| self.show(output);
+        // Ok(Output::<String>::todo()).map(text).map(print)
+        anyhow::bail!(self.show(Output::<String>::todo()))
     }
-}
 
-async fn list_regions(zone: bool) -> anyhow::Result<()> {
-    kubectl::get_regions(zone)
-        .await
-        .map(|nodes| println!("{}", nodes.show()))
+    async fn add_location(&self, state: v1::StateName, location: Location) -> anyhow::Result<()> {
+        self.add_location_helper(&state, &location).await
+    }
+
+    pub(crate) async fn create_volume(self) -> anyhow::Result<()> {
+        // let text = |output| self.show(output);
+        // Ok(Output::<String>::todo()).map(text).map(print)
+        anyhow::bail!(self.show(Output::<String>::todo()))
+    }
+
+    pub(crate) async fn delete_volume(self) -> anyhow::Result<()> {
+        // let text = |output| self.show(output);
+        // Ok(Output::<String>::todo()).map(text).map(print)
+        anyhow::bail!(self.show(Output::<String>::todo()))
+    }
+
+    pub(crate) async fn remove_location(self) -> anyhow::Result<()> {
+        // let text = |output| self.show(output);
+        // Ok(Output::<String>::todo()).map(text).map(print)
+        anyhow::bail!(self.show(Output::<String>::todo()))
+    }
+
+    pub(crate) async fn set_availability(self) -> anyhow::Result<()> {
+        // let text = |output| self.show(output);
+        // Ok(Output::<String>::todo()).map(text).map(print)
+        anyhow::bail!(self.show(Output::<String>::todo()))
+    }
+
+    pub(crate) async fn set_owner(
+        &self,
+        state: v1::StateName,
+        cluster: v1::ClusterName,
+    ) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+        self.api
+            .set_owner(state, cluster)
+            .await
+            .map(text)
+            .map(print)
+    }
+
+    pub(crate) async fn unset_owner(
+        &self,
+        state: v1::StateName,
+        cluster: v1::ClusterName,
+    ) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+        self.api
+            .unset_owner(state, cluster)
+            .await
+            .map(text)
+            .map(print)
+    }
+
+    async fn add_location_helper(
+        &self,
+        state: &v1::StateName,
+        location: &Location,
+    ) -> anyhow::Result<()> {
+        match location {
+            Location::Aws(region) => self
+                .api
+                .add_aws_location(state.clone(), *region)
+                .await
+                .map(|_aws| ()),
+            Location::Azure(region) => self
+                .api
+                .add_azure_location(state.clone(), *region)
+                .await
+                .map(|_azure| ()),
+        }
+    }
+
+    pub(crate) fn show<T>(&self, output: Output<T>) -> String
+    where
+        T: DeserializeOwned + Serialize + Show,
+    {
+        if self.json {
+            output.into_value().show()
+        } else if !self.raw {
+            output.into_typed().show()
+        } else {
+            output.show()
+        }
+    }
+
+    async fn list_regions(&self, zone: bool) -> anyhow::Result<()> {
+        kubectl::get_regions(zone)
+            .await
+            .map(|nodes| println!("{}", nodes.show()))
+    }
 }
 
 fn print(text: String) {

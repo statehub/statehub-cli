@@ -9,7 +9,6 @@ use inspector::ResultInspector;
 use serde::{de, ser};
 
 use crate::output::Output;
-use crate::show::Show;
 use crate::v1;
 
 pub(crate) type ApiResult<T> = Result<Output<T>, anyhow::Error>;
@@ -53,105 +52,21 @@ impl Api {
         }
     }
 
-    pub(crate) async fn create_state(
-        self,
-        name: v1::StateName,
-        owner: Option<v1::ClusterName>,
-        locations: v1::Locations,
-    ) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-
-        let body = v1::State {
-            name,
-            storage_class: None,
-            owner,
-            locations,
-            allowed_clusters: None,
-        };
-        self.post::<_, _, v1::State>("/states", body)
-            .await
-            .map(text)
-            .map(print)
-    }
-
-    pub(crate) async fn show_state(self, state: v1::StateName) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-
-        let path = format!("/states/{state}", state = state);
-        self.get::<_, v1::State>(path).await.map(text).map(print)
-    }
-
-    pub(crate) async fn list_clusters(self) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-
-        self.get::<_, Vec<v1::Cluster>>("/clusters")
-            .await
-            .map(text)
-            .map(print)
-    }
-
-    pub(crate) async fn unregister_cluster(self) -> anyhow::Result<()> {
-        // let text = |output| self.show(output);
-        // Ok(Output::<String>::todo()).map(text).map(print)
-        anyhow::bail!(self.show(Output::<String>::todo()))
-    }
-
-    pub(crate) async fn create_volume(self) -> anyhow::Result<()> {
-        // let text = |output| self.show(output);
-        // Ok(Output::<String>::todo()).map(text).map(print)
-        anyhow::bail!(self.show(Output::<String>::todo()))
-    }
-
-    pub(crate) async fn delete_volume(self) -> anyhow::Result<()> {
-        // let text = |output| self.show(output);
-        // Ok(Output::<String>::todo()).map(text).map(print)
-        anyhow::bail!(self.show(Output::<String>::todo()))
-    }
-
-    pub(crate) async fn remove_location(self) -> anyhow::Result<()> {
-        // let text = |output| self.show(output);
-        // Ok(Output::<String>::todo()).map(text).map(print)
-        anyhow::bail!(self.show(Output::<String>::todo()))
-    }
-
-    pub(crate) async fn set_availability(self) -> anyhow::Result<()> {
-        // let text = |output| self.show(output);
-        // Ok(Output::<String>::todo()).map(text).map(print)
-        anyhow::bail!(self.show(Output::<String>::todo()))
-    }
-
-    pub(crate) async fn set_owner(
-        self,
-        state: v1::StateName,
-        cluster: v1::ClusterName,
-    ) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-
-        let path = format!(
-            "/states/{state}/owner/{cluster}",
-            state = state,
-            cluster = cluster,
-        );
-        self.put::<_, v1::State>(path).await.map(text).map(print)
-    }
-
-    pub(crate) async fn unset_owner(
-        self,
-        state: v1::StateName,
-        cluster: v1::ClusterName,
-    ) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-
-        let path = format!(
-            "/states/{state}/owner/{cluster}",
-            state = state,
-            cluster = cluster,
-        );
-        self.del::<_, v1::State>(path).await.map(text).map(print)
+    pub(crate) async fn create_state(&self, state: v1::State) -> ApiResult<v1::State> {
+        self.post("/states", state).await
     }
 
     pub(crate) async fn get_states(&self) -> ApiResult<Vec<v1::State>> {
         self.get("/states").await
+    }
+
+    pub(crate) async fn show_state(&self, state: v1::StateName) -> ApiResult<v1::State> {
+        let path = format!("/states/{state}", state = state);
+        self.get(path).await
+    }
+
+    pub(crate) async fn list_clusters(&self) -> ApiResult<Vec<v1::Cluster>> {
+        self.get("/clusters").await
     }
 
     pub(crate) async fn register_cluster(&self, name: String) -> ApiResult<v1::Cluster> {
@@ -178,6 +93,32 @@ impl Api {
         let path = format!("/states/{state}/locations/azure", state = state);
         let body = v1::CreateStateLocationAzure { region };
         self.post(path, body).await
+    }
+
+    pub(crate) async fn set_owner(
+        &self,
+        state: v1::StateName,
+        cluster: v1::ClusterName,
+    ) -> ApiResult<v1::State> {
+        let path = format!(
+            "/states/{state}/owner/{cluster}",
+            state = state,
+            cluster = cluster,
+        );
+        self.put(path).await
+    }
+
+    pub(crate) async fn unset_owner(
+        &self,
+        state: v1::StateName,
+        cluster: v1::ClusterName,
+    ) -> ApiResult<v1::State> {
+        let path = format!(
+            "/states/{state}/owner/{cluster}",
+            state = state,
+            cluster = cluster,
+        );
+        self.del(path).await
     }
 
     fn url(&self, path: impl fmt::Display) -> String {
@@ -278,19 +219,6 @@ impl Api {
             .user_agent(&self.user_agent)
             .build()
     }
-
-    pub(crate) fn show<T>(&self, output: Output<T>) -> String
-    where
-        T: de::DeserializeOwned + ser::Serialize + Show,
-    {
-        if self.json {
-            output.into_value().show()
-        } else if !self.raw {
-            output.into_typed().show()
-        } else {
-            output.show()
-        }
-    }
 }
 
 trait Optionally {
@@ -313,8 +241,4 @@ impl Optionally for reqwest::RequestBuilder {
     fn optionally_bearer_auth(self, token: Option<impl fmt::Display>) -> Self {
         self.optionally(token, |this, token| this.bearer_auth(token))
     }
-}
-
-fn print(text: String) {
-    println!("{}", text);
 }

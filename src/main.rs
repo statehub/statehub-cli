@@ -15,7 +15,8 @@
 #![deny(warnings)]
 
 use location::Location;
-use statehub::StateHub;
+use output::Output;
+use statehub::Cli;
 
 mod api;
 mod kubectl;
@@ -29,5 +30,5 @@ pub mod v1;
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
     pretty_env_logger::init_custom_env("STATEHUB_LOG");
-    StateHub::execute().await
+    Cli::execute().await
 }
