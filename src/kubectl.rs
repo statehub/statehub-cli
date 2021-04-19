@@ -3,12 +3,12 @@
 // Use is subject to license terms.
 //
 
+use std::collections::HashMap;
+
 use k8s_openapi::api::core::v1::{Node, Pod};
 use kube::api::{Api, ListParams};
 // use kube::api::{Api, ListParams, PostParams, Resource, WatchEvent};
 use kube::Client;
-
-use crate::show::Show;
 
 use kube_helper::{group_nodes_by_region, group_nodes_by_zone};
 
@@ -77,7 +77,9 @@ impl Kubectl {
     }
 }
 
-pub(crate) async fn list_regions(zone: bool) -> anyhow::Result<()> {
+pub(crate) async fn get_regions(
+    zone: bool,
+) -> anyhow::Result<HashMap<Option<String>, Vec<String>>> {
     let group_nodes = |nodes| {
         if zone {
             group_nodes_by_zone(nodes)
@@ -86,10 +88,5 @@ pub(crate) async fn list_regions(zone: bool) -> anyhow::Result<()> {
         }
     };
 
-    Kubectl::default()
-        .await?
-        .all_nodes()
-        .await
-        .map(group_nodes)
-        .map(|nodes| println!("{}", nodes.show()))
+    Kubectl::default().await?.all_nodes().await.map(group_nodes)
 }

@@ -6,9 +6,8 @@
 use std::fmt;
 
 use inspector::ResultInspector;
-use serde::{de, ser, Serialize};
+use serde::{de, ser};
 
-use crate::location::Location;
 use crate::output::Output;
 use crate::show::Show;
 use crate::v1;
@@ -75,15 +74,6 @@ impl Api {
             .map(print)
     }
 
-    pub(crate) async fn list_states(self) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-
-        self.get::<_, Vec<v1::State>>("/states")
-            .await
-            .map(text)
-            .map(print)
-    }
-
     pub(crate) async fn show_state(self, state: v1::StateName) -> anyhow::Result<()> {
         let text = |output| self.show(output);
 
@@ -98,12 +88,6 @@ impl Api {
             .await
             .map(text)
             .map(print)
-    }
-
-    pub(crate) async fn register_cluster(self) -> anyhow::Result<()> {
-        // let text = |output| self.show(output);
-        // Ok(Output::<String>::todo()).map(text).map(print)
-        anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) async fn unregister_cluster(self) -> anyhow::Result<()> {
@@ -122,39 +106,6 @@ impl Api {
         // let text = |output| self.show(output);
         // Ok(Output::<String>::todo()).map(text).map(print)
         anyhow::bail!(self.show(Output::<String>::todo()))
-    }
-
-    pub(crate) async fn add_location(
-        self,
-        state: v1::StateName,
-        location: Location,
-    ) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-
-        #[derive(Debug, Serialize)]
-        struct StateLocation {
-            region: String,
-        }
-
-        let (path, body) = match location {
-            Location::Aws(region) => (
-                format!("/states/{state}/locations/aws", state = state),
-                StateLocation {
-                    region: region.to_string(),
-                },
-            ),
-            Location::Azure(region) => (
-                format!("/states/{state}/locations/azure", state = state),
-                StateLocation {
-                    region: region.to_string(),
-                },
-            ),
-        };
-
-        self.post::<_, _, v1::State>(path, body)
-            .await
-            .map(text)
-            .map(print)
     }
 
     pub(crate) async fn remove_location(self) -> anyhow::Result<()> {
@@ -197,6 +148,36 @@ impl Api {
             cluster = cluster,
         );
         self.del::<_, v1::State>(path).await.map(text).map(print)
+    }
+
+    pub(crate) async fn get_states(&self) -> ApiResult<Vec<v1::State>> {
+        self.get("/states").await
+    }
+
+    pub(crate) async fn register_cluster(&self, name: String) -> ApiResult<v1::Cluster> {
+        let name = v1::ClusterName(name);
+        let body = v1::CreateClusterDto { name };
+        self.post("/clusters", body).await
+    }
+
+    pub(crate) async fn add_aws_location(
+        &self,
+        state: v1::StateName,
+        region: v1::AwsRegion,
+    ) -> ApiResult<v1::StateLocationAws> {
+        let path = format!("/states/{state}/locations/aws", state = state);
+        let body = v1::CreateStateLocationAws { region };
+        self.post(path, body).await
+    }
+
+    pub(crate) async fn add_azure_location(
+        &self,
+        state: v1::StateName,
+        region: v1::AzureRegion,
+    ) -> ApiResult<v1::StateLocationAzure> {
+        let path = format!("/states/{state}/locations/azure", state = state);
+        let body = v1::CreateStateLocationAzure { region };
+        self.post(path, body).await
     }
 
     fn url(&self, path: impl fmt::Display) -> String {
@@ -298,7 +279,7 @@ impl Api {
             .build()
     }
 
-    fn show<T>(&self, output: Output<T>) -> String
+    pub(crate) fn show<T>(&self, output: Output<T>) -> String
     where
         T: de::DeserializeOwned + ser::Serialize + Show,
     {

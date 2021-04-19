@@ -4,10 +4,11 @@
 //
 
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 mod impls;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct State {
     pub name: StateName,
@@ -17,36 +18,72 @@ pub struct State {
     pub allowed_clusters: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Cluster {
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CreateClusterDto {
     pub name: ClusterName,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Cluster {
+    pub id: Uuid,
+    pub name: ClusterName,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StateName(pub String);
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ClusterName(pub String);
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CreateStateLocationAws {
+    pub region: AwsRegion,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CreateStateLocationAzure {
+    pub region: AzureRegion,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StateLocationAws {
+    pub region: AwsRegion,
+    pub status: StateLocationStatus,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StateLocationAzure {
+    pub region: AzureRegion,
+    pub status: StateLocationStatus,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum StateLocationStatus {
+    Ok,
+    Provisioning,
+    Recovering,
+    Error,
+}
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct StorageClass {
     pub mount_options: Option<String>,
     pub volume_binding_mode: VolumeBindingMode,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum VolumeBindingMode {
     WaitForFirstConsumer,
     Immediate,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Locations {
     aws: Vec<AwsRegion>,
     azure: Vec<AzureRegion>,
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum AwsRegion {
     ApNortheast1,
     ApNortheast2,
@@ -66,7 +103,7 @@ pub enum AwsRegion {
     UsWest2,
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum AzureRegion {
     CentralUs,
     EastUs,
@@ -80,12 +117,12 @@ pub enum AzureRegion {
     WestUs2,
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum GcpRegion {
     Antarctica,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Volume {
     pub name: String,

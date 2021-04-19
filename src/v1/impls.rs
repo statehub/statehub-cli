@@ -40,6 +40,12 @@ impl str::FromStr for StateName {
     }
 }
 
+impl State {
+    pub(crate) fn is_available_in(&self, location: &Location) -> bool {
+        self.locations.contains(location)
+    }
+}
+
 impl fmt::Display for Cluster {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Cluster").field("name", &self.name).finish()
@@ -84,5 +90,14 @@ impl From<Vec<Location>> for Locations {
             }
         }
         Self { aws, azure }
+    }
+}
+
+impl Locations {
+    pub(crate) fn contains(&self, location: &Location) -> bool {
+        match location {
+            Location::Aws(region) => self.aws.contains(region),
+            Location::Azure(region) => self.azure.contains(region),
+        }
     }
 }

@@ -9,7 +9,7 @@ use thiserror::Error;
 
 use crate::v1;
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub(crate) enum Location {
     Aws(v1::AwsRegion),
     Azure(v1::AzureRegion),

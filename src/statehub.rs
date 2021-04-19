@@ -7,6 +7,7 @@ use structopt::StructOpt;
 
 use crate::api;
 use crate::kubectl::{self, Kubectl};
+use crate::show::Show;
 use crate::v1;
 use crate::Location;
 
@@ -66,7 +67,10 @@ enum Command {
     #[structopt(about = "Register new cluster", aliases = &["list-cluster", "list-cl", "lc"])]
     ListClusters,
     #[structopt(about = "Register new cluster", aliases = &["register-cl", "rc"])]
-    RegisterCluster,
+    RegisterCluster {
+        #[structopt(help = "Cluster name")]
+        name: String,
+    },
     #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"])]
     UnregisterCluster,
     #[structopt(about = "Manually create new volume")]
@@ -132,21 +136,94 @@ impl StateHub {
                 let locations = location.into();
                 api.create_state(state, owner, locations).await
             }
-            Command::ListStates => api.list_states().await,
+            Command::ListStates => list_states(api).await,
             Command::ShowState { state } => api.show_state(state).await,
             Command::ListClusters => api.list_clusters().await,
-            Command::RegisterCluster => api.register_cluster().await,
+            Command::RegisterCluster { name } => register_cluster(api, name).await,
             Command::UnregisterCluster => api.unregister_cluster().await,
             Command::CreateVolume => api.create_volume().await,
             Command::DeleteVolume => api.delete_volume().await,
-            Command::AddLocation { state, location } => api.add_location(state, location).await,
+            Command::AddLocation { state, location } => add_location(api, state, location).await,
             Command::RemoveLocation => api.remove_location().await,
             Command::SetAvailability => api.set_availability().await,
             Command::SetOwner { state, cluster } => api.set_owner(state, cluster).await,
             Command::UnsetOwner { state, cluster } => api.unset_owner(state, cluster).await,
             Command::ListNodes => Kubectl::list_nodes().await,
             Command::ListPods => Kubectl::list_pods().await,
-            Command::ListRegions { zone } => kubectl::list_regions(zone).await,
+            Command::ListRegions { zone } => list_regions(zone).await,
         }
     }
+}
+
+async fn list_states(api: api::Api) -> anyhow::Result<()> {
+    let text = |output| api.show(output);
+
+    api.get_states().await.map(text).map(print)
+}
+
+async fn register_cluster(api: api::Api, name: String) -> anyhow::Result<()> {
+    let text = |output| api.show(output);
+
+    // Find where my nodes are located (no need for AZ just yet)
+    let locations = kubectl::get_regions(false)
+        .await?
+        .into_iter()
+        .map(|(region, nodes)| {
+            region.ok_or_else(|| anyhow::anyhow!("Cannot determine location for nodes {:?}", nodes))
+        })
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .map(|region| region.parse())
+        .collect::<Result<Vec<Location>, _>>()
+        .map_err(anyhow::Error::msg)?;
+
+    // Get all the states (user token allows to get all of them)
+    let states = api.get_states().await?;
+
+    // Verify that all the states are available in all the locations
+    for state in states {
+        for location in &locations {
+            if !state.is_available_in(location) {
+                // need to extend the state to this location as well
+                add_location_helper(&api, &state.name, location).await?;
+            }
+        }
+    }
+
+    api.register_cluster(name).await.map(text).map(print)
+}
+
+async fn add_location(
+    api: api::Api,
+    state: v1::StateName,
+    location: Location,
+) -> anyhow::Result<()> {
+    add_location_helper(&api, &state, &location).await
+}
+
+async fn add_location_helper(
+    api: &api::Api,
+    state: &v1::StateName,
+    location: &Location,
+) -> anyhow::Result<()> {
+    match location {
+        Location::Aws(region) => api
+            .add_aws_location(state.clone(), *region)
+            .await
+            .map(|_aws| ()),
+        Location::Azure(region) => api
+            .add_azure_location(state.clone(), *region)
+            .await
+            .map(|_azure| ()),
+    }
+}
+
+async fn list_regions(zone: bool) -> anyhow::Result<()> {
+    kubectl::get_regions(zone)
+        .await
+        .map(|nodes| println!("{}", nodes.show()))
+}
+
+fn print(text: String) {
+    println!("{}", text);
 }
