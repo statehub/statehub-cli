@@ -239,6 +239,6 @@ trait Optionally {
 
 impl Optionally for reqwest::RequestBuilder {
     fn optionally_bearer_auth(self, token: Option<impl fmt::Display>) -> Self {
-        self.optionally(token, |this, token| this.bearer_auth(token))
+        self.optionally(token, Self::bearer_auth)
     }
 }
