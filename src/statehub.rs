@@ -320,10 +320,10 @@ impl StateHub {
     {
         if self.json {
             output.into_value().show()
-        } else if !self.raw {
-            output.into_typed().show()
-        } else {
+        } else if self.raw {
             output.show()
+        } else {
+            output.into_typed().show()
         }
     }
 
