@@ -18,12 +18,19 @@ use location::Location;
 use output::Output;
 use statehub::Cli;
 
+// statehub API implementation
 mod api;
+// K8s interface and helpers
 mod kubectl;
+// Location definitions
 mod location;
+// `Output` wrapper
 mod output;
+// `Show` trait definition and impls
 mod show;
+// Main tool bussines logic
 mod statehub;
+// stathub API v1 definitions
 pub mod v1;
 
 #[tokio::main]
