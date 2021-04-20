@@ -10,6 +10,8 @@ use kube::api::{Api, ListParams};
 // use kube::api::{Api, ListParams, PostParams, Resource, WatchEvent};
 use kube::Client;
 
+use crate::Location;
+
 use kube_helper::{group_nodes_by_region, group_nodes_by_zone};
 
 mod kube_helper;
@@ -89,4 +91,18 @@ pub(crate) async fn get_regions(
     };
 
     Kubectl::default().await?.all_nodes().await.map(group_nodes)
+}
+
+pub(crate) async fn collect_node_locations() -> anyhow::Result<Vec<Location>> {
+    get_regions(false)
+        .await?
+        .into_iter()
+        .map(|(region, nodes)| {
+            region.ok_or_else(|| anyhow::anyhow!("Cannot determine location for nodes {:?}", nodes))
+        })
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .map(|region| region.parse())
+        .collect::<Result<Vec<Location>, _>>()
+        .map_err(anyhow::Error::msg)
 }

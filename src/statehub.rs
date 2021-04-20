@@ -216,22 +216,10 @@ impl StateHub {
     async fn register_cluster(&self, name: String) -> anyhow::Result<()> {
         let text = |output| self.show(output);
 
-        // Find where my nodes are located (no need for AZ just yet)
-        let locations = kubectl::get_regions(false)
-            .await?
-            .into_iter()
-            .map(|(region, nodes)| {
-                region.ok_or_else(|| {
-                    anyhow::anyhow!("Cannot determine location for nodes {:?}", nodes)
-                })
-            })
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .map(|region| region.parse())
-            .collect::<Result<Vec<Location>, _>>()
-            .map_err(anyhow::Error::msg)?;
+        // Find where my nodes are located
+        let locations = kubectl::collect_node_locations().await?;
 
-        // Get all the states (user token allows to get all of them)
+        // Get all the states (user token allows to *see* all of them)
         let states = self.api.get_states().await?;
 
         // Verify that all the states are available in all the locations
