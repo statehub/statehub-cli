@@ -17,7 +17,7 @@ trait ResourceExt: Resource {
             .labels
             .as_ref()
             .and_then(|labels| labels.get(label.as_ref()))
-            .map(|label| label.as_str())
+            .map(String::as_str)
     }
 
     fn region(&self) -> Option<&str> {
