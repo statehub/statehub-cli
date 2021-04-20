@@ -74,11 +74,7 @@ impl Show for HashMap<Option<String>, Vec<String>> {
         let mut out = String::new();
 
         for (region, nodes) in self {
-            let region = if let Some(region) = region {
-                region
-            } else {
-                String::from("No region")
-            };
+            let region = region.unwrap_or_else(|| String::from("No region"));
             out += &format!("{}:    {}\n", region, join(nodes, ", "));
         }
         out
