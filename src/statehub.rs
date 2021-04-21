@@ -76,12 +76,12 @@ enum Command {
     #[structopt(about = "Register new cluster", aliases = &["register-cl", "rc"])]
     RegisterCluster {
         #[structopt(help = "Cluster name")]
-        name: String,
+        name: v1::ClusterName,
     },
     #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"])]
     UnregisterCluster {
         #[structopt(help = "Cluster name")]
-        name: String,
+        name: v1::ClusterName,
     },
     #[structopt(about = "Manually create new volume")]
     CreateVolume,
@@ -224,7 +224,7 @@ impl StateHub {
         self.api.list_clusters().await.map(text).map(print)
     }
 
-    async fn register_cluster(&self, name: String) -> anyhow::Result<()> {
+    async fn register_cluster(&self, name: v1::ClusterName) -> anyhow::Result<()> {
         let text = |output| self.show(output);
 
         // Find where my nodes are located
@@ -246,7 +246,7 @@ impl StateHub {
         self.api.register_cluster(name).await.map(text).map(print)
     }
 
-    async fn unregister_cluster(&self, _name: String) -> anyhow::Result<()> {
+    async fn unregister_cluster(&self, _name: v1::ClusterName) -> anyhow::Result<()> {
         // let text = |output| self.show(output);
         // Ok(Output::<String>::todo()).map(text).map(print)
         anyhow::bail!(self.show(Output::<String>::todo()))

@@ -74,8 +74,7 @@ impl Api {
         self.get("/clusters").await
     }
 
-    pub(crate) async fn register_cluster(&self, name: String) -> ApiResult<v1::Cluster> {
-        let name = v1::ClusterName(name);
+    pub(crate) async fn register_cluster(&self, name: v1::ClusterName) -> ApiResult<v1::Cluster> {
         let body = v1::CreateClusterDto { name };
         self.post("/clusters", body).await
     }
