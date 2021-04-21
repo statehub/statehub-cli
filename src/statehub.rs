@@ -59,6 +59,11 @@ enum Command {
         #[structopt(long, short, help = "Location definition")]
         location: Vec<Location>,
     },
+    #[structopt(about = "Delete existing state", aliases = &["delete-st", "ds"])]
+    DeleteState {
+        #[structopt(help = "State name")]
+        name: v1::StateName,
+    },
     #[structopt(about = "List available states", aliases = &["list-state", "list-st", "ls"])]
     ListStates,
     #[structopt(about = "Show state details", aliases = &["show-s", "ss"])]
@@ -141,6 +146,7 @@ impl Cli {
                 let locations = location.into();
                 statehub.create_state(name, owner, locations).await
             }
+            Command::DeleteState { name: state } => statehub.delete_state(state).await,
             Command::ListStates => statehub.list_states().await,
             Command::ShowState { name } => statehub.show_state(name).await,
             Command::ListClusters => statehub.list_clusters().await,
@@ -196,6 +202,11 @@ impl StateHub {
             allowed_clusters: None,
         };
         self.api.create_state(state).await.map(text).map(print)
+    }
+
+    pub(crate) async fn delete_state(&self, name: v1::StateName) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+        self.api.delete_state(name).await.map(text).map(print)
     }
 
     pub(crate) async fn show_state(self, state: v1::StateName) -> anyhow::Result<()> {
