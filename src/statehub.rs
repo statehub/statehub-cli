@@ -246,10 +246,9 @@ impl StateHub {
         self.api.register_cluster(name).await.map(text).map(print)
     }
 
-    async fn unregister_cluster(&self, _name: v1::ClusterName) -> anyhow::Result<()> {
-        // let text = |output| self.show(output);
-        // Ok(Output::<String>::todo()).map(text).map(print)
-        anyhow::bail!(self.show(Output::<String>::todo()))
+    async fn unregister_cluster(&self, name: v1::ClusterName) -> anyhow::Result<()> {
+        let text = |output| self.show(output);
+        self.api.unregister_cluster(name).await.map(text).map(print)
     }
 
     async fn add_location(&self, state: v1::StateName, location: Location) -> anyhow::Result<()> {

@@ -79,6 +79,11 @@ impl Api {
         self.post("/clusters", body).await
     }
 
+    pub(crate) async fn unregister_cluster(&self, name: v1::ClusterName) -> ApiResult<v1::Cluster> {
+        let path = format!("/clusters/{name}", name = name);
+        self.del(path).await
+    }
+
     pub(crate) async fn add_aws_location(
         &self,
         name: v1::StateName,
