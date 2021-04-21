@@ -52,7 +52,7 @@ impl Api {
         }
     }
 
-    pub(crate) async fn create_state(&self, state: v1::State) -> ApiResult<v1::State> {
+    pub(crate) async fn create_state(&self, state: v1::CreateStateDto) -> ApiResult<v1::State> {
         self.post("/states", state).await
     }
 

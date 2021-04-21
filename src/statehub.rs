@@ -194,7 +194,7 @@ impl StateHub {
         locations: v1::Locations,
     ) -> anyhow::Result<()> {
         let text = |output| self.show(output);
-        let state = v1::State {
+        let state = v1::CreateStateDto {
             name,
             storage_class: None,
             owner,

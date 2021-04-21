@@ -23,6 +23,16 @@ pub struct State {
     pub condition: Condition,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateStateDto {
+    pub name: StateName,
+    pub storage_class: Option<StorageClass>,
+    pub locations: Locations,
+    pub owner: Option<ClusterName>,
+    pub allowed_clusters: Option<Vec<ClusterName>>,
+}
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum Condition {
