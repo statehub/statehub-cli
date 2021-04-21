@@ -53,7 +53,7 @@ enum Command {
     #[structopt(about = "Create new state", aliases = &["create-st", "cs"])]
     CreateState {
         #[structopt(help = "State name")]
-        state: v1::StateName,
+        name: v1::StateName,
         #[structopt(long, short, help = "Defalt owning cluster")]
         owner: Option<v1::ClusterName>,
         #[structopt(long, short, help = "Location definition")]
@@ -64,7 +64,7 @@ enum Command {
     #[structopt(about = "Show state details", aliases = &["show-s", "ss"])]
     ShowState {
         #[structopt(help = "State name")]
-        state: v1::StateName,
+        name: v1::StateName,
     },
     #[structopt(about = "Register new cluster", aliases = &["list-cluster", "list-cl", "lc"])]
     ListClusters,
@@ -134,15 +134,15 @@ impl Cli {
 
         match self.command {
             Command::CreateState {
-                state,
+                name,
                 owner,
                 location,
             } => {
                 let locations = location.into();
-                statehub.create_state(state, owner, locations).await
+                statehub.create_state(name, owner, locations).await
             }
             Command::ListStates => statehub.list_states().await,
-            Command::ShowState { state } => statehub.show_state(state).await,
+            Command::ShowState { name } => statehub.show_state(name).await,
             Command::ListClusters => statehub.list_clusters().await,
             Command::RegisterCluster { name } => statehub.register_cluster(name).await,
             Command::UnregisterCluster { name } => statehub.unregister_cluster(name).await,
@@ -297,18 +297,18 @@ impl StateHub {
 
     async fn add_location_helper(
         &self,
-        state: &v1::StateName,
+        name: &v1::StateName,
         location: &Location,
     ) -> anyhow::Result<()> {
         match location {
             Location::Aws(region) => self
                 .api
-                .add_aws_location(state.clone(), *region)
+                .add_aws_location(name.clone(), *region)
                 .await
                 .map(|_aws| ()),
             Location::Azure(region) => self
                 .api
-                .add_azure_location(state.clone(), *region)
+                .add_azure_location(name.clone(), *region)
                 .await
                 .map(|_azure| ()),
         }

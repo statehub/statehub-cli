@@ -60,8 +60,8 @@ impl Api {
         self.get("/states").await
     }
 
-    pub(crate) async fn show_state(&self, state: v1::StateName) -> ApiResult<v1::State> {
-        let path = format!("/states/{state}", state = state);
+    pub(crate) async fn show_state(&self, name: v1::StateName) -> ApiResult<v1::State> {
+        let path = format!("/states/{name}", name = name);
         self.get(path).await
     }
 
@@ -77,20 +77,20 @@ impl Api {
 
     pub(crate) async fn add_aws_location(
         &self,
-        state: v1::StateName,
+        name: v1::StateName,
         region: v1::AwsRegion,
     ) -> ApiResult<v1::StateLocationAws> {
-        let path = format!("/states/{state}/locations/aws", state = state);
+        let path = format!("/states/{name}/locations/aws", name = name);
         let body = v1::CreateStateLocationAws { region };
         self.post(path, body).await
     }
 
     pub(crate) async fn add_azure_location(
         &self,
-        state: v1::StateName,
+        name: v1::StateName,
         region: v1::AzureRegion,
     ) -> ApiResult<v1::StateLocationAzure> {
-        let path = format!("/states/{state}/locations/azure", state = state);
+        let path = format!("/states/{name}/locations/azure", name = name);
         let body = v1::CreateStateLocationAzure { region };
         self.post(path, body).await
     }
