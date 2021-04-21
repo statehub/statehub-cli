@@ -3,6 +3,7 @@
 // Use is subject to license terms.
 //
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -11,11 +12,23 @@ mod impls;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct State {
+    pub id: Uuid,
     pub name: StateName,
+    pub created: DateTime<Utc>,
+    pub modified: DateTime<Utc>,
     pub storage_class: Option<StorageClass>,
-    pub owner: Option<ClusterName>,
     pub locations: Locations,
-    pub allowed_clusters: Option<String>,
+    pub owner: Option<ClusterName>,
+    pub allowed_clusters: Option<Vec<ClusterName>>,
+    pub condition: Condition,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum Condition {
+    Green,
+    Yellow,
+    Red,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -27,6 +40,8 @@ pub struct CreateClusterDto {
 pub struct Cluster {
     pub id: Uuid,
     pub name: ClusterName,
+    pub created: DateTime<Utc>,
+    pub modified: DateTime<Utc>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
