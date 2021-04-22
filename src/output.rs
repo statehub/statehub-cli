@@ -11,6 +11,7 @@ use serde_json as json;
 
 use crate::show::Show;
 
+/// `Output` wraps different form of data returned by the API
 #[derive(Debug)]
 pub(crate) enum Output<T> {
     Raw(Bytes),
@@ -78,34 +79,6 @@ pub(crate) trait IntoOutput {
     where
         T: de::DeserializeOwned + fmt::Debug;
 }
-
-// impl IntoOutput for attohttpc::Response {
-//     type Err = attohttpc::Error;
-//     fn into_output<T>(self, raw: bool, json: bool) -> Result<Output<T>, <Self as IntoOutput>::Err>
-//     where
-//         T: de::DeserializeOwned + fmt::Debug,
-//     {
-//         if raw {
-//             self.text().map(Output::Raw)
-//         } else if json {
-//             self.json().map(Output::Value)
-//         } else {
-//             self.json().map(Output::Typed)
-//         }
-//     }
-// }
-
-// impl<T> Into<T> for Output<T>
-// where
-//     T: de::DeserializeOwned,
-// {
-//     fn into(self) -> T {
-//         match self {
-//             Output::Raw(text) => todo!(),
-//             Output::Typed(data) => data,
-//         }
-//     }
-// }
 
 impl<T> ops::Deref for Output<T> {
     type Target = T;

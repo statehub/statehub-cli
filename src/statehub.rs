@@ -182,7 +182,7 @@ impl StateHub {
         raw: bool,
         verbose: bool,
     ) -> Self {
-        let api = api::Api::new(management, token, json, raw, verbose);
+        let api = api::Api::new(management, token, verbose);
 
         Self { api, json, raw }
     }

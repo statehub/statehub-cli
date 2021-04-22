@@ -17,20 +17,12 @@ pub(crate) type ApiResult<T> = Result<Output<T>, anyhow::Error>;
 pub(crate) struct Api {
     base: String,
     token: Option<String>,
-    json: bool,
-    raw: bool,
     verbose: bool,
     user_agent: String,
 }
 
 impl Api {
-    pub(crate) fn new(
-        management: String,
-        token: Option<String>,
-        json: bool,
-        raw: bool,
-        verbose: bool,
-    ) -> Self {
+    pub(crate) fn new(management: String, token: Option<String>, verbose: bool) -> Self {
         let user_agent = format!("{}/{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
         let endpoint = "endpoint";
 
@@ -45,8 +37,6 @@ impl Api {
         Self {
             base,
             token,
-            json,
-            raw,
             verbose,
             user_agent,
         }
