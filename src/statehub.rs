@@ -193,7 +193,6 @@ impl StateHub {
         owner: Option<v1::ClusterName>,
         locations: v1::Locations,
     ) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
         let state = v1::CreateStateDto {
             name,
             storage_class: None,
@@ -201,32 +200,41 @@ impl StateHub {
             locations,
             allowed_clusters: None,
         };
-        self.api.create_state(state).await.map(text).map(print)
+        self.api
+            .create_state(state)
+            .await
+            .handle_output(self.raw, self.json)
     }
 
     pub(crate) async fn delete_state(&self, name: v1::StateName) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-        self.api.delete_state(name).await.map(text).map(print)
+        self.api
+            .delete_state(name)
+            .await
+            .handle_output(self.raw, self.json)
     }
 
     pub(crate) async fn show_state(self, state: v1::StateName) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-        self.api.show_state(state).await.map(text).map(print)
+        self.api
+            .show_state(state)
+            .await
+            .handle_output(self.raw, self.json)
     }
 
     async fn list_states(&self) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-        self.api.get_states().await.map(text).map(print)
+        self.api
+            .get_states()
+            .await
+            .handle_output(self.raw, self.json)
     }
 
     pub(crate) async fn list_clusters(&self) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-        self.api.list_clusters().await.map(text).map(print)
+        self.api
+            .list_clusters()
+            .await
+            .handle_output(self.raw, self.json)
     }
 
     async fn register_cluster(&self, name: v1::ClusterName) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-
         // Find where my nodes are located
         let locations = kubectl::collect_node_locations().await?;
 
@@ -243,12 +251,17 @@ impl StateHub {
             }
         }
 
-        self.api.register_cluster(name).await.map(text).map(print)
+        self.api
+            .register_cluster(name)
+            .await
+            .handle_output(self.raw, self.json)
     }
 
     async fn unregister_cluster(&self, name: v1::ClusterName) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
-        self.api.unregister_cluster(name).await.map(text).map(print)
+        self.api
+            .unregister_cluster(name)
+            .await
+            .handle_output(self.raw, self.json)
     }
 
     async fn add_location(&self, state: v1::StateName, location: Location) -> anyhow::Result<()> {
@@ -256,26 +269,22 @@ impl StateHub {
     }
 
     pub(crate) async fn create_volume(self) -> anyhow::Result<()> {
-        // let text = |output| self.show(output);
-        // Ok(Output::<String>::todo()).map(text).map(print)
+        // Ok(Output::<String>::todo()).handle_output(self.raw, self.json)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) async fn delete_volume(self) -> anyhow::Result<()> {
-        // let text = |output| self.show(output);
-        // Ok(Output::<String>::todo()).map(text).map(print)
+        // Ok(Output::<String>::todo()).handle_output(self.raw, self.json)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) async fn remove_location(self) -> anyhow::Result<()> {
-        // let text = |output| self.show(output);
-        // Ok(Output::<String>::todo()).map(text).map(print)
+        // Ok(Output::<String>::todo()).handle_output(self.raw, self.json)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) async fn set_availability(self) -> anyhow::Result<()> {
-        // let text = |output| self.show(output);
-        // Ok(Output::<String>::todo()).map(text).map(print)
+        // Ok(Output::<String>::todo()).handle_output(self.raw, self.json)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
@@ -284,12 +293,10 @@ impl StateHub {
         state: v1::StateName,
         cluster: v1::ClusterName,
     ) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
         self.api
             .set_owner(state, cluster)
             .await
-            .map(text)
-            .map(print)
+            .handle_output(self.raw, self.json)
     }
 
     pub(crate) async fn unset_owner(
@@ -297,12 +304,10 @@ impl StateHub {
         state: v1::StateName,
         cluster: v1::ClusterName,
     ) -> anyhow::Result<()> {
-        let text = |output| self.show(output);
         self.api
             .unset_owner(state, cluster)
             .await
-            .map(text)
-            .map(print)
+            .handle_output(self.raw, self.json)
     }
 
     async fn add_location_helper(
@@ -344,6 +349,24 @@ impl StateHub {
     }
 }
 
-fn print(text: String) {
-    println!("{}", text);
+trait HandleOutput {
+    fn handle_output(self, raw: bool, json: bool) -> anyhow::Result<()>;
+}
+
+impl<T> HandleOutput for api::ApiResult<T>
+where
+    T: DeserializeOwned + Serialize + Show,
+{
+    fn handle_output(self, raw: bool, json: bool) -> anyhow::Result<()> {
+        let text = |output: Output<T>| {
+            if raw {
+                output.show()
+            } else if json {
+                output.into_value().show()
+            } else {
+                output.into_typed().show()
+            }
+        };
+        self.map(text).map(|text| println!("{}", text))
+    }
 }
