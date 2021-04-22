@@ -129,7 +129,7 @@ impl Api {
         T: fmt::Debug,
     {
         if self.verbose {
-            println!("{:#?}", output);
+            println!("{}", output);
         }
     }
 

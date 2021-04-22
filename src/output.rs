@@ -54,12 +54,6 @@ where
     }
 }
 
-impl<T> From<Bytes> for Output<T> {
-    fn from(bytes: Bytes) -> Self {
-        Self::Raw(bytes)
-    }
-}
-
 impl<T> Show for Output<T>
 where
     T: Show,
@@ -78,6 +72,20 @@ pub(crate) trait IntoOutput {
     fn into_output<T>(self, raw: bool, json: bool) -> Result<Output<T>, Self::Err>
     where
         T: de::DeserializeOwned + fmt::Debug;
+}
+
+impl<T> fmt::Display for Output<T>
+where
+    T: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let text = match self {
+            Self::Raw(bytes) => String::from_utf8_lossy(bytes).into_owned(),
+            Self::Typed(t) => format!("{:?}", t),
+            Self::Value(v) => v.to_string(),
+        };
+        text.fmt(f)
+    }
 }
 
 impl<T> ops::Deref for Output<T> {
