@@ -161,8 +161,8 @@ impl Cli {
             Command::SetAvailability => statehub.set_availability().await,
             Command::SetOwner { state, cluster } => statehub.set_owner(state, cluster).await,
             Command::UnsetOwner { state, cluster } => statehub.unset_owner(state, cluster).await,
-            Command::ListNodes => Kubectl::list_nodes().await,
-            Command::ListPods => Kubectl::list_pods().await,
+            Command::ListNodes => statehub.list_nodes().await,
+            Command::ListPods => statehub.list_pods().await,
             Command::ListRegions { zone } => statehub.list_regions(zone).await,
         }
     }
@@ -346,6 +346,14 @@ impl StateHub {
         kubectl::get_regions(zone)
             .await
             .map(|nodes| println!("{}", nodes.show()))
+    }
+
+    async fn list_pods(&self) -> anyhow::Result<()> {
+        Kubectl::list_pods().await
+    }
+
+    async fn list_nodes(&self) -> anyhow::Result<()> {
+        Kubectl::list_nodes().await
     }
 }
 
