@@ -3,6 +3,8 @@
 // Use is subject to license terms.
 //
 
+use std::fmt;
+
 use serde::{de::DeserializeOwned, Serialize};
 use structopt::StructOpt;
 
@@ -172,6 +174,7 @@ pub(crate) struct StateHub {
     api: api::Api,
     json: bool,
     raw: bool,
+    verbose: bool,
 }
 
 impl StateHub {
@@ -184,7 +187,12 @@ impl StateHub {
     ) -> Self {
         let api = api::Api::new(management, token, verbose);
 
-        Self { api, json, raw }
+        Self {
+            api,
+            json,
+            raw,
+            verbose,
+        }
     }
 
     pub(crate) async fn create_state(
@@ -246,6 +254,10 @@ impl StateHub {
             for location in &locations {
                 if !state.is_available_in(location) {
                     // need to extend the state to this location as well
+                    self.verbosely(format!(
+                        "Adding {:#} location to state '{}'",
+                        location, state.name
+                    ));
                     self.add_location_helper(&state.name, location).await?;
                 }
             }
@@ -354,6 +366,12 @@ impl StateHub {
 
     async fn list_nodes(&self) -> anyhow::Result<()> {
         Kubectl::list_nodes().await
+    }
+
+    fn verbosely(&self, text: impl fmt::Display) {
+        if self.verbose {
+            println!("{}", text)
+        }
     }
 }
 

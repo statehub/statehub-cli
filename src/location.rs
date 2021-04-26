@@ -3,6 +3,7 @@
 // Use is subject to license terms.
 //
 
+use std::fmt;
 use std::str::FromStr;
 
 use thiserror::Error;
@@ -14,6 +15,15 @@ pub(crate) enum Location {
     Aws(v1::AwsRegion),
     Azure(v1::AzureRegion),
     // Gcp(v1::GcpRegion),
+}
+
+impl fmt::Display for Location {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Aws(region) => region.fmt(f),
+            Self::Azure(region) => region.fmt(f),
+        }
+    }
 }
 
 impl FromStr for Location {
