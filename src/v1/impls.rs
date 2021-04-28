@@ -136,3 +136,9 @@ impl str::FromStr for VolumeStatus {
         Ok(status)
     }
 }
+
+trait CloudRegion {
+    const VENDOR: &'static str;
+    const VENDOR_PREFIX: &'static str;
+    fn as_str(&self) -> &'static str;
+}

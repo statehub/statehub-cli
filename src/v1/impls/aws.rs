@@ -8,8 +8,9 @@ use std::str;
 
 use super::*;
 
-impl AwsRegion {
-    const PREFIX: &'static str = "aws:";
+impl CloudRegion for AwsRegion {
+    const VENDOR: &'static str = "AWS";
+    const VENDOR_PREFIX: &'static str = "aws/";
     fn as_str(&self) -> &'static str {
         match self {
             Self::ApNortheast1 => "ap-northeast-1",
@@ -36,7 +37,7 @@ impl str::FromStr for AwsRegion {
     type Err = InvalidRegion;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let text = s.strip_prefix(Self::PREFIX).unwrap_or(s);
+        let text = s.strip_prefix(Self::VENDOR_PREFIX).unwrap_or(s);
         match text {
             "ap-northeast-1" => Ok(Self::ApNortheast1),
             "ap-northeast-2" => Ok(Self::ApNortheast2),
@@ -54,17 +55,18 @@ impl str::FromStr for AwsRegion {
             "us-east-2" => Ok(Self::UsEast2),
             "us-west-1" => Ok(Self::UsWest1),
             "us-west-2" => Ok(Self::UsWest2),
-            other => Err(InvalidRegion::aws(other)),
+            other => Err(InvalidRegion::new(Self::VENDOR, other)),
         }
     }
 }
 
 impl fmt::Display for AwsRegion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let text = self.as_str();
         if f.alternate() {
-            format!("{}{}", Self::PREFIX, self.as_str()).fmt(f)
+            format!("{}{}", Self::VENDOR_PREFIX, text).fmt(f)
         } else {
-            self.as_str().fmt(f)
+            text.fmt(f)
         }
     }
 }

@@ -63,14 +63,8 @@ pub struct InvalidRegion {
 }
 
 impl InvalidRegion {
-    pub(crate) fn aws(region: impl ToString) -> Self {
-        let vendor = "AWS".to_string();
-        let region = region.to_string();
-        Self { vendor, region }
-    }
-
-    pub(crate) fn azure(region: impl ToString) -> Self {
-        let vendor = "Azure".to_string();
+    pub(crate) fn new(vendor: &str, region: &str) -> Self {
+        let vendor = vendor.to_string();
         let region = region.to_string();
         Self { vendor, region }
     }

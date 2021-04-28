@@ -6,14 +6,13 @@
 use std::fmt;
 use std::str;
 
-use thiserror::Error;
-
 use super::*;
 
-impl GcpRegion {
-    pub(crate) const PREFIX: &'static str = "gcp:";
+impl CloudRegion for GcpRegion {
+    const VENDOR: &'static str = "GCP";
+    const VENDOR_PREFIX: &'static str = "gcp/";
 
-    pub(crate) fn as_str(&self) -> &str {
+    fn as_str(&self) -> &'static str {
         match self {
             Self::Antarctica => "antarctica",
         }
@@ -21,40 +20,24 @@ impl GcpRegion {
 }
 
 impl str::FromStr for GcpRegion {
-    type Err = InvalidGcpRegion;
+    type Err = InvalidRegion;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let text = s.strip_prefix(Self::PREFIX).unwrap_or(s);
+        let text = s.strip_prefix(Self::VENDOR_PREFIX).unwrap_or(s);
         match text {
             "antarctica" => Ok(Self::Antarctica),
-            other => Err(other.into()),
+            other => Err(InvalidRegion::new(Self::VENDOR, other)),
         }
     }
 }
 
 impl fmt::Display for GcpRegion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let text = self.as_str();
         if f.alternate() {
-            format!("{}{}", Self::PREFIX, self.as_str()).fmt(f)
+            format!("{}{}", Self::VENDOR_PREFIX, text).fmt(f)
         } else {
-            self.as_str().fmt(f)
+            text.fmt(f)
         }
-    }
-}
-
-#[derive(Debug, Error)]
-#[error(r#"Invalid GCP Region "{0}""#)]
-pub struct InvalidGcpRegion(String);
-
-impl InvalidGcpRegion {
-    pub fn into_inner(self) -> String {
-        self.0
-    }
-}
-
-impl From<&str> for InvalidGcpRegion {
-    fn from(region: &str) -> Self {
-        let region = region.to_string();
-        Self(region)
     }
 }

@@ -8,8 +8,9 @@ use std::str;
 
 use super::*;
 
-impl AzureRegion {
-    const PREFIX: &'static str = "azure:";
+impl CloudRegion for AzureRegion {
+    const VENDOR: &'static str = "Azure";
+    const VENDOR_PREFIX: &'static str = "azure/";
 
     fn as_str(&self) -> &'static str {
         match self {
@@ -31,7 +32,7 @@ impl str::FromStr for AzureRegion {
     type Err = InvalidRegion;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let text = s.strip_prefix(Self::PREFIX).unwrap_or(s);
+        let text = s.strip_prefix(Self::VENDOR_PREFIX).unwrap_or(s);
         match text {
             "centralus" => Ok(Self::CentralUs),
             "eastus" => Ok(Self::EastUs),
@@ -43,17 +44,18 @@ impl str::FromStr for AzureRegion {
             "uksouth" => Ok(Self::UkSouth),
             "westeurope" => Ok(Self::WestEurope),
             "westus2" => Ok(Self::WestUs2),
-            other => Err(InvalidRegion::azure(other)),
+            other => Err(InvalidRegion::new(Self::VENDOR, other)),
         }
     }
 }
 
 impl fmt::Display for AzureRegion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let text = self.as_str();
         if f.alternate() {
-            format!("{}{}", Self::PREFIX, self.as_str()).fmt(f)
+            format!("{}{}", Self::VENDOR_PREFIX, text).fmt(f)
         } else {
-            self.as_str().fmt(f)
+            text.fmt(f)
         }
     }
 }
