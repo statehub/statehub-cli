@@ -54,6 +54,7 @@ pub struct Cluster {
     pub name: ClusterName,
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
+    pub locations: Locations,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
