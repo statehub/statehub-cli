@@ -24,14 +24,13 @@ pub(crate) struct Api {
 impl Api {
     pub(crate) fn new(management: String, token: Option<String>, verbose: bool) -> Self {
         let user_agent = format!("{}/{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
-        let endpoint = "endpoint";
 
         let base = if management.starts_with("http") {
-            format!("{}/{}", management, endpoint)
+            format!("{}/{}", management, v1::VERSION)
         } else if management.starts_with("api.") && management.ends_with(".statehub.io") {
-            format!("https://{}/{}", management, endpoint)
+            format!("https://{}/{}", management, v1::VERSION)
         } else {
-            format!("http://{}:3000/{}", management, endpoint)
+            format!("http://{}:3000/{}", management, v1::VERSION)
         };
 
         Self {

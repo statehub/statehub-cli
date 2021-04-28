@@ -9,6 +9,8 @@ use uuid::Uuid;
 
 mod impls;
 
+pub const VERSION: &str = "__API_VERSION__";
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct State {
