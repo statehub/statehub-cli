@@ -61,10 +61,7 @@ pub(crate) fn volume(volume: v1::Volume) -> String {
     out += &format!("Volume  :{:>60}\n", volume.name);
     out += &format!("Size    :{:>56} GiB\n", volume.size_gi);
     out += &format!("FS Type :{:>60}\n", volume.fs_type);
-    out += &format!(
-        "Owner   :{:>60}\n",
-        volume.owner.as_deref().unwrap_or("None")
-    );
+    out += &format!("Status  :{:>60}\n", volume.status);
 
     out
 }

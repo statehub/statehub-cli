@@ -101,3 +101,38 @@ impl Locations {
         }
     }
 }
+
+impl VolumeStatus {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Ok => "ok",
+            Self::Degraded => "degraded",
+            Self::Error => "error",
+            Self::Syncing => "syncing",
+            Self::Pending => "pending",
+        }
+    }
+}
+
+impl fmt::Display for VolumeStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.as_str().fmt(f)
+    }
+}
+
+impl str::FromStr for VolumeStatus {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let status = match s {
+            "ok" => Self::Ok,
+            "degraded" => Self::Degraded,
+            "error" => Self::Error,
+            "syncing" => Self::Syncing,
+            "pending" => Self::Pending,
+            other => anyhow::bail!("Inknown volume status: {}", other),
+        };
+
+        Ok(status)
+    }
+}

@@ -5,6 +5,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use serde_with::{DeserializeFromStr, SerializeDisplay};
 use uuid::Uuid;
 
 mod impls;
@@ -85,7 +86,8 @@ pub struct StateLocationAzure {
     pub status: StateLocationStatus,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
+#[serde(rename_all = "lowercase")]
 pub enum StateLocationStatus {
     Ok,
     Provisioning,
@@ -111,7 +113,9 @@ pub struct Locations {
     azure: Vec<AzureRegion>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, SerializeDisplay, DeserializeFromStr,
+)]
 pub enum AwsRegion {
     ApNortheast1,
     ApNortheast2,
@@ -131,7 +135,9 @@ pub enum AwsRegion {
     UsWest2,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, SerializeDisplay, DeserializeFromStr,
+)]
 pub enum AzureRegion {
     CentralUs,
     EastUs,
@@ -145,7 +151,9 @@ pub enum AzureRegion {
     WestUs2,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, SerializeDisplay, DeserializeFromStr,
+)]
 pub enum GcpRegion {
     Antarctica,
 }
@@ -153,8 +161,29 @@ pub enum GcpRegion {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Volume {
+    pub id: Uuid,
     pub name: String,
     pub size_gi: u64,
     pub fs_type: String,
-    pub owner: Option<String>,
+    pub active_location: Locations,
+    pub status: VolumeStatus,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateVolumeDto {
+    pub name: String,
+    pub size_gi: u64,
+    pub fs_type: String,
+}
+
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, SerializeDisplay, DeserializeFromStr,
+)]
+pub enum VolumeStatus {
+    Ok,
+    Degraded,
+    Error,
+    Syncing,
+    Pending,
 }
