@@ -345,13 +345,7 @@ impl StateHub {
     where
         T: DeserializeOwned + Serialize + Show,
     {
-        if self.json {
-            output.into_value().show()
-        } else if self.raw {
-            output.show()
-        } else {
-            output.into_typed().show()
-        }
+        output.into_text(self.raw, self.json)
     }
 
     async fn list_regions(&self, zone: bool) -> anyhow::Result<()> {
@@ -384,15 +378,16 @@ where
     T: DeserializeOwned + Serialize + Show,
 {
     fn handle_output(self, raw: bool, json: bool) -> anyhow::Result<()> {
-        let text = |output: Output<T>| {
-            if raw {
-                output.show()
-            } else if json {
-                output.into_value().show()
-            } else {
-                output.into_typed().show()
-            }
-        };
-        self.map(text).map(|text| println!("{}", text))
+        self.and_then(|output| output.handle_output(raw, json))
+    }
+}
+
+impl<T> HandleOutput for Output<T>
+where
+    T: DeserializeOwned + Serialize + Show,
+{
+    fn handle_output(self, raw: bool, json: bool) -> anyhow::Result<()> {
+        println!("{}", self.into_text(raw, json));
+        Ok(())
     }
 }

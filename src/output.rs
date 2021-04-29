@@ -52,6 +52,19 @@ where
             Self::Value(value) => Self::Value(value),
         }
     }
+
+    pub(crate) fn into_text(self, raw: bool, json: bool) -> String
+    where
+        T: Show,
+    {
+        if raw {
+            self.show()
+        } else if json {
+            self.into_value().show()
+        } else {
+            self.into_typed().show()
+        }
+    }
 }
 
 impl<T> Show for Output<T>
