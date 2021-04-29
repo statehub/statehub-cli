@@ -223,14 +223,14 @@ impl StateHub {
 
     pub(crate) async fn show_state(self, state: v1::StateName) -> anyhow::Result<()> {
         self.api
-            .show_state(state)
+            .get_state(state)
             .await
             .handle_output(self.raw, self.json)
     }
 
     async fn list_states(&self) -> anyhow::Result<()> {
         self.api
-            .get_states()
+            .get_all_states()
             .await
             .handle_output(self.raw, self.json)
     }

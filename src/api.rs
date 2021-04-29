@@ -50,13 +50,13 @@ impl Api {
         self.del(path).await
     }
 
-    pub(crate) async fn get_states(&self) -> ApiResult<Vec<v1::State>> {
-        self.get("/states").await
-    }
-
-    pub(crate) async fn show_state(&self, name: v1::StateName) -> ApiResult<v1::State> {
+    pub(crate) async fn get_state(&self, name: v1::StateName) -> ApiResult<v1::State> {
         let path = format!("/states/{name}", name = name);
         self.get(path).await
+    }
+
+    pub(crate) async fn get_all_states(&self) -> ApiResult<Vec<v1::State>> {
+        self.get("/states").await
     }
 
     pub(crate) async fn list_clusters(&self) -> ApiResult<Vec<v1::Cluster>> {
