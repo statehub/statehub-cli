@@ -65,6 +65,14 @@ where
             self.into_typed().show()
         }
     }
+
+    pub(crate) fn into_inner(self) -> json::Result<T> {
+        match self {
+            Self::Raw(raw) => json::from_slice(&raw),
+            Self::Typed(typed) => Ok(typed),
+            Self::Value(value) => json::from_value(value),
+        }
+    }
 }
 
 impl<T> Show for Output<T>
