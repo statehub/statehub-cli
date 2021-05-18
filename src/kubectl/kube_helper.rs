@@ -6,18 +6,14 @@
 use std::collections::HashMap;
 
 use k8s_openapi::api::core::v1::Node;
-use kube::api::Resource;
+use kube::api::ResourceExt;
 
 const K8S_TOPOLOGY_REGION: &str = "topology.kubernetes.io/region";
 const K8S_TOPOLOGY_ZONE: &str = "topology.kubernetes.io/zone";
 
-trait LabelsExt: Resource {
+trait LabelsExt: ResourceExt {
     fn label(&self, label: impl AsRef<str>) -> Option<&str> {
-        self.meta()
-            .labels
-            .as_ref()
-            .and_then(|labels| labels.get(label.as_ref()))
-            .map(String::as_str)
+        self.labels().get(label.as_ref()).map(String::as_str)
     }
 
     fn region(&self) -> Option<&str> {
@@ -29,7 +25,7 @@ trait LabelsExt: Resource {
     }
 }
 
-impl<R> LabelsExt for R where R: Resource {}
+impl<R> LabelsExt for R where R: ResourceExt {}
 
 pub(super) fn group_nodes_by_region(
     nodes: impl IntoIterator<Item = Node>,
