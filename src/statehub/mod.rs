@@ -15,6 +15,8 @@ use crate::v1;
 use crate::Location;
 use crate::Output;
 
+mod helper;
+
 const ABOUT: &str = "statehub CLI tool";
 
 #[derive(Debug, StructOpt)]
@@ -276,7 +278,7 @@ impl StateHub {
     ) -> anyhow::Result<()> {
         if let Some(ref states) = states {
             let locations = kubectl::collect_node_locations().await?;
-            self.adjust_states_to_locations(states, &locations).await?;
+            self.adjust_all_states(states, &locations).await?;
         } else {
             self.verbosely("## Skip adding this cluster to any state");
         }
@@ -345,57 +347,6 @@ impl StateHub {
             .unset_owner(state, cluster)
             .await
             .handle_output(self.raw, self.json)
-    }
-
-    async fn get_states_helper(&self, names: &[v1::StateName]) -> anyhow::Result<Vec<v1::State>> {
-        let mut states = vec![];
-        for name in names {
-            let state = self.api.get_state(name).await?.into_inner()?;
-            states.push(state);
-        }
-        Ok(states)
-    }
-
-    async fn add_location_helper(
-        &self,
-        name: &v1::StateName,
-        location: &Location,
-    ) -> anyhow::Result<()> {
-        match location {
-            Location::Aws(region) => self
-                .api
-                .add_aws_location(name.clone(), *region)
-                .await
-                .map(|_aws| ()),
-            Location::Azure(region) => self
-                .api
-                .add_azure_location(name.clone(), *region)
-                .await
-                .map(|_azure| ()),
-        }
-    }
-
-    async fn adjust_states_to_locations(
-        &self,
-        names: &[v1::StateName],
-        locations: &[Location],
-    ) -> anyhow::Result<()> {
-        let states = self.get_states_helper(names).await?;
-
-        for state in states {
-            for location in locations {
-                if !state.is_available_in(location) {
-                    // need to extend the state to this location as well
-                    self.verbosely(format!(
-                        "Adding {:#} location to state '{}'",
-                        location, state.name
-                    ));
-                    self.add_location_helper(&state.name, location).await?;
-                }
-            }
-        }
-
-        Ok(())
     }
 
     pub(crate) fn show<T>(&self, output: Output<T>) -> String
