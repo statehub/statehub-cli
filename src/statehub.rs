@@ -79,6 +79,21 @@ enum Command {
     RegisterCluster {
         #[structopt(help = "Cluster name")]
         name: v1::ClusterName,
+        #[structopt(
+            help = "List of states to for this cluster to use",
+            long,
+            alias = "state",
+            default_value = "default"
+        )]
+        states: Vec<v1::StateName>,
+        #[structopt(
+            help = "Skip adding this cluster locations to any state",
+            long,
+            conflicts_with = "states"
+        )]
+        no_state: bool,
+        #[structopt(help = "Do not register this cluster as state owner", long)]
+        no_state_owner: bool,
     },
     #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"])]
     UnregisterCluster {
@@ -150,9 +165,20 @@ impl Cli {
             }
             Command::DeleteState { name: state } => statehub.delete_state(state).await,
             Command::ListStates => statehub.list_states().await,
-            Command::ShowState { name } => statehub.show_state(name).await,
+            Command::ShowState { name } => statehub.show_state(&name).await,
             Command::ListClusters => statehub.list_clusters().await,
-            Command::RegisterCluster { name } => statehub.register_cluster(name).await,
+            Command::RegisterCluster {
+                name,
+                states,
+                no_state,
+                no_state_owner,
+            } => {
+                let states = if no_state { None } else { Some(states) };
+                let claim_unowned_states = !no_state_owner;
+                statehub
+                    .register_cluster(name, states, claim_unowned_states)
+                    .await
+            }
             Command::UnregisterCluster { name } => statehub.unregister_cluster(name).await,
             Command::CreateVolume => statehub.create_volume().await,
             Command::DeleteVolume => statehub.delete_volume().await,
@@ -221,7 +247,7 @@ impl StateHub {
             .handle_output(self.raw, self.json)
     }
 
-    pub(crate) async fn show_state(self, state: v1::StateName) -> anyhow::Result<()> {
+    pub(crate) async fn show_state(self, state: &v1::StateName) -> anyhow::Result<()> {
         self.api
             .get_state(state)
             .await
@@ -242,31 +268,30 @@ impl StateHub {
             .handle_output(self.raw, self.json)
     }
 
-    async fn register_cluster(&self, name: v1::ClusterName) -> anyhow::Result<()> {
-        // Find where my nodes are located
-        let locations = kubectl::collect_node_locations().await?;
+    async fn register_cluster(
+        &self,
+        cluster: v1::ClusterName,
+        states: Option<Vec<v1::StateName>>,
+        claim_unowned_states: bool,
+    ) -> anyhow::Result<()> {
+        if let Some(ref states) = states {
+            let locations = kubectl::collect_node_locations().await?;
+            self.adjust_states_to_locations(states, &locations).await?;
+        } else {
+            self.verbosely("## Skip adding this cluster to any state");
+        }
 
-        // Get all the states (user token allows to *see* all of them)
-        let states = self.api.get_states().await?;
+        let output = self.api.register_cluster(&cluster).await?;
 
-        // Verify that all the states are available in all the locations
-        for state in states {
-            for location in &locations {
-                if !state.is_available_in(location) {
-                    // need to extend the state to this location as well
-                    self.verbosely(format!(
-                        "Adding {:#} location to state '{}'",
-                        location, state.name
-                    ));
-                    self.add_location_helper(&state.name, location).await?;
+        if claim_unowned_states {
+            if let Some(states) = states {
+                for state in states {
+                    self.api.set_owner(state, &cluster).await?;
                 }
             }
         }
 
-        self.api
-            .register_cluster(name)
-            .await
-            .handle_output(self.raw, self.json)
+        output.handle_output(self.raw, self.json)
     }
 
     async fn unregister_cluster(&self, name: v1::ClusterName) -> anyhow::Result<()> {
@@ -322,6 +347,15 @@ impl StateHub {
             .handle_output(self.raw, self.json)
     }
 
+    async fn get_states_helper(&self, names: &[v1::StateName]) -> anyhow::Result<Vec<v1::State>> {
+        let mut states = vec![];
+        for name in names {
+            let state = self.api.get_state(name).await?.into_inner()?;
+            states.push(state);
+        }
+        Ok(states)
+    }
+
     async fn add_location_helper(
         &self,
         name: &v1::StateName,
@@ -339,6 +373,29 @@ impl StateHub {
                 .await
                 .map(|_azure| ()),
         }
+    }
+
+    async fn adjust_states_to_locations(
+        &self,
+        names: &[v1::StateName],
+        locations: &[Location],
+    ) -> anyhow::Result<()> {
+        let states = self.get_states_helper(names).await?;
+
+        for state in states {
+            for location in locations {
+                if !state.is_available_in(location) {
+                    // need to extend the state to this location as well
+                    self.verbosely(format!(
+                        "Adding {:#} location to state '{}'",
+                        location, state.name
+                    ));
+                    self.add_location_helper(&state.name, location).await?;
+                }
+            }
+        }
+
+        Ok(())
     }
 
     pub(crate) fn show<T>(&self, output: Output<T>) -> String

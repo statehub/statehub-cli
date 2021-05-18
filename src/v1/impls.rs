@@ -40,6 +40,12 @@ impl str::FromStr for StateName {
     }
 }
 
+impl AsRef<Self> for StateName {
+    fn as_ref(&self) -> &Self {
+        self
+    }
+}
+
 impl State {
     pub(crate) fn is_available_in(&self, location: &Location) -> bool {
         self.locations.contains(location)
@@ -69,6 +75,12 @@ impl str::FromStr for ClusterName {
 
     fn from_str(text: &str) -> Result<Self, Self::Err> {
         Ok(text.to_string().into())
+    }
+}
+
+impl AsRef<Self> for ClusterName {
+    fn as_ref(&self) -> &Self {
+        self
     }
 }
 

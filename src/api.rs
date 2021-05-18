@@ -50,7 +50,7 @@ impl Api {
         self.del(path).await
     }
 
-    pub(crate) async fn get_state(&self, name: v1::StateName) -> ApiResult<v1::State> {
+    pub(crate) async fn get_state(&self, name: &v1::StateName) -> ApiResult<v1::State> {
         let path = format!("/states/{name}", name = name);
         self.get(path).await
     }
@@ -63,7 +63,8 @@ impl Api {
         self.get("/clusters").await
     }
 
-    pub(crate) async fn register_cluster(&self, name: v1::ClusterName) -> ApiResult<v1::Cluster> {
+    pub(crate) async fn register_cluster(&self, name: &v1::ClusterName) -> ApiResult<v1::Cluster> {
+        let name = name.clone();
         let body = v1::CreateClusterDto { name };
         self.post("/clusters", body).await
     }
@@ -95,26 +96,26 @@ impl Api {
 
     pub(crate) async fn set_owner(
         &self,
-        state: v1::StateName,
-        cluster: v1::ClusterName,
+        state: impl AsRef<v1::StateName>,
+        cluster: impl AsRef<v1::ClusterName>,
     ) -> ApiResult<v1::State> {
         let path = format!(
             "/states/{state}/owner/{cluster}",
-            state = state,
-            cluster = cluster,
+            state = state.as_ref(),
+            cluster = cluster.as_ref(),
         );
         self.put(path).await
     }
 
     pub(crate) async fn unset_owner(
         &self,
-        state: v1::StateName,
-        cluster: v1::ClusterName,
+        state: impl AsRef<v1::StateName>,
+        cluster: impl AsRef<v1::ClusterName>,
     ) -> ApiResult<v1::State> {
         let path = format!(
             "/states/{state}/owner/{cluster}",
-            state = state,
-            cluster = cluster,
+            state = state.as_ref(),
+            cluster = cluster.as_ref(),
         );
         self.del(path).await
     }
