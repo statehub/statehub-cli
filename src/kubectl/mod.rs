@@ -12,9 +12,9 @@ use kube::Client;
 
 use crate::Location;
 
-use kube_helper::{group_nodes_by_region, group_nodes_by_zone};
+use helper::{group_nodes_by_region, group_nodes_by_zone};
 
-mod kube_helper;
+mod helper;
 
 const DEFAULT_NS: &str = "default";
 const KUBE_SYSTEM_NS: &str = "kube-system";
