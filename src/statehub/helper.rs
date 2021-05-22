@@ -6,6 +6,16 @@
 use super::*;
 
 impl StateHub {
+    pub(super) async fn install_statehub_helper(
+        &self,
+        cluster: &v1::Cluster,
+    ) -> anyhow::Result<()> {
+        if cluster.install_command.is_empty() {
+            anyhow::bail!("Empty installation command");
+        }
+        Ok(())
+    }
+
     // async fn get_states_helper(&self, names: &[v1::StateName]) -> anyhow::Result<Vec<v1::State>> {
     //     let mut states = vec![];
     //     for name in names {

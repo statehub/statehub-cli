@@ -56,6 +56,7 @@ pub struct Cluster {
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
     pub locations: Locations,
+    pub install_command: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

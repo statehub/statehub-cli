@@ -285,6 +285,8 @@ impl StateHub {
 
         let output = self.api.register_cluster(&cluster).await?;
 
+        self.install_statehub_helper(&output).await?;
+
         if claim_unowned_states {
             if let Some(states) = states {
                 for state in states {
