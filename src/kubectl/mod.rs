@@ -106,3 +106,7 @@ pub(crate) async fn collect_node_locations() -> anyhow::Result<Vec<Location>> {
         .collect::<Result<Vec<Location>, _>>()
         .map_err(anyhow::Error::msg)
 }
+
+pub(crate) fn helm_is_found() -> bool {
+    which::which("helm").is_ok()
+}

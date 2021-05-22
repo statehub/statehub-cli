@@ -276,6 +276,12 @@ impl StateHub {
         states: Option<Vec<v1::StateName>>,
         claim_unowned_states: bool,
     ) -> anyhow::Result<()> {
+        if !kubectl::helm_is_found() {
+            anyhow::bail!(
+                "helm is not detected, please make sure helm is installed and is in the PATH"
+            );
+        }
+
         if let Some(ref states) = states {
             let locations = kubectl::collect_node_locations().await?;
             self.adjust_all_states(states, &locations).await?;
