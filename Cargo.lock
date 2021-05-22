@@ -596,9 +596,9 @@ dependencies = [
 
 [[package]]
 name = "kube"
-version = "0.53.0"
+version = "0.55.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38a92e9c744815d199c09b9a4799efb3efc1f2528a6a3c35fb38115b0d691f17"
+checksum = "43a7370e62dacd8f672231c59001ddf00b090648c81b3cde2600bfbfab7518fe"
 dependencies = [
  "base64",
  "bytes",
@@ -612,8 +612,7 @@ dependencies = [
  "hyper-tls",
  "jsonpath_lib",
  "k8s-openapi",
- "log",
- "once_cell",
+ "kube-core",
  "openssl",
  "pem",
  "pin-project",
@@ -627,6 +626,21 @@ dependencies = [
  "tokio-util",
  "tower",
  "tracing",
+ "url",
+]
+
+[[package]]
+name = "kube-core"
+version = "0.55.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a12871b580beae491ae6adeed43f261d85c3fb2bf97d53ab9cf9c1c9ffb32e5"
+dependencies = [
+ "http",
+ "k8s-openapi",
+ "once_cell",
+ "serde",
+ "serde_json",
+ "thiserror",
  "url",
 ]
 
