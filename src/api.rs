@@ -3,6 +3,7 @@
 // Use is subject to license terms.
 //
 
+use std::convert::TryInto;
 use std::fmt;
 
 use inspector::ResultInspector;
@@ -136,81 +137,71 @@ impl Api {
     async fn del<P, T>(&self, path: P) -> ApiResult<T>
     where
         P: fmt::Display,
-        T: de::DeserializeOwned + fmt::Debug,
+        T: de::DeserializeOwned + ser::Serialize + fmt::Debug,
     {
         let url = self.url(path);
-        let output = self
-            .client()?
+        self.client()?
             .delete(url)
             .optionally_bearer_auth(self.token.as_ref())
             .send()
             .await?
             .bytes()
-            .await
-            .map(Output::from)
-            .inspect(|output| self.inspect(output))?;
-        Ok(output)
+            .await?
+            .try_into()
+            .inspect(|output| self.inspect(output))
     }
 
     async fn get<P, T>(&self, path: P) -> ApiResult<T>
     where
         P: fmt::Display,
-        T: de::DeserializeOwned + fmt::Debug,
+        T: de::DeserializeOwned + ser::Serialize + fmt::Debug,
     {
         let url = self.url(path);
-        let output = self
-            .client()?
+        self.client()?
             .get(url)
             .optionally_bearer_auth(self.token.as_ref())
             .send()
             .await?
             .bytes()
-            .await
-            .map(Output::from)
-            .inspect(|output| self.inspect(output))?;
-
-        Ok(output)
+            .await?
+            .try_into()
+            .inspect(|output| self.inspect(output))
     }
 
     async fn post<P, T, U>(&self, path: P, body: T) -> ApiResult<U>
     where
         P: fmt::Display,
         T: ser::Serialize,
-        U: de::DeserializeOwned + fmt::Debug,
+        U: de::DeserializeOwned + ser::Serialize + fmt::Debug,
     {
         let url = self.url(path);
-        let output = self
-            .client()?
+        self.client()?
             .post(url)
             .optionally_bearer_auth(self.token.as_ref())
             .json(&body)
             .send()
             .await?
             .bytes()
-            .await
-            .map(Output::from)
-            .inspect(|output| self.inspect(output))?;
-
-        Ok(output)
+            .await?
+            .try_into()
+            .inspect(|output| self.inspect(output))
     }
 
     async fn put<P, T>(&self, path: P) -> ApiResult<T>
     where
         P: fmt::Display,
-        T: de::DeserializeOwned + fmt::Debug,
+        T: de::DeserializeOwned + ser::Serialize + fmt::Debug,
     {
         let url = format!("{}{}", self.base, path);
-        let output = self
-            .client()?
+        self.client()?
             .put(url)
             .optionally_bearer_auth(self.token.as_ref())
             .send()
             .await?
             .bytes()
-            .await
-            .map(Output::from)
-            .inspect(|output| self.inspect(output))?;
-        Ok(output)
+            .await?
+            .try_into()
+            .inspect(|output| self.inspect(output))
     }
 
     fn client(&self) -> reqwest::Result<reqwest::Client> {

@@ -73,7 +73,7 @@ impl StateHub {
         name: &v1::StateName,
         locations: &[Location],
     ) -> anyhow::Result<()> {
-        let state = self.api.get_state(name).await?.into_inner()?;
+        let state = self.api.get_state(name).await?;
 
         for location in locations {
             if !state.is_available_in(location) {
