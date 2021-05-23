@@ -32,19 +32,7 @@ pub(crate) struct Cli {
     management: String,
     #[structopt(help = "Authentication token", short, long, env = "SHTOKEN")]
     token: Option<String>,
-    #[structopt(
-        long,
-        global = true,
-        conflicts_with = "json",
-        help = "Show raw JSON output (different from '--json')"
-    )]
-    raw: bool,
-    #[structopt(
-        long,
-        global = true,
-        conflicts_with = "raw",
-        help = "Show results as JSON (different from '--raw')"
-    )]
+    #[structopt(long, global = true, help = "Show results as JSON")]
     json: bool,
     #[structopt(short, long, global = true)]
     verbose: bool,
@@ -156,13 +144,7 @@ impl Cli {
     }
 
     async fn dispatch(self) -> anyhow::Result<()> {
-        let statehub = StateHub::new(
-            self.management,
-            self.token,
-            self.json,
-            self.raw,
-            self.verbose,
-        );
+        let statehub = StateHub::new(self.management, self.token, self.json, self.verbose);
 
         match self.command {
             Command::CreateState {
@@ -211,26 +193,14 @@ impl Cli {
 pub(crate) struct StateHub {
     api: api::Api,
     json: bool,
-    raw: bool,
     verbose: bool,
 }
 
 impl StateHub {
-    fn new(
-        management: String,
-        token: Option<String>,
-        json: bool,
-        raw: bool,
-        verbose: bool,
-    ) -> Self {
+    fn new(management: String, token: Option<String>, json: bool, verbose: bool) -> Self {
         let api = api::Api::new(management, token, verbose);
 
-        Self {
-            api,
-            json,
-            raw,
-            verbose,
-        }
+        Self { api, json, verbose }
     }
 
     pub(crate) async fn create_state(
@@ -246,38 +216,23 @@ impl StateHub {
             locations,
             allowed_clusters: None,
         };
-        self.api
-            .create_state(state)
-            .await
-            .handle_output(self.raw, self.json)
+        self.api.create_state(state).await.handle_output(self.json)
     }
 
     pub(crate) async fn delete_state(&self, name: v1::StateName) -> anyhow::Result<()> {
-        self.api
-            .delete_state(name)
-            .await
-            .handle_output(self.raw, self.json)
+        self.api.delete_state(name).await.handle_output(self.json)
     }
 
     pub(crate) async fn show_state(self, state: &v1::StateName) -> anyhow::Result<()> {
-        self.api
-            .get_state(state)
-            .await
-            .handle_output(self.raw, self.json)
+        self.api.get_state(state).await.handle_output(self.json)
     }
 
     async fn list_states(&self) -> anyhow::Result<()> {
-        self.api
-            .get_all_states()
-            .await
-            .handle_output(self.raw, self.json)
+        self.api.get_all_states().await.handle_output(self.json)
     }
 
     pub(crate) async fn list_clusters(&self) -> anyhow::Result<()> {
-        self.api
-            .list_clusters()
-            .await
-            .handle_output(self.raw, self.json)
+        self.api.list_clusters().await.handle_output(self.json)
     }
 
     async fn register_cluster(
@@ -317,14 +272,14 @@ impl StateHub {
             }
         }
 
-        output.handle_output(self.raw, self.json)
+        output.handle_output(self.json)
     }
 
     async fn unregister_cluster(&self, name: v1::ClusterName) -> anyhow::Result<()> {
         self.api
             .unregister_cluster(name)
             .await
-            .handle_output(self.raw, self.json)
+            .handle_output(self.json)
     }
 
     async fn add_location(&self, state: v1::StateName, location: Location) -> anyhow::Result<()> {
@@ -332,22 +287,22 @@ impl StateHub {
     }
 
     pub(crate) async fn create_volume(self) -> anyhow::Result<()> {
-        // Ok(Output::<String>::todo()).handle_output(self.raw, self.json)
+        // Ok(Output::<String>::todo()).handle_output(self.json)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) async fn delete_volume(self) -> anyhow::Result<()> {
-        // Ok(Output::<String>::todo()).handle_output(self.raw, self.json)
+        // Ok(Output::<String>::todo()).handle_output(self.json)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) async fn remove_location(self) -> anyhow::Result<()> {
-        // Ok(Output::<String>::todo()).handle_output(self.raw, self.json)
+        // Ok(Output::<String>::todo()).handle_output(self.json)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) async fn set_availability(self) -> anyhow::Result<()> {
-        // Ok(Output::<String>::todo()).handle_output(self.raw, self.json)
+        // Ok(Output::<String>::todo()).handle_output(self.json)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
@@ -359,7 +314,7 @@ impl StateHub {
         self.api
             .set_owner(state, cluster)
             .await
-            .handle_output(self.raw, self.json)
+            .handle_output(self.json)
     }
 
     pub(crate) async fn unset_owner(
@@ -370,14 +325,14 @@ impl StateHub {
         self.api
             .unset_owner(state, cluster)
             .await
-            .handle_output(self.raw, self.json)
+            .handle_output(self.json)
     }
 
     pub(crate) fn show<T>(&self, output: Output<T>) -> String
     where
         T: DeserializeOwned + Serialize + Show,
     {
-        output.into_text(self.raw, self.json)
+        output.into_text(self.json)
     }
 
     async fn list_regions(&self, zone: bool) -> anyhow::Result<()> {
@@ -402,15 +357,15 @@ impl StateHub {
 }
 
 trait HandleOutput {
-    fn handle_output(self, raw: bool, json: bool) -> anyhow::Result<()>;
+    fn handle_output(self, json: bool) -> anyhow::Result<()>;
 }
 
 impl<T> HandleOutput for api::ApiResult<T>
 where
     T: DeserializeOwned + Serialize + Show,
 {
-    fn handle_output(self, raw: bool, json: bool) -> anyhow::Result<()> {
-        self.and_then(|output| output.handle_output(raw, json))
+    fn handle_output(self, json: bool) -> anyhow::Result<()> {
+        self.and_then(|output| output.handle_output(json))
     }
 }
 
@@ -418,8 +373,8 @@ impl<T> HandleOutput for Output<T>
 where
     T: DeserializeOwned + Serialize + Show,
 {
-    fn handle_output(self, raw: bool, json: bool) -> anyhow::Result<()> {
-        println!("{}", self.into_text(raw, json));
+    fn handle_output(self, json: bool) -> anyhow::Result<()> {
+        println!("{}", self.into_text(json));
         Ok(())
     }
 }

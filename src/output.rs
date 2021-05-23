@@ -25,7 +25,7 @@ where
         Output(text)
     }
 
-    pub(crate) fn into_text(self, _raw: bool, json: bool) -> String
+    pub(crate) fn into_text(self, json: bool) -> String
     where
         T: Show,
     {
