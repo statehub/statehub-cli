@@ -108,14 +108,20 @@ enum Command {
     CreateVolume,
     #[structopt(about = "Manually delete existing volume")]
     DeleteVolume,
-    #[structopt(about = "Manually make state available in a specified location", aliases = &["add-l", "al"])]
+    #[structopt(
+        about = "Manually make state available in a specified location",
+        aliases = &["add-l", "al"],
+    )]
     AddLocation {
         #[structopt(help = "State name")]
         state: v1::StateName,
         #[structopt(help = "Location definition")]
         location: Location,
     },
-    #[structopt(about = "Manually make state unavailable in a specified location")]
+    #[structopt(
+        about = "Manually make state unavailable in a specified location",
+        aliases = &["remove-l", "rem-l", "rl"],
+    )]
     RemoveLocation,
     #[structopt(about = "Set state availability grade")]
     SetAvailability,
