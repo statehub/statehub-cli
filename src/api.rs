@@ -147,7 +147,7 @@ impl Api {
             .await?
             .bytes()
             .await
-            .map(Output::Raw)
+            .map(Output::from)
             .inspect(|output| self.inspect(output))?;
         Ok(output)
     }
@@ -166,7 +166,7 @@ impl Api {
             .await?
             .bytes()
             .await
-            .map(Output::Raw)
+            .map(Output::from)
             .inspect(|output| self.inspect(output))?;
 
         Ok(output)
@@ -188,7 +188,7 @@ impl Api {
             .await?
             .bytes()
             .await
-            .map(Output::Raw)
+            .map(Output::from)
             .inspect(|output| self.inspect(output))?;
 
         Ok(output)
@@ -208,7 +208,7 @@ impl Api {
             .await?
             .bytes()
             .await
-            .map(Output::Raw)
+            .map(Output::from)
             .inspect(|output| self.inspect(output))?;
         Ok(output)
     }

@@ -88,6 +88,13 @@ where
     }
 }
 
+impl<T> From<Bytes> for Output<T> {
+    fn from(bytes: Bytes) -> Self {
+        log::debug!("received body: {}", String::from_utf8_lossy(&bytes));
+        Self::Raw(bytes)
+    }
+}
+
 pub(crate) trait IntoOutput {
     type Err;
     fn into_output<T>(self, raw: bool, json: bool) -> Result<Output<T>, Self::Err>
