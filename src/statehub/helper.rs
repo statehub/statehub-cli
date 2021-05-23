@@ -11,7 +11,7 @@ use super::*;
 impl StateHub {
     pub(super) fn helm(&self, helm: &v1::Helm) -> Command {
         let mut cmd = Command::new("helm");
-        cmd.arg("insttall")
+        cmd.arg("install")
             .arg("--namespace")
             .arg("statehub")
             .arg("--repo")
