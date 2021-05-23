@@ -96,6 +96,8 @@ enum Command {
         no_state: bool,
         #[structopt(help = "Do not register this cluster as state owner", long)]
         no_state_owner: bool,
+        #[structopt(help = "Skip running 'helm install'", long)]
+        skip_helm: bool,
     },
     #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"])]
     UnregisterCluster {
@@ -174,11 +176,13 @@ impl Cli {
                 states,
                 no_state,
                 no_state_owner,
+                skip_helm,
             } => {
                 let states = if no_state { None } else { Some(states) };
                 let claim_unowned_states = !no_state_owner;
+                let run_helm_install = !skip_helm;
                 statehub
-                    .register_cluster(name, states, claim_unowned_states)
+                    .register_cluster(name, states, run_helm_install, claim_unowned_states)
                     .await
             }
             Command::UnregisterCluster { name } => statehub.unregister_cluster(name).await,
@@ -274,6 +278,7 @@ impl StateHub {
         &self,
         cluster: v1::ClusterName,
         states: Option<Vec<v1::StateName>>,
+        run_helm_install: bool,
         claim_unowned_states: bool,
     ) -> anyhow::Result<()> {
         if !kubectl::helm_is_found() {
@@ -291,7 +296,12 @@ impl StateHub {
 
         let output = self.api.register_cluster(&cluster).await?;
 
-        self.install_statehub_helper(&output).await?;
+        let helm = self.helm(&output.helm);
+        if run_helm_install {
+            self.install_statehub_helper(helm).await?;
+        } else {
+            self.verbosely(format!("Run manually\n\"{}\"", helm.show()))
+        }
 
         if claim_unowned_states {
             if let Some(states) = states {

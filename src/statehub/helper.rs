@@ -3,16 +3,28 @@
 // Use is subject to license terms.
 //
 
+use std::process::Command;
+use tokio::process::Command as AsyncCmd;
+
 use super::*;
 
 impl StateHub {
-    pub(super) async fn install_statehub_helper(
-        &self,
-        cluster: &v1::Cluster,
-    ) -> anyhow::Result<()> {
-        if cluster.install_command.is_empty() {
-            anyhow::bail!("Empty installation command");
-        }
+    pub(super) fn helm(&self, helm: &v1::Helm) -> Command {
+        let mut cmd = Command::new("helm");
+        cmd.arg("insttall")
+            .arg("--namespace")
+            .arg("statehub")
+            .arg("--repo")
+            .arg(&helm.repo)
+            .arg(&helm.chart);
+        cmd
+    }
+
+    pub(super) async fn install_statehub_helper(&self, helm: Command) -> anyhow::Result<()> {
+        let output = AsyncCmd::from(helm).output().await?;
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        self.verbosely(stdout);
+
         Ok(())
     }
 

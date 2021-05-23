@@ -4,6 +4,7 @@
 //
 
 use std::collections::HashMap;
+use std::process::Command;
 
 use itertools::join;
 
@@ -75,5 +76,11 @@ impl Show for HashMap<Option<String>, Vec<String>> {
             out += &format!("{}:    {}\n", region, join(nodes, ", "));
         }
         out
+    }
+}
+
+impl Show for Command {
+    fn show(self) -> String {
+        format!("{:?}", self).replace(r#" "#, " ")
     }
 }

@@ -56,7 +56,13 @@ pub struct Cluster {
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
     pub locations: Locations,
-    pub install_command: String,
+    pub helm: Helm,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Helm {
+    pub repo: String,
+    pub chart: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
