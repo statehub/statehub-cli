@@ -75,7 +75,7 @@ enum Command {
         #[structopt(help = "State name")]
         name: v1::StateName,
     },
-    #[structopt(about = "Register new cluster", aliases = &["list-cluster", "list-cl", "lc"])]
+    #[structopt(about = "List registered clusters", aliases = &["list-cluster", "list-cl", "lc"])]
     ListClusters,
     #[structopt(about = "Register new cluster", aliases = &["register-cl", "rc"])]
     RegisterCluster {
