@@ -257,7 +257,7 @@ impl StateHub {
 
         let output = self.api.register_cluster(&cluster).await?;
 
-        let helm = self.helm(&output.helm);
+        let helm = self.helm(&output);
         if run_helm_install {
             self.install_statehub_helper(helm).await?;
         } else {

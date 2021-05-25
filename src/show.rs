@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 use std::process::Command;
 
-use itertools::join;
+use itertools::{join, Itertools};
 
 use crate::v1;
 
@@ -82,5 +82,11 @@ impl Show for HashMap<Option<String>, Vec<String>> {
 impl Show for Command {
     fn show(self) -> String {
         format!("{:?}", self).replace(r#" "#, " ")
+    }
+}
+
+impl Show for Vec<Command> {
+    fn show(self) -> String {
+        self.into_iter().map(|cmd| cmd.show()).join("\n\n")
     }
 }

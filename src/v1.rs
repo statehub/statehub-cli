@@ -3,6 +3,8 @@
 // Use is subject to license terms.
 //
 
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
@@ -56,13 +58,15 @@ pub struct Cluster {
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
     pub locations: Locations,
-    pub helm: Helm,
+    pub helm: Vec<Helm>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Helm {
     pub repo: String,
     pub chart: String,
+    pub version: String,
+    pub paramarers: HashMap<String, String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

@@ -9,21 +9,39 @@ use tokio::process::Command as AsyncCmd;
 use super::*;
 
 impl StateHub {
-    pub(super) fn helm(&self, helm: &v1::Helm) -> Command {
-        let mut cmd = Command::new("helm");
-        cmd.arg("install")
-            .arg("--namespace")
-            .arg("statehub")
-            .arg("--repo")
-            .arg(&helm.repo)
-            .arg(&helm.chart);
-        cmd
+    pub(super) fn helm(&self, cluster: &v1::Cluster) -> Vec<Command> {
+        cluster
+            .helm
+            .iter()
+            .map(|helm| {
+                let mut cmd = Command::new("helm");
+                cmd.arg("install")
+                    .arg("--namespace")
+                    .arg("statehub")
+                    .arg("--repo")
+                    .arg(&helm.repo)
+                    .arg("--version")
+                    .arg(&helm.version)
+                    .arg(&helm.chart);
+                for (param, value) in &helm.paramarers {
+                    cmd.arg("--set").arg(format!("{}={}", param, value));
+                }
+                cmd.arg("--set")
+                    .arg(format!("cluster.name={}", cluster.name));
+                cmd
+            })
+            .collect()
     }
 
-    pub(super) async fn install_statehub_helper(&self, helm: Command) -> anyhow::Result<()> {
-        let output = AsyncCmd::from(helm).output().await?;
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        self.verbosely(stdout);
+    pub(super) async fn install_statehub_helper(
+        &self,
+        commands: Vec<Command>,
+    ) -> anyhow::Result<()> {
+        for cmd in commands {
+            let output = AsyncCmd::from(cmd).output().await?;
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            self.verbosely(stdout);
+        }
 
         Ok(())
     }
