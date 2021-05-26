@@ -69,6 +69,7 @@ enum Command {
     RegisterCluster {
         #[structopt(help = "Cluster name")]
         name: v1::ClusterName,
+
         #[structopt(
             help = "List of states to for this cluster to use",
             long,
@@ -76,14 +77,31 @@ enum Command {
             default_value = "default"
         )]
         states: Vec<v1::StateName>,
+
         #[structopt(
             help = "Skip adding this cluster locations to any state",
             long,
             conflicts_with = "states"
         )]
         no_state: bool,
+
+        #[structopt(
+            help = "Skip setting up default storage class",
+            long,
+            conflicts_with = "default_storage_class"
+        )]
+        no_default_storage_class: bool,
+
+        #[structopt(
+            help = "The name of the state to configure as default storage class",
+            long,
+            conflicts_with_all = &["no_state", "no_default_storage_class"]
+        )]
+        default_storage_class: Option<String>,
+
         #[structopt(help = "Do not register this cluster as state owner", long)]
         no_state_owner: bool,
+
         #[structopt(help = "Skip running 'helm install'", long)]
         skip_helm: bool,
     },
@@ -163,14 +181,34 @@ impl Cli {
                 name,
                 states,
                 no_state,
+                no_default_storage_class,
+                default_storage_class,
                 no_state_owner,
                 skip_helm,
             } => {
+                let no_default_storage_class = if no_state {
+                    true
+                } else {
+                    no_default_storage_class
+                };
+                let default_storage_class = if no_default_storage_class {
+                    None
+                } else if default_storage_class.is_none() {
+                    states.first().map(|state| state.to_string())
+                } else {
+                    default_storage_class
+                };
                 let states = if no_state { None } else { Some(states) };
                 let claim_unowned_states = !no_state_owner;
                 let run_helm_install = !skip_helm;
                 statehub
-                    .register_cluster(name, states, run_helm_install, claim_unowned_states)
+                    .register_cluster(
+                        name,
+                        states,
+                        default_storage_class,
+                        run_helm_install,
+                        claim_unowned_states,
+                    )
                     .await
             }
             Command::UnregisterCluster { name } => statehub.unregister_cluster(name).await,
@@ -239,6 +277,7 @@ impl StateHub {
         &self,
         cluster: v1::ClusterName,
         states: Option<Vec<v1::StateName>>,
+        default_storage_class: Option<String>,
         run_helm_install: bool,
         claim_unowned_states: bool,
     ) -> anyhow::Result<()> {
@@ -257,7 +296,7 @@ impl StateHub {
 
         let output = self.api.register_cluster(&cluster).await?;
 
-        let helm = self.helm(&output);
+        let helm = self.helm(&output, default_storage_class);
         if run_helm_install {
             self.install_statehub_helper(helm).await?;
         } else {

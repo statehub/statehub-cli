@@ -9,7 +9,11 @@ use tokio::process::Command as AsyncCmd;
 use super::*;
 
 impl StateHub {
-    pub(super) fn helm(&self, cluster: &v1::Cluster) -> Vec<Command> {
+    pub(super) fn helm(
+        &self,
+        cluster: &v1::Cluster,
+        default_storage_class: Option<String>,
+    ) -> Vec<Command> {
         cluster
             .helm
             .iter()
@@ -25,6 +29,12 @@ impl StateHub {
                     .arg(&helm.chart);
                 for (param, value) in &helm.paramarers {
                     cmd.arg("--set").arg(format!("{}={}", param, value));
+                }
+                if let Some(ref default_storage_class) = default_storage_class {
+                    cmd.arg("--set").arg(format!(
+                        "cluster.default_storage_class={}",
+                        default_storage_class
+                    ));
                 }
                 cmd.arg("--set")
                     .arg(format!("cluster.name={}", cluster.name));
