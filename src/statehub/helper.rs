@@ -9,53 +9,6 @@ use tokio::process::Command as AsyncCmd;
 use super::*;
 
 impl StateHub {
-    pub(super) fn helm(
-        &self,
-        cluster: &v1::Cluster,
-        default_storage_class: Option<String>,
-    ) -> Vec<Command> {
-        cluster
-            .helm
-            .iter()
-            .map(|helm| {
-                let mut cmd = Command::new("helm");
-                cmd.arg("install")
-                    .arg("--namespace")
-                    .arg("statehub")
-                    .arg("--repo")
-                    .arg(&helm.repo)
-                    .arg("--version")
-                    .arg(&helm.version)
-                    .arg(&helm.chart);
-                for (param, value) in &helm.paramarers {
-                    cmd.arg("--set").arg(format!("{}={}", param, value));
-                }
-                if let Some(ref default_storage_class) = default_storage_class {
-                    cmd.arg("--set").arg(format!(
-                        "cluster.default_storage_class={}",
-                        default_storage_class
-                    ));
-                }
-                cmd.arg("--set")
-                    .arg(format!("cluster.name={}", cluster.name));
-                cmd
-            })
-            .collect()
-    }
-
-    pub(super) async fn install_statehub_helper(
-        &self,
-        commands: Vec<Command>,
-    ) -> anyhow::Result<()> {
-        for cmd in commands {
-            let output = AsyncCmd::from(cmd).output().await?;
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            self.verbosely(stdout);
-        }
-
-        Ok(())
-    }
-
     // async fn get_states_helper(&self, names: &[v1::StateName]) -> anyhow::Result<Vec<v1::State>> {
     //     let mut states = vec![];
     //     for name in names {
@@ -114,6 +67,65 @@ impl StateHub {
             }
         }
 
+        Ok(())
+    }
+}
+
+impl HelmInstall {
+    fn command(&self, cluster: &v1::Cluster) -> Vec<Command> {
+        let (namespace, default_storage_class) = match self {
+            HelmInstall::Skip {
+                namespace,
+                default_storage_class,
+            } => (namespace, default_storage_class),
+            HelmInstall::Do {
+                namespace,
+                default_storage_class,
+            } => (namespace, default_storage_class),
+        };
+        cluster
+            .helm
+            .iter()
+            .map(|helm| {
+                let mut cmd = Command::new("helm");
+                cmd.arg("install")
+                    .arg("--namespace")
+                    .arg(namespace)
+                    .arg("--repo")
+                    .arg(&helm.repo)
+                    .arg("--version")
+                    .arg(&helm.version)
+                    .arg(&helm.chart);
+                for (param, value) in &helm.paramarers {
+                    cmd.arg("--set").arg(format!("{}={}", param, value));
+                }
+                if let Some(default_storage_class) = default_storage_class {
+                    cmd.arg("--set").arg(format!(
+                        "cluster.default_storage_class={}",
+                        default_storage_class
+                    ));
+                }
+                cmd.arg("--set")
+                    .arg(format!("cluster.name={}", cluster.name));
+                cmd
+            })
+            .collect()
+    }
+
+    pub(super) async fn execute(&self, cluster: &v1::Cluster, verbose: bool) -> anyhow::Result<()> {
+        let commands = self.command(cluster);
+        match self {
+            HelmInstall::Skip { .. } => println!("Manually run\n{}", commands.show()),
+            HelmInstall::Do { .. } => {
+                for cmd in commands {
+                    let output = AsyncCmd::from(cmd).output().await?;
+                    let stdout = String::from_utf8_lossy(&output.stdout);
+                    if verbose {
+                        println!("{}", stdout);
+                    }
+                }
+            }
+        };
         Ok(())
     }
 }

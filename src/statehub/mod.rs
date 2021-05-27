@@ -102,6 +102,13 @@ enum Command {
         #[structopt(help = "Do not register this cluster as state owner", long)]
         no_state_owner: bool,
 
+        #[structopt(
+            help = "Namespace to install statehub components",
+            long,
+            default_value = "statehub"
+        )]
+        namespace: String,
+
         #[structopt(help = "Skip running 'helm install'", long)]
         skip_helm: bool,
     },
@@ -184,6 +191,7 @@ impl Cli {
                 no_default_storage_class,
                 default_storage_class,
                 no_state_owner,
+                namespace,
                 skip_helm,
             } => {
                 let no_default_storage_class = if no_state {
@@ -200,15 +208,9 @@ impl Cli {
                 };
                 let states = if no_state { None } else { Some(states) };
                 let claim_unowned_states = !no_state_owner;
-                let run_helm_install = !skip_helm;
+                let helm = HelmInstall::new(namespace, default_storage_class, skip_helm);
                 statehub
-                    .register_cluster(
-                        name,
-                        states,
-                        default_storage_class,
-                        run_helm_install,
-                        claim_unowned_states,
-                    )
+                    .register_cluster(name, states, helm, claim_unowned_states)
                     .await
             }
             Command::UnregisterCluster { name } => statehub.unregister_cluster(name).await,
@@ -277,8 +279,7 @@ impl StateHub {
         &self,
         cluster: v1::ClusterName,
         states: Option<Vec<v1::StateName>>,
-        default_storage_class: Option<String>,
-        run_helm_install: bool,
+        helm: HelmInstall,
         claim_unowned_states: bool,
     ) -> anyhow::Result<()> {
         if !kubectl::helm_is_found() {
@@ -296,12 +297,7 @@ impl StateHub {
 
         let output = self.api.register_cluster(&cluster).await?;
 
-        let helm = self.helm(&output, default_storage_class);
-        if run_helm_install {
-            self.install_statehub_helper(helm).await?;
-        } else {
-            self.verbosely(format!("Run manually\n\"{}\"", helm.show()))
-        }
+        helm.execute(&output, self.verbose).await?;
 
         if claim_unowned_states {
             if let Some(states) = states {
@@ -415,5 +411,33 @@ where
     fn handle_output(self, json: bool) -> anyhow::Result<()> {
         println!("{}", self.into_text(json));
         Ok(())
+    }
+}
+
+#[derive(Debug)]
+enum HelmInstall {
+    Skip {
+        namespace: String,
+        default_storage_class: Option<String>,
+    },
+    Do {
+        namespace: String,
+        default_storage_class: Option<String>,
+    },
+}
+
+impl HelmInstall {
+    fn new(namespace: String, default_storage_class: Option<String>, skip_helm: bool) -> Self {
+        if skip_helm {
+            Self::Skip {
+                namespace,
+                default_storage_class,
+            }
+        } else {
+            Self::Do {
+                namespace,
+                default_storage_class,
+            }
+        }
     }
 }
