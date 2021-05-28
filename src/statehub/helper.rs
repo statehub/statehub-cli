@@ -78,7 +78,7 @@ impl StateHub {
         let token = self.api.issue_cluster_token(&cluster.name).await?;
         self.verbosely(format!("Issued token {} for {}", token.token, cluster));
         let namespace = helm.namespace();
-        kubectl::store_cluster_token(namespace, &token.token).await?;
+        k8s::store_cluster_token(namespace, &token.token).await?;
         Ok(())
     }
 }

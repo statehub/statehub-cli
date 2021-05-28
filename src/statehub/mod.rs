@@ -9,7 +9,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use structopt::{clap, StructOpt};
 
 use crate::api;
-use crate::kubectl::{self, Kubectl};
+use crate::k8s::{self, Kubectl};
 use crate::show::Show;
 use crate::v1;
 use crate::Location;
@@ -299,14 +299,14 @@ impl StateHub {
         helm: HelmInstall,
         claim_unowned_states: bool,
     ) -> anyhow::Result<()> {
-        if !kubectl::helm_is_found() {
+        if !k8s::helm_is_found() {
             anyhow::bail!(
                 "helm is not detected, please make sure helm is installed and is in the PATH"
             );
         }
 
         if let Some(ref states) = states {
-            let locations = kubectl::collect_node_locations().await?;
+            let locations = k8s::collect_node_locations().await?;
             self.adjust_all_states(states, &locations).await?;
         } else {
             self.verbosely("## Skip adding this cluster to any state");
@@ -390,7 +390,7 @@ impl StateHub {
     }
 
     async fn list_regions(&self, zone: bool) -> anyhow::Result<()> {
-        kubectl::get_regions(zone)
+        k8s::get_regions(zone)
             .await
             .map(|nodes| println!("{}", nodes.show()))
     }

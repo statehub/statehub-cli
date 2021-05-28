@@ -21,7 +21,7 @@ use statehub::Cli;
 // statehub API implementation
 mod api;
 // K8s interface and helpers
-mod kubectl;
+mod k8s;
 // Location definitions
 mod location;
 // `Output` wrapper
