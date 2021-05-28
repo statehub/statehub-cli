@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 use k8s_openapi::api::core::v1::{Node, Pod};
-use kube::api::{Api, ListParams};
+use kube::api::{self, Api};
 // use kube::api::{Api, ListParams, PostParams, Resource, WatchEvent};
 use kube::Client;
 
@@ -60,14 +60,18 @@ impl Kubectl {
 
     async fn all_nodes(&self) -> anyhow::Result<impl IntoIterator<Item = Node>> {
         let nodes = self.nodes();
-        let lp = ListParams::default();
+        let lp = self.list_params();
         Ok(nodes.list(&lp).await?)
     }
 
     async fn all_pods(&self) -> anyhow::Result<impl IntoIterator<Item = Pod>> {
         let pods = self.pods();
-        let lp = ListParams::default();
+        let lp = self.list_params();
         Ok(pods.list(&lp).await?)
+    }
+
+    fn list_params(&self) -> api::ListParams {
+        api::ListParams::default()
     }
 
     fn nodes(&self) -> Api<Node> {
