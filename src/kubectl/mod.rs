@@ -5,10 +5,11 @@
 
 use std::collections::HashMap;
 
-use k8s_openapi::api::core::v1::{Node, Pod};
+use k8s_openapi::api::core::v1::{Namespace, Node, Pod};
 use kube::api::{self, Api};
 // use kube::api::{Api, ListParams, PostParams, Resource, WatchEvent};
 use kube::Client;
+use serde_json as json;
 
 use crate::Location;
 
@@ -58,6 +59,29 @@ impl Kubectl {
         Ok(())
     }
 
+    pub(crate) async fn create_namespace(namespace: String) -> anyhow::Result<Namespace> {
+        Self::default()
+            .await?
+            .create_namespace_impl(namespace)
+            .await
+    }
+
+    pub(crate) async fn list_namespaces() -> anyhow::Result<()> {
+        Self::kube_system()
+            .await?
+            .all_namespaces()
+            .await?
+            .into_iter()
+            .for_each(|namespace| println!("{:#?}", namespace));
+        Ok(())
+    }
+
+    async fn all_namespaces(&self) -> anyhow::Result<impl IntoIterator<Item = Namespace>> {
+        let namespaces = self.namespaces();
+        let lp = self.list_params();
+        Ok(namespaces.list(&lp).await?)
+    }
+
     async fn all_nodes(&self) -> anyhow::Result<impl IntoIterator<Item = Node>> {
         let nodes = self.nodes();
         let lp = self.list_params();
@@ -70,8 +94,30 @@ impl Kubectl {
         Ok(pods.list(&lp).await?)
     }
 
+    async fn create_namespace_impl(&self, namespace: String) -> anyhow::Result<Namespace> {
+        let namespaces = self.namespaces();
+        let namespace = json::from_value(json::json!({
+            "apiVerion": "v1",
+            "kind": "Namespace",
+            "metadata": {
+                "name": namespace,
+            }
+        }))?;
+        let pp = self.post_params();
+        let namespace = namespaces.create(&pp, &namespace).await?;
+        Ok(namespace)
+    }
+
     fn list_params(&self) -> api::ListParams {
         api::ListParams::default()
+    }
+
+    fn post_params(&self) -> api::PostParams {
+        api::PostParams::default()
+    }
+
+    fn namespaces(&self) -> Api<Namespace> {
+        Api::all(self.client.clone())
     }
 
     fn nodes(&self) -> Api<Node> {
@@ -111,7 +157,7 @@ pub(crate) async fn collect_node_locations() -> anyhow::Result<Vec<Location>> {
         .map_err(anyhow::Error::msg)
 }
 
-pub(crate) async fn store_cluster_token(namespace: &str, token: &str) -> anyhow::Result<()> {
+pub(crate) async fn store_cluster_token(_namespace: &str, _token: &str) -> anyhow::Result<()> {
     Ok(())
 }
 

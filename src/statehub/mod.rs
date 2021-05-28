@@ -6,7 +6,7 @@
 use std::fmt;
 
 use serde::{de::DeserializeOwned, Serialize};
-use structopt::StructOpt;
+use structopt::{clap, StructOpt};
 
 use crate::api;
 use crate::kubectl::{self, Kubectl};
@@ -152,9 +152,24 @@ enum Command {
         #[structopt(help = "Cluster name")]
         cluster: v1::ClusterName,
     },
-    #[structopt(about = "List K8s nodes")]
+    #[structopt(
+        about = "Create new namespace",
+        alias = "c-ns",
+        setting(clap::AppSettings::Hidden)
+    )]
+    CreateNamespace {
+        #[structopt(help = "Namespace name")]
+        namespace: String,
+    },
+    #[structopt(
+        about = "List K8s namespaces",
+        alias = "list-ns",
+        setting(clap::AppSettings::Hidden)
+    )]
+    ListNamespaces,
+    #[structopt(about = "List K8s nodes", setting(clap::AppSettings::Hidden))]
     ListNodes,
-    #[structopt(about = "List K8s pods")]
+    #[structopt(about = "List K8s pods", setting(clap::AppSettings::Hidden))]
     ListPods,
     #[structopt(about = "List K8s node regions")]
     ListRegions {
@@ -223,6 +238,8 @@ impl Cli {
             Command::SetAvailability => statehub.set_availability().await,
             Command::SetOwner { state, cluster } => statehub.set_owner(state, cluster).await,
             Command::UnsetOwner { state, cluster } => statehub.unset_owner(state, cluster).await,
+            Command::CreateNamespace { namespace } => statehub.create_namespace(namespace).await,
+            Command::ListNamespaces => statehub.list_namespaces().await,
             Command::ListNodes => statehub.list_nodes().await,
             Command::ListPods => statehub.list_pods().await,
             Command::ListRegions { zone } => statehub.list_regions(zone).await,
@@ -378,12 +395,22 @@ impl StateHub {
             .map(|nodes| println!("{}", nodes.show()))
     }
 
-    async fn list_pods(&self) -> anyhow::Result<()> {
-        Kubectl::list_pods().await
+    async fn create_namespace(&self, namespace: String) -> anyhow::Result<()> {
+        Kubectl::create_namespace(namespace)
+            .await
+            .map(|namespace| println!("{:#?}", namespace))
+    }
+
+    async fn list_namespaces(&self) -> anyhow::Result<()> {
+        Kubectl::list_namespaces().await
     }
 
     async fn list_nodes(&self) -> anyhow::Result<()> {
         Kubectl::list_nodes().await
+    }
+
+    async fn list_pods(&self) -> anyhow::Result<()> {
+        Kubectl::list_pods().await
     }
 
     fn verbosely(&self, text: impl fmt::Display) {
