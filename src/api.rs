@@ -121,6 +121,14 @@ impl Api {
         self.del(path).await
     }
 
+    pub(crate) async fn issue_cluster_token(
+        &self,
+        cluster: impl AsRef<v1::ClusterName>,
+    ) -> ApiResult<v1::ClusterToken> {
+        let path = format!("/clusters/{}/token", cluster.as_ref());
+        self.post(path, "").await
+    }
+
     fn url(&self, path: impl fmt::Display) -> String {
         format!("{}{}", self.base, path)
     }

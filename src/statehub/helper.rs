@@ -69,6 +69,18 @@ impl StateHub {
 
         Ok(())
     }
+
+    pub(super) async fn setup_cluster_token_helper(
+        &self,
+        cluster: &v1::Cluster,
+        helm: &HelmInstall,
+    ) -> anyhow::Result<()> {
+        let token = self.api.issue_cluster_token(&cluster.name).await?;
+        self.verbosely(format!("Issued token {} for {}", token.token, cluster));
+        let namespace = helm.namespace();
+        kubectl::store_cluster_token(namespace, &token.token).await?;
+        Ok(())
+    }
 }
 
 impl HelmInstall {

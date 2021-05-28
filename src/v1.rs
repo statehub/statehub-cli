@@ -62,6 +62,11 @@ pub struct Cluster {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ClusterToken {
+    pub token: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Helm {
     pub repo: String,
     pub chart: String,

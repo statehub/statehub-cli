@@ -297,6 +297,8 @@ impl StateHub {
 
         let output = self.api.register_cluster(&cluster).await?;
 
+        self.setup_cluster_token_helper(&output, &helm).await?;
+
         helm.execute(&output, self.verbose).await?;
 
         if claim_unowned_states {
@@ -438,6 +440,13 @@ impl HelmInstall {
                 namespace,
                 default_storage_class,
             }
+        }
+    }
+
+    fn namespace(&self) -> &str {
+        match self {
+            HelmInstall::Skip { namespace, .. } => namespace,
+            HelmInstall::Do { namespace, .. } => namespace,
         }
     }
 }

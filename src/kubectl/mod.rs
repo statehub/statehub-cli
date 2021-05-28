@@ -107,6 +107,10 @@ pub(crate) async fn collect_node_locations() -> anyhow::Result<Vec<Location>> {
         .map_err(anyhow::Error::msg)
 }
 
+pub(crate) async fn store_cluster_token(namespace: &str, token: &str) -> anyhow::Result<()> {
+    Ok(())
+}
+
 pub(crate) fn helm_is_found() -> bool {
     which::which("helm").is_ok()
 }
