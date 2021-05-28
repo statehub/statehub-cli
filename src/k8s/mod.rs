@@ -13,8 +13,10 @@ use serde_json as json;
 
 use crate::Location;
 
+pub(crate) use helm::Helm;
 use helper::{group_nodes_by_region, group_nodes_by_zone};
 
+mod helm;
 mod helper;
 
 const DEFAULT_NS: &str = "default";
@@ -59,13 +61,6 @@ impl Kubectl {
         Ok(())
     }
 
-    pub(crate) async fn create_namespace(namespace: String) -> anyhow::Result<Namespace> {
-        Self::default()
-            .await?
-            .create_namespace_impl(namespace)
-            .await
-    }
-
     pub(crate) async fn list_namespaces() -> anyhow::Result<()> {
         Self::kube_system()
             .await?
@@ -94,7 +89,7 @@ impl Kubectl {
         Ok(pods.list(&lp).await?)
     }
 
-    async fn create_namespace_impl(&self, namespace: String) -> anyhow::Result<Namespace> {
+    async fn create_namespace(&self, namespace: String) -> anyhow::Result<Namespace> {
         let namespaces = self.namespaces();
         let namespace = json::from_value(json::json!({
             "apiVerion": "v1",
@@ -155,6 +150,13 @@ pub(crate) async fn collect_node_locations() -> anyhow::Result<Vec<Location>> {
         .map(|region| region.parse())
         .collect::<Result<Vec<Location>, _>>()
         .map_err(anyhow::Error::msg)
+}
+
+pub(crate) async fn create_namespace(namespace: String) -> anyhow::Result<Namespace> {
+    Kubectl::kube_system()
+        .await?
+        .create_namespace(namespace)
+        .await
 }
 
 pub(crate) async fn store_cluster_token(_namespace: &str, _token: &str) -> anyhow::Result<()> {

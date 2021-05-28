@@ -223,7 +223,7 @@ impl Cli {
                 };
                 let states = if no_state { None } else { Some(states) };
                 let claim_unowned_states = !no_state_owner;
-                let helm = HelmInstall::new(namespace, default_storage_class, skip_helm);
+                let helm = k8s::Helm::new(namespace, default_storage_class, skip_helm);
                 statehub
                     .register_cluster(name, states, helm, claim_unowned_states)
                     .await
@@ -296,7 +296,7 @@ impl StateHub {
         &self,
         cluster: v1::ClusterName,
         states: Option<Vec<v1::StateName>>,
-        helm: HelmInstall,
+        helm: k8s::Helm,
         claim_unowned_states: bool,
     ) -> anyhow::Result<()> {
         if !k8s::helm_is_found() {
@@ -396,7 +396,7 @@ impl StateHub {
     }
 
     async fn create_namespace(&self, namespace: String) -> anyhow::Result<()> {
-        Kubectl::create_namespace(namespace)
+        k8s::create_namespace(namespace)
             .await
             .map(|namespace| println!("{:#?}", namespace))
     }
@@ -440,40 +440,5 @@ where
     fn handle_output(self, json: bool) -> anyhow::Result<()> {
         println!("{}", self.into_text(json));
         Ok(())
-    }
-}
-
-#[derive(Debug)]
-enum HelmInstall {
-    Skip {
-        namespace: String,
-        default_storage_class: Option<String>,
-    },
-    Do {
-        namespace: String,
-        default_storage_class: Option<String>,
-    },
-}
-
-impl HelmInstall {
-    fn new(namespace: String, default_storage_class: Option<String>, skip_helm: bool) -> Self {
-        if skip_helm {
-            Self::Skip {
-                namespace,
-                default_storage_class,
-            }
-        } else {
-            Self::Do {
-                namespace,
-                default_storage_class,
-            }
-        }
-    }
-
-    fn namespace(&self) -> &str {
-        match self {
-            HelmInstall::Skip { namespace, .. } => namespace,
-            HelmInstall::Do { namespace, .. } => namespace,
-        }
     }
 }
