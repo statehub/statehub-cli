@@ -6,7 +6,8 @@
 use std::fmt;
 
 use serde::{de::DeserializeOwned, Serialize};
-use structopt::{clap, StructOpt};
+use structopt::StructOpt;
+// use structopt::clap;
 
 use crate::api;
 use crate::k8s::{self, Kubectl};
@@ -155,7 +156,7 @@ enum Command {
     #[structopt(
         about = "Create new namespace",
         alias = "c-ns",
-        setting(clap::AppSettings::Hidden)
+        // setting(clap::AppSettings::Hidden)
     )]
     CreateNamespace {
         #[structopt(help = "Namespace name")]
@@ -164,12 +165,18 @@ enum Command {
     #[structopt(
         about = "List K8s namespaces",
         alias = "list-ns",
-        setting(clap::AppSettings::Hidden)
+        // setting(clap::AppSettings::Hidden)
     )]
     ListNamespaces,
-    #[structopt(about = "List K8s nodes", setting(clap::AppSettings::Hidden))]
+    #[structopt(
+        about = "List K8s nodes",
+        // setting(clap::AppSettings::Hidden)
+    )]
     ListNodes,
-    #[structopt(about = "List K8s pods", setting(clap::AppSettings::Hidden))]
+    #[structopt(
+        about = "List K8s pods",
+        // setting(clap::AppSettings::Hidden)
+    )]
     ListPods,
     #[structopt(about = "List K8s node regions")]
     ListRegions {
