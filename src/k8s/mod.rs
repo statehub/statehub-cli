@@ -18,6 +18,7 @@ use helper::{group_nodes_by_region, group_nodes_by_zone};
 
 mod helm;
 mod helper;
+mod show;
 
 const DEFAULT_NS: &str = "default";
 const KUBE_SYSTEM_NS: &str = "kube-system";
@@ -39,26 +40,6 @@ impl Kubectl {
 
     pub(crate) async fn kube_system() -> anyhow::Result<Self> {
         Self::with_namespace(KUBE_SYSTEM_NS).await
-    }
-
-    pub(crate) async fn list_nodes() -> anyhow::Result<()> {
-        Self::default()
-            .await?
-            .all_nodes()
-            .await?
-            .into_iter()
-            .for_each(|node| println!("{:#?}", node));
-        Ok(())
-    }
-
-    pub(crate) async fn list_pods() -> anyhow::Result<()> {
-        Self::kube_system()
-            .await?
-            .all_pods()
-            .await?
-            .into_iter()
-            .for_each(|pod| println!("{:#?}", pod));
-        Ok(())
     }
 
     async fn all_namespaces(&self) -> anyhow::Result<impl IntoIterator<Item = Namespace>> {
@@ -162,6 +143,14 @@ pub(crate) async fn validate_namespace(namespace: impl AsRef<str>) -> anyhow::Re
 
 pub(crate) async fn list_namespaces() -> anyhow::Result<impl IntoIterator<Item = Namespace>> {
     Kubectl::kube_system().await?.all_namespaces().await
+}
+
+pub(crate) async fn list_nodes() -> anyhow::Result<impl IntoIterator<Item = Node>> {
+    Kubectl::default().await?.all_nodes().await
+}
+
+pub(crate) async fn list_pods() -> anyhow::Result<impl IntoIterator<Item = Pod>> {
+    Kubectl::kube_system().await?.all_pods().await
 }
 
 pub(crate) async fn store_cluster_token(_namespace: &str, _token: &str) -> anyhow::Result<()> {

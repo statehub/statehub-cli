@@ -10,7 +10,7 @@ use structopt::StructOpt;
 // use structopt::clap;
 
 use crate::api;
-use crate::k8s::{self, Kubectl};
+use crate::k8s;
 use crate::show::Show;
 use crate::v1;
 use crate::Location;
@@ -419,11 +419,19 @@ impl StateHub {
     }
 
     async fn list_nodes(&self) -> anyhow::Result<()> {
-        Kubectl::list_nodes().await
+        k8s::list_nodes()
+            .await?
+            .into_iter()
+            .for_each(|node| println!("{}", node.show()));
+        Ok(())
     }
 
     async fn list_pods(&self) -> anyhow::Result<()> {
-        Kubectl::list_pods().await
+        k8s::list_pods()
+            .await?
+            .into_iter()
+            .for_each(|pod| println!("{}", pod.show()));
+        Ok(())
     }
 
     fn verbosely(&self, text: impl fmt::Display) {
