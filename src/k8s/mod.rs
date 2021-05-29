@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use k8s_openapi::api::core::v1::{Namespace, Node, Pod};
 use kube::api::{self, Api};
 // use kube::api::{Api, ListParams, PostParams, Resource, WatchEvent};
-use kube::Client;
+use kube::{Client, ResourceExt};
 use serde_json as json;
 
 use crate::Location;
@@ -61,16 +61,6 @@ impl Kubectl {
         Ok(())
     }
 
-    pub(crate) async fn list_namespaces() -> anyhow::Result<()> {
-        Self::kube_system()
-            .await?
-            .all_namespaces()
-            .await?
-            .into_iter()
-            .for_each(|namespace| println!("{:#?}", namespace));
-        Ok(())
-    }
-
     async fn all_namespaces(&self) -> anyhow::Result<impl IntoIterator<Item = Namespace>> {
         let namespaces = self.namespaces();
         let lp = self.list_params();
@@ -89,7 +79,7 @@ impl Kubectl {
         Ok(pods.list(&lp).await?)
     }
 
-    async fn create_namespace(&self, namespace: String) -> anyhow::Result<Namespace> {
+    async fn create_namespace(&self, namespace: &str) -> anyhow::Result<Namespace> {
         let namespaces = self.namespaces();
         let namespace = json::from_value(json::json!({
             "apiVerion": "v1",
@@ -152,11 +142,24 @@ pub(crate) async fn collect_node_locations() -> anyhow::Result<Vec<Location>> {
         .map_err(anyhow::Error::msg)
 }
 
-pub(crate) async fn create_namespace(namespace: String) -> anyhow::Result<Namespace> {
-    Kubectl::kube_system()
+pub(crate) async fn validate_namespace(namespace: impl AsRef<str>) -> anyhow::Result<Namespace> {
+    let namespace = namespace.as_ref();
+    let kube = Kubectl::kube_system().await?;
+    let existing = kube
+        .all_namespaces()
         .await?
-        .create_namespace(namespace)
-        .await
+        .into_iter()
+        .find(|ns| ns.name() == namespace);
+
+    if let Some(existing) = existing {
+        Ok(existing)
+    } else {
+        kube.create_namespace(namespace).await
+    }
+}
+
+pub(crate) async fn list_namespaces() -> anyhow::Result<impl IntoIterator<Item = Namespace>> {
+    Kubectl::kube_system().await?.all_namespaces().await
 }
 
 pub(crate) async fn store_cluster_token(_namespace: &str, _token: &str) -> anyhow::Result<()> {

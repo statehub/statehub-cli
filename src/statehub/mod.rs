@@ -314,6 +314,8 @@ impl StateHub {
 
         let output = self.api.register_cluster(&cluster).await?;
 
+        k8s::validate_namespace(helm.namespace()).await?;
+
         self.setup_cluster_token_helper(&output, &helm).await?;
 
         helm.execute(&output, self.verbose).await?;
@@ -396,13 +398,17 @@ impl StateHub {
     }
 
     async fn create_namespace(&self, namespace: String) -> anyhow::Result<()> {
-        k8s::create_namespace(namespace)
+        k8s::validate_namespace(namespace)
             .await
             .map(|namespace| println!("{:#?}", namespace))
     }
 
     async fn list_namespaces(&self) -> anyhow::Result<()> {
-        Kubectl::list_namespaces().await
+        k8s::list_namespaces()
+            .await?
+            .into_iter()
+            .for_each(|namespace| println!("{:#?}", namespace));
+        Ok(())
     }
 
     async fn list_nodes(&self) -> anyhow::Result<()> {
