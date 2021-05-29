@@ -152,8 +152,10 @@ pub(crate) async fn validate_namespace(namespace: impl AsRef<str>) -> anyhow::Re
         .find(|ns| ns.name() == namespace);
 
     if let Some(existing) = existing {
+        log::info!("Using existing namespace {}", existing.name());
         Ok(existing)
     } else {
+        log::info!("Creating new namespace {}", namespace);
         kube.create_namespace(namespace).await
     }
 }
