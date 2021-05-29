@@ -115,6 +115,8 @@ enum Command {
     },
     #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"])]
     UnregisterCluster {
+        #[structopt(help = "Skip confirmation", long, short)]
+        force: bool,
         #[structopt(help = "Cluster name")]
         name: v1::ClusterName,
     },
@@ -246,7 +248,9 @@ impl Cli {
                     .register_cluster(name, states, helm, claim_unowned_states)
                     .await
             }
-            Command::UnregisterCluster { name } => statehub.unregister_cluster(name).await,
+            Command::UnregisterCluster { force, name } => {
+                statehub.unregister_cluster(name, force).await
+            }
             Command::CreateVolume => statehub.create_volume().await,
             Command::DeleteVolume => statehub.delete_volume().await,
             Command::AddLocation { state, location } => {
@@ -352,11 +356,20 @@ impl StateHub {
         output.handle_output(self.json)
     }
 
-    async fn unregister_cluster(&self, name: v1::ClusterName) -> anyhow::Result<()> {
-        self.api
-            .unregister_cluster(name)
-            .await
-            .handle_output(self.json)
+    async fn unregister_cluster(&self, name: v1::ClusterName, force: bool) -> anyhow::Result<()> {
+        if force || self.confirm("Are you sure?") {
+            log::info!("Make sure all the pods using statehub are terminated");
+            log::info!("Uninstall helm");
+
+            self.relinquish_states_helper(&name).await?;
+
+            self.api
+                .unregister_cluster(name)
+                .await
+                .handle_output(self.json)
+        } else {
+            Ok(())
+        }
     }
 
     async fn add_location(&self, state: v1::StateName, location: Location) -> anyhow::Result<()> {
@@ -460,6 +473,12 @@ impl StateHub {
             .into_iter()
             .for_each(|pod| println!("{}", pod.show()));
         Ok(())
+    }
+
+    fn confirm(&self, text: impl fmt::Display) -> bool {
+        print!("{}", text);
+        let yes: String = text_io::read!();
+        yes == "y" || yes == "yes"
     }
 
     fn verbosely(&self, text: impl fmt::Display) {

@@ -74,10 +74,10 @@ pub struct Helm {
     pub paramarers: HashMap<String, String>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct StateName(pub String);
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClusterName(pub String);
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

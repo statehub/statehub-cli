@@ -78,4 +78,21 @@ impl StateHub {
         k8s::store_cluster_token(namespace, &token.token).await?;
         Ok(())
     }
+
+    pub(super) async fn relinquish_states_helper(
+        &self,
+        cluster: &v1::ClusterName,
+    ) -> anyhow::Result<()> {
+        for state in self.api.get_all_states().await? {
+            if state.owner.as_ref() == Some(cluster) {
+                log::info!("Relinquish ownership for state {}", state.name);
+                self.api.unset_owner(state.name, cluster).await?;
+            } else if let Some(owner) = state.owner {
+                log::debug!("Skipping state {} (owned by {})", state.name, owner);
+            } else {
+                log::debug!("Skipping state {} (unowned)", state.name);
+            }
+        }
+        Ok(())
+    }
 }

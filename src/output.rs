@@ -73,3 +73,15 @@ impl<T> ops::Deref for Output<T> {
         &self.0
     }
 }
+
+impl<T> IntoIterator for Output<T>
+where
+    T: IntoIterator,
+{
+    type Item = <T as IntoIterator>::Item;
+    type IntoIter = <T as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
