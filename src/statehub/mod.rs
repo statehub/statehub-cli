@@ -439,15 +439,9 @@ impl StateHub {
 
     async fn save_cluster_token(&self, namespace: String, token: String) -> anyhow::Result<()> {
         let secret = k8s::store_cluster_token(&namespace, &token).await?;
-        let token = secret
-            .data
-            .as_ref()
-            .and_then(|data| data.get("token"))
-            .map(|bytes| bytes.0.as_slice())
-            .map(String::from_utf8_lossy)
-            .unwrap_or_default();
-
-        println!("Token: {}", token);
+        if let Some(token) = k8s::extract_cluster_token(&secret) {
+            log::debug!("Token: {}", token);
+        }
         Ok(())
     }
 

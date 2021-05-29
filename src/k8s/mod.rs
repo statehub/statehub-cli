@@ -3,6 +3,7 @@
 // Use is subject to license terms.
 //
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 use k8s_openapi::api::core::v1::{Namespace, Node, Pod, Secret};
@@ -85,7 +86,7 @@ impl Kubectl {
             },
             "type": r#type,
             "data": {
-                "token": base64::encode(secret),
+                "cluster-token": base64::encode(secret),
             }
         }))?;
         let pp = self.post_params();
@@ -185,4 +186,13 @@ pub(crate) async fn store_cluster_token(namespace: &str, token: &str) -> anyhow:
 
 pub(crate) fn helm_is_found() -> bool {
     which::which("helm").is_ok()
+}
+
+pub(crate) fn extract_cluster_token(secret: &Secret) -> Option<Cow<'_, str>> {
+    secret
+        .data
+        .as_ref()
+        .and_then(|data| data.get("cluster-token"))
+        .map(|bytes| bytes.0.as_slice())
+        .map(String::from_utf8_lossy)
 }
