@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use k8s_openapi::api::core::v1::{Namespace, Node, Pod};
+use k8s_openapi::api::core::v1::{Namespace, Node, Pod, Secret};
 use kube::api::{self, Api};
 // use kube::api::{Api, ListParams, PostParams, Resource, WatchEvent};
 use kube::{Client, ResourceExt};
@@ -22,6 +22,7 @@ mod show;
 
 const DEFAULT_NS: &str = "default";
 const KUBE_SYSTEM_NS: &str = "kube-system";
+const STATEHUB_CLUSTER_TOKEN_SECRET_TYPE: &str = "statehub.io/cluster-token";
 
 pub(crate) struct Kubectl {
     client: Client,
@@ -74,6 +75,24 @@ impl Kubectl {
         Ok(namespace)
     }
 
+    async fn create_secret(&self, r#type: &str, secret: &str) -> anyhow::Result<Secret> {
+        let secrets = self.secrets();
+        let secret = json::from_value(json::json!({
+            "apiVerion": "v1",
+            "kind": "Secret",
+            "metadata": {
+                "name": "statehub-cluster-token",
+            },
+            "type": r#type,
+            "data": {
+                "token": base64::encode(secret),
+            }
+        }))?;
+        let pp = self.post_params();
+        let secret = secrets.create(&pp, &secret).await?;
+        Ok(secret)
+    }
+
     fn list_params(&self) -> api::ListParams {
         api::ListParams::default()
     }
@@ -91,6 +110,10 @@ impl Kubectl {
     }
 
     fn pods(&self) -> Api<Pod> {
+        Api::namespaced(self.client.clone(), &self.namespace)
+    }
+
+    fn secrets(&self) -> Api<Secret> {
         Api::namespaced(self.client.clone(), &self.namespace)
     }
 }
@@ -153,8 +176,11 @@ pub(crate) async fn list_pods() -> anyhow::Result<impl IntoIterator<Item = Pod>>
     Kubectl::kube_system().await?.all_pods().await
 }
 
-pub(crate) async fn store_cluster_token(_namespace: &str, _token: &str) -> anyhow::Result<()> {
-    Ok(())
+pub(crate) async fn store_cluster_token(namespace: &str, token: &str) -> anyhow::Result<Secret> {
+    Kubectl::with_namespace(namespace)
+        .await?
+        .create_secret(STATEHUB_CLUSTER_TOKEN_SECRET_TYPE, token)
+        .await
 }
 
 pub(crate) fn helm_is_found() -> bool {

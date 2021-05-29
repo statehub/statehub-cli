@@ -163,6 +163,17 @@ enum Command {
         namespace: String,
     },
     #[structopt(
+        about = "Save cluster token",
+        alias = "sct",
+        // setting(clap::AppSettings::Hidden)
+    )]
+    SaveClusterToken {
+        #[structopt(help = "Namespace name")]
+        namespace: String,
+        #[structopt(help = "Cluster token")]
+        token: String,
+    },
+    #[structopt(
         about = "List K8s namespaces",
         alias = "list-ns",
         // setting(clap::AppSettings::Hidden)
@@ -246,6 +257,9 @@ impl Cli {
             Command::SetOwner { state, cluster } => statehub.set_owner(state, cluster).await,
             Command::UnsetOwner { state, cluster } => statehub.unset_owner(state, cluster).await,
             Command::CreateNamespace { namespace } => statehub.create_namespace(namespace).await,
+            Command::SaveClusterToken { namespace, token } => {
+                statehub.save_cluster_token(namespace, token).await
+            }
             Command::ListNamespaces => statehub.list_namespaces().await,
             Command::ListNodes => statehub.list_nodes().await,
             Command::ListPods => statehub.list_pods().await,
@@ -408,6 +422,20 @@ impl StateHub {
         k8s::validate_namespace(namespace)
             .await
             .map(|namespace| println!("{:#?}", namespace))
+    }
+
+    async fn save_cluster_token(&self, namespace: String, token: String) -> anyhow::Result<()> {
+        let secret = k8s::store_cluster_token(&namespace, &token).await?;
+        let token = secret
+            .data
+            .as_ref()
+            .and_then(|data| data.get("token"))
+            .map(|bytes| bytes.0.as_slice())
+            .map(String::from_utf8_lossy)
+            .unwrap_or_default();
+
+        println!("Token: {}", token);
+        Ok(())
     }
 
     async fn list_namespaces(&self) -> anyhow::Result<()> {
