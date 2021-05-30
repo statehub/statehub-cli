@@ -24,6 +24,7 @@ mod show;
 const DEFAULT_NS: &str = "default";
 const KUBE_SYSTEM_NS: &str = "kube-system";
 const STATEHUB_CLUSTER_TOKEN_SECRET_TYPE: &str = "statehub.io/cluster-token";
+const STATEHUB_CLUSTER_TOKEN_SECRET_NAME: &str = "statehub-cluster-token";
 
 pub(crate) struct Kubectl {
     client: Client,
@@ -76,13 +77,18 @@ impl Kubectl {
         Ok(namespace)
     }
 
-    async fn create_secret(&self, r#type: &str, secret: &str) -> anyhow::Result<Secret> {
+    async fn create_secret(
+        &self,
+        r#type: &str,
+        name: &str,
+        secret: &str,
+    ) -> anyhow::Result<Secret> {
         let secrets = self.secrets();
         let secret = json::from_value(json::json!({
             "apiVerion": "v1",
             "kind": "Secret",
             "metadata": {
-                "name": "statehub-cluster-token",
+                "name": name,
             },
             "type": r#type,
             "data": {
@@ -92,6 +98,23 @@ impl Kubectl {
         let pp = self.post_params();
         let secret = secrets.create(&pp, &secret).await?;
         Ok(secret)
+    }
+
+    async fn delete_secret(&self, secret: &str) -> anyhow::Result<()> {
+        log::info!("Deleting secret {}", secret);
+        let secrets = self.secrets();
+        let dp = self.delete_params();
+        secrets
+            .delete(secret, &dp)
+            .await?
+            .map_left(|secret| log::info!("Delete in progress {:#?}", secret))
+            .map_right(|status| log::info!("Delete succeeded: {:#?}", status));
+
+        Ok(())
+    }
+
+    fn delete_params(&self) -> api::DeleteParams {
+        api::DeleteParams::default()
     }
 
     fn list_params(&self) -> api::ListParams {
@@ -178,10 +201,21 @@ pub(crate) async fn list_pods() -> anyhow::Result<impl IntoIterator<Item = Pod>>
 }
 
 pub(crate) async fn store_cluster_token(namespace: &str, token: &str) -> anyhow::Result<Secret> {
-    Kubectl::with_namespace(namespace)
-        .await?
-        .create_secret(STATEHUB_CLUSTER_TOKEN_SECRET_TYPE, token)
+    let kube = Kubectl::with_namespace(namespace).await?;
+
+    if kube
+        .delete_secret(STATEHUB_CLUSTER_TOKEN_SECRET_NAME)
         .await
+        .is_ok()
+    {
+        log::trace!("Removing previous cluster token");
+    }
+    kube.create_secret(
+        STATEHUB_CLUSTER_TOKEN_SECRET_TYPE,
+        STATEHUB_CLUSTER_TOKEN_SECRET_NAME,
+        token,
+    )
+    .await
 }
 
 pub(crate) fn helm_is_found() -> bool {
