@@ -21,6 +21,15 @@ nightly:test:
   extends: .test:cargo
   image: rustdocker/rust:nightly
 
+publish:crates.io:
+  stage: publish
+  image: rustdocker/rust:stable
+  only:
+    - tags
+  script:
+    - cargo login $CRATES_IO_PPUBLISH_TOKEN
+    - cargo publish
+
 publish:packages:
   stage: publish
   image: rustdocker/rust:stable
