@@ -1,8 +1,11 @@
 [package]
 name = "statehub"
-version = "0.1.0"
-authors = ["The RepliXio developers <info@replixio.com>"]
+version = "0.0.1"
+authors = ["The RepliXio developers <info@replix.io>"]
 edition = "2018"
+license = "MIT OR Apache-2.0"
+repository = "https://gitlab.com/statehub/statehub-cli"
+categories = ["command-line-utilities"]
 description = "statehub CLI tool"
 keywords = ["statehub", "cli"]
 
