@@ -27,7 +27,7 @@ publish:crates.io:
   only:
     - tags
   script:
-    - cargo login $CRATES_IO_PPUBLISH_TOKEN
+    - cargo login $CRATES_IO_PUBLISH_TOKEN
     - cargo publish
 
 publish:packages:
