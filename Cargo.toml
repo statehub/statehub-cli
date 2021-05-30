@@ -3,6 +3,8 @@ name = "statehub"
 version = "0.1.0"
 authors = ["The RepliXio developers <info@replixio.com>"]
 edition = "2018"
+description = "statehub CLI tool"
+keywords = ["statehub", "cli"]
 
 [dependencies]
 anyhow = "1.0"
