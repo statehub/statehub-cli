@@ -1,0 +1,36 @@
+.test:cargo:
+  stage: test
+  script:
+    - cargo fmt -- --check
+    - cargo clippy --all-targets
+    - cargo test
+
+stages:
+  - test
+  - publish
+
+stable:test:
+  extends: .test:cargo
+  image: rustdocker/rust:stable
+
+beta:test:
+  extends: .test:cargo
+  image: rustdocker/rust:beta
+
+nightly:test:
+  extends: .test:cargo
+  image: rustdocker/rust:nightly
+
+publish:packages:
+  stage: publish
+  image: rustdocker/rust:stable
+  only:
+    - tags
+  script:
+    - env
+    - cargo build --release
+    - cp target/release/statehub ./statehub
+    - strip statehub
+    - sha512sum statehub | tee SHA512SUM
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file statehub "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/statehub/${CI_COMMIT_TAG}/statehub"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file SHA512SUM "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/statehub/${CI_COMMIT_TAG}/SHA512SUM"'
