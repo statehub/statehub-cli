@@ -95,6 +95,32 @@ impl Api {
         self.post(path, body).await
     }
 
+    pub(crate) async fn del_aws_location(
+        &self,
+        name: v1::StateName,
+        region: v1::AwsRegion,
+    ) -> ApiResult<v1::StateLocationAws> {
+        let path = format!(
+            "/states/{name}/locations/aws/{region}",
+            name = name,
+            region = region
+        );
+        self.del(path).await
+    }
+
+    pub(crate) async fn del_azure_location(
+        &self,
+        name: v1::StateName,
+        region: v1::AzureRegion,
+    ) -> ApiResult<v1::StateLocationAzure> {
+        let path = format!(
+            "/states/{name}/locations/azure/{region}",
+            name = name,
+            region = region
+        );
+        self.del(path).await
+    }
+
     pub(crate) async fn set_owner(
         &self,
         state: impl AsRef<v1::StateName>,

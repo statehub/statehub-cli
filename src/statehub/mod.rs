@@ -135,7 +135,7 @@ enum Command {
     AddLocation {
         #[structopt(help = "State name")]
         state: v1::StateName,
-        #[structopt(help = "Location definition")]
+        #[structopt(help = "Location specification")]
         location: Location,
     },
 
@@ -144,7 +144,12 @@ enum Command {
         aliases = &["remove-l", "rem-l", "rl"],
         display_order(3)
     )]
-    RemoveLocation,
+    RemoveLocation {
+        #[structopt(help = "State name")]
+        state: v1::StateName,
+        #[structopt(help = "Location specification")]
+        location: Location,
+    },
 
     #[structopt(about = "Set state availability grade", display_order(4))]
     SetAvailability,
@@ -280,7 +285,9 @@ impl Cli {
             Command::AddLocation { state, location } => {
                 statehub.add_location(state, location).await
             }
-            Command::RemoveLocation => statehub.remove_location().await,
+            Command::RemoveLocation { state, location } => {
+                statehub.remove_location(state, location).await
+            }
             Command::SetAvailability => statehub.set_availability().await,
             Command::SetOwner { state, cluster } => statehub.set_owner(state, cluster).await,
             Command::UnsetOwner { state, cluster } => statehub.unset_owner(state, cluster).await,
@@ -402,17 +409,16 @@ impl StateHub {
         self.add_location_helper(&state, &location).await
     }
 
+    async fn remove_location(self, state: v1::StateName, location: Location) -> anyhow::Result<()> {
+        self.remove_location_helper(&state, &location).await
+    }
+
     pub(crate) async fn create_volume(self) -> anyhow::Result<()> {
         // Ok(Output::<String>::todo()).handle_output(self.json)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) async fn delete_volume(self) -> anyhow::Result<()> {
-        // Ok(Output::<String>::todo()).handle_output(self.json)
-        anyhow::bail!(self.show(Output::<String>::todo()))
-    }
-
-    pub(crate) async fn remove_location(self) -> anyhow::Result<()> {
         // Ok(Output::<String>::todo()).handle_output(self.json)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }

@@ -34,6 +34,25 @@ impl StateHub {
         }
     }
 
+    pub(super) async fn remove_location_helper(
+        &self,
+        name: &v1::StateName,
+        location: &Location,
+    ) -> anyhow::Result<()> {
+        match location {
+            Location::Aws(region) => self
+                .api
+                .del_aws_location(name.clone(), *region)
+                .await
+                .map(|_aws| ()),
+            Location::Azure(region) => self
+                .api
+                .del_azure_location(name.clone(), *region)
+                .await
+                .map(|_azure| ()),
+        }
+    }
+
     pub(super) async fn adjust_all_states(
         &self,
         names: &[v1::StateName],
