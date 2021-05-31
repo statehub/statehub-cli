@@ -43,7 +43,7 @@ pub(crate) struct Cli {
 
 #[derive(Debug, StructOpt)]
 enum Command {
-    #[structopt(about = "Create new state", aliases = &["create-st", "cs"])]
+    #[structopt(about = "Create new state", aliases = &["create-st", "cs"], display_order(1))]
     CreateState {
         #[structopt(help = "State name")]
         name: v1::StateName,
@@ -52,21 +52,26 @@ enum Command {
         #[structopt(long, short, help = "Location definition")]
         location: Vec<Location>,
     },
-    #[structopt(about = "Delete existing state", aliases = &["delete-st", "ds"])]
+
+    #[structopt(about = "Delete existing state", aliases = &["delete-st", "ds"], display_order(1))]
     DeleteState {
         #[structopt(help = "State name")]
         name: v1::StateName,
     },
-    #[structopt(about = "List available states", aliases = &["list-state", "list-st", "ls"])]
+
+    #[structopt(about = "List available states", aliases = &["list-state", "list-st", "ls"], display_order(1))]
     ListStates,
-    #[structopt(about = "Show state details", aliases = &["show-s", "ss"])]
+
+    #[structopt(about = "Show state details", aliases = &["show-s", "ss"], display_order(1))]
     ShowState {
         #[structopt(help = "State name")]
         name: v1::StateName,
     },
-    #[structopt(about = "List registered clusters", aliases = &["list-cluster", "list-cl", "lc"])]
+
+    #[structopt(about = "List registered clusters", aliases = &["list-cluster", "list-cl", "lc"], display_order(3))]
     ListClusters,
-    #[structopt(about = "Register new cluster", aliases = &["register-cl", "rc"])]
+
+    #[structopt(about = "Register new cluster", aliases = &["register-cl", "rc"], display_order(2))]
     RegisterCluster {
         #[structopt(help = "Cluster name")]
         name: v1::ClusterName,
@@ -113,20 +118,19 @@ enum Command {
         #[structopt(help = "Skip running 'helm install'", long)]
         skip_helm: bool,
     },
-    #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"])]
+
+    #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"], display_order(2))]
     UnregisterCluster {
         #[structopt(help = "Skip confirmation", long, short)]
         force: bool,
         #[structopt(help = "Cluster name")]
         name: v1::ClusterName,
     },
-    #[structopt(about = "Manually create new volume")]
-    CreateVolume,
-    #[structopt(about = "Manually delete existing volume")]
-    DeleteVolume,
+
     #[structopt(
         about = "Manually make state available in a specified location",
         aliases = &["add-l", "al"],
+        display_order(3)
     )]
     AddLocation {
         #[structopt(help = "State name")]
@@ -134,39 +138,54 @@ enum Command {
         #[structopt(help = "Location definition")]
         location: Location,
     },
+
     #[structopt(
         about = "Manually make state unavailable in a specified location",
         aliases = &["remove-l", "rem-l", "rl"],
+        display_order(3)
     )]
     RemoveLocation,
-    #[structopt(about = "Set state availability grade")]
+
+    #[structopt(about = "Set state availability grade", display_order(4))]
     SetAvailability,
-    #[structopt(about = "Set cluster as the state owner")]
+
+    #[structopt(about = "Set cluster as the state owner", display_order(4))]
     SetOwner {
         #[structopt(help = "State name")]
         state: v1::StateName,
         #[structopt(help = "Cluster name")]
         cluster: v1::ClusterName,
     },
-    #[structopt(about = "Clear state owner")]
+
+    #[structopt(about = "Clear state owner", display_order(4))]
     UnsetOwner {
         #[structopt(help = "State name")]
         state: v1::StateName,
         #[structopt(help = "Cluster name")]
         cluster: v1::ClusterName,
     },
+
+    #[structopt(about = "Manually create new volume", display_order(5))]
+    CreateVolume,
+
+    #[structopt(about = "Manually delete existing volume", display_order(5))]
+    DeleteVolume,
+
     #[structopt(
         about = "Create new namespace",
         alias = "c-ns",
+        display_order(100),
         // setting(clap::AppSettings::Hidden)
     )]
     CreateNamespace {
         #[structopt(help = "Namespace name")]
         namespace: String,
     },
+
     #[structopt(
         about = "Save cluster token",
         alias = "sct",
+        display_order(100),
         // setting(clap::AppSettings::Hidden)
     )]
     SaveClusterToken {
@@ -175,23 +194,30 @@ enum Command {
         #[structopt(help = "Cluster token")]
         token: String,
     },
+
     #[structopt(
         about = "List K8s namespaces",
         alias = "list-ns",
+        display_order(100),
         // setting(clap::AppSettings::Hidden)
     )]
     ListNamespaces,
+
     #[structopt(
         about = "List K8s nodes",
+        display_order(100),
         // setting(clap::AppSettings::Hidden)
     )]
     ListNodes,
+
     #[structopt(
         about = "List K8s pods",
+        display_order(100),
         // setting(clap::AppSettings::Hidden)
     )]
     ListPods,
-    #[structopt(about = "List K8s node regions")]
+
+    #[structopt(about = "List K8s node regions", display_order(100))]
     ListRegions {
         #[structopt(help = "Also list zones", long, short)]
         zone: bool,
@@ -251,8 +277,6 @@ impl Cli {
             Command::UnregisterCluster { force, name } => {
                 statehub.unregister_cluster(name, force).await
             }
-            Command::CreateVolume => statehub.create_volume().await,
-            Command::DeleteVolume => statehub.delete_volume().await,
             Command::AddLocation { state, location } => {
                 statehub.add_location(state, location).await
             }
@@ -260,6 +284,8 @@ impl Cli {
             Command::SetAvailability => statehub.set_availability().await,
             Command::SetOwner { state, cluster } => statehub.set_owner(state, cluster).await,
             Command::UnsetOwner { state, cluster } => statehub.unset_owner(state, cluster).await,
+            Command::CreateVolume => statehub.create_volume().await,
+            Command::DeleteVolume => statehub.delete_volume().await,
             Command::CreateNamespace { namespace } => statehub.create_namespace(namespace).await,
             Command::SaveClusterToken { namespace, token } => {
                 statehub.save_cluster_token(namespace, token).await
