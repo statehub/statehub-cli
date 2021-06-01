@@ -24,8 +24,9 @@ pub struct State {
     pub storage_class: Option<StorageClass>,
     pub locations: Locations,
     pub owner: Option<ClusterName>,
+    pub provisioning_status: ProvisioningStatus,
     pub allowed_clusters: Option<Vec<ClusterName>>,
-    pub condition: Condition,
+    pub condition: Option<Condition>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -36,6 +37,14 @@ pub struct CreateStateDto {
     pub locations: Locations,
     pub owner: Option<ClusterName>,
     pub allowed_clusters: Option<Vec<ClusterName>>,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum ProvisioningStatus {
+    Ready,
+    Provisioning,
+    Error,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]

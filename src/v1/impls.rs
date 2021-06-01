@@ -90,6 +90,12 @@ impl Default for VolumeBindingMode {
     }
 }
 
+impl Default for Condition {
+    fn default() -> Self {
+        Self::Green
+    }
+}
+
 impl From<Vec<Location>> for Locations {
     fn from(locations: Vec<Location>) -> Self {
         let mut aws = vec![];
