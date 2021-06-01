@@ -43,7 +43,7 @@ pub(crate) struct Cli {
 
 #[derive(Debug, StructOpt)]
 enum Command {
-    #[structopt(about = "Create new state", aliases = &["create-st", "cs"], display_order(1))]
+    #[structopt(about = "Create new state", aliases = &["create-st", "cs"], display_order(20))]
     CreateState {
         #[structopt(help = "State name")]
         name: v1::StateName,
@@ -53,25 +53,25 @@ enum Command {
         location: Vec<Location>,
     },
 
-    #[structopt(about = "Delete existing state", aliases = &["delete-st", "ds"], display_order(1))]
+    #[structopt(about = "Delete existing state", aliases = &["delete-st", "ds"], display_order(20))]
     DeleteState {
         #[structopt(help = "State name")]
         name: v1::StateName,
     },
 
-    #[structopt(about = "List available states", aliases = &["list-state", "list-st", "ls"], display_order(1))]
+    #[structopt(about = "List available states", aliases = &["list-state", "list-st", "ls"], display_order(20))]
     ListStates,
 
-    #[structopt(about = "Show state details", aliases = &["show-s", "ss"], display_order(1))]
+    #[structopt(about = "Show state details", aliases = &["show-s", "ss"], display_order(20))]
     ShowState {
         #[structopt(help = "State name")]
         name: v1::StateName,
     },
 
-    #[structopt(about = "List registered clusters", aliases = &["list-cluster", "list-cl", "lc"], display_order(3))]
+    #[structopt(about = "List registered clusters", aliases = &["list-cluster", "list-cl", "lc"], display_order(10))]
     ListClusters,
 
-    #[structopt(about = "Register new cluster", aliases = &["register-cl", "rc"], display_order(2))]
+    #[structopt(about = "Register new cluster", aliases = &["register-cl", "rc"], display_order(10))]
     RegisterCluster {
         #[structopt(help = "Cluster name")]
         name: v1::ClusterName,
@@ -119,7 +119,7 @@ enum Command {
         skip_helm: bool,
     },
 
-    #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"], display_order(2))]
+    #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"], display_order(10))]
     UnregisterCluster {
         #[structopt(help = "Skip confirmation", long, short)]
         force: bool,
@@ -130,7 +130,7 @@ enum Command {
     #[structopt(
         about = "Manually make state available in a specified location",
         aliases = &["add-l", "al"],
-        display_order(3)
+        display_order(30)
     )]
     AddLocation {
         #[structopt(help = "State name")]
@@ -142,7 +142,7 @@ enum Command {
     #[structopt(
         about = "Manually make state unavailable in a specified location",
         aliases = &["remove-l", "rem-l", "rl"],
-        display_order(3)
+        display_order(30)
     )]
     RemoveLocation {
         #[structopt(help = "State name")]
@@ -151,10 +151,10 @@ enum Command {
         location: Location,
     },
 
-    #[structopt(about = "Set state availability grade", display_order(4))]
+    #[structopt(about = "Set state availability grade", display_order(40))]
     SetAvailability,
 
-    #[structopt(about = "Set cluster as the state owner", display_order(4))]
+    #[structopt(about = "Set cluster as the state owner", display_order(40))]
     SetOwner {
         #[structopt(help = "State name")]
         state: v1::StateName,
@@ -162,7 +162,7 @@ enum Command {
         cluster: v1::ClusterName,
     },
 
-    #[structopt(about = "Clear state owner", display_order(4))]
+    #[structopt(about = "Clear state owner", display_order(40))]
     UnsetOwner {
         #[structopt(help = "State name")]
         state: v1::StateName,
@@ -170,16 +170,16 @@ enum Command {
         cluster: v1::ClusterName,
     },
 
-    #[structopt(about = "Manually create new volume", display_order(5))]
+    #[structopt(about = "Manually create new volume", display_order(50))]
     CreateVolume,
 
-    #[structopt(about = "Manually delete existing volume", display_order(5))]
+    #[structopt(about = "Manually delete existing volume", display_order(50))]
     DeleteVolume,
 
     #[structopt(
         about = "Create new namespace",
         alias = "c-ns",
-        display_order(100),
+        display_order(1000),
         // setting(clap::AppSettings::Hidden)
     )]
     CreateNamespace {
@@ -190,7 +190,7 @@ enum Command {
     #[structopt(
         about = "Save cluster token",
         alias = "sct",
-        display_order(100),
+        display_order(1000),
         // setting(clap::AppSettings::Hidden)
     )]
     SaveClusterToken {
@@ -203,26 +203,26 @@ enum Command {
     #[structopt(
         about = "List K8s namespaces",
         alias = "list-ns",
-        display_order(100),
+        display_order(1000),
         // setting(clap::AppSettings::Hidden)
     )]
     ListNamespaces,
 
     #[structopt(
         about = "List K8s nodes",
-        display_order(100),
+        display_order(1000),
         // setting(clap::AppSettings::Hidden)
     )]
     ListNodes,
 
     #[structopt(
         about = "List K8s pods",
-        display_order(100),
+        display_order(1000),
         // setting(clap::AppSettings::Hidden)
     )]
     ListPods,
 
-    #[structopt(about = "List K8s node regions", display_order(100))]
+    #[structopt(about = "List K8s node regions", display_order(1000))]
     ListRegions {
         #[structopt(help = "Also list zones", long, short)]
         zone: bool,
