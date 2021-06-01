@@ -28,7 +28,7 @@ serde_with = "1.8"
 structopt = "0.3"
 text_io = "0.1"
 thiserror = "1.0"
-tokio = { version = "1.0", features = ["full"] }
+tokio = { version = "1.0", features = ["macros", "net", "process", "rt-multi-thread"] }
 uuid = { version = "0.8", features = ["serde"] }
 which = "4.1"
 
