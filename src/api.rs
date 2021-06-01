@@ -27,11 +27,11 @@ impl Api {
         let user_agent = format!("{}/{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 
         let base = if management.starts_with("http") {
-            format!("{}/{}", management, v1::VERSION)
+            format!("{}{}", management, v1::VERSION)
         } else if management.starts_with("api.") && management.ends_with(".statehub.io") {
-            format!("https://{}/{}", management, v1::VERSION)
+            format!("https://{}{}", management, v1::VERSION)
         } else {
-            format!("http://{}:3000/{}", management, v1::VERSION)
+            format!("http://{}:3000{}", management, v1::VERSION)
         };
 
         Self {

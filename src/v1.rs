@@ -12,7 +12,7 @@ use uuid::Uuid;
 
 mod impls;
 
-pub const VERSION: &str = "__API_VERSION__";
+pub const VERSION: &str = "";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
