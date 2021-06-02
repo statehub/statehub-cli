@@ -23,8 +23,9 @@ pub(crate) struct Api {
 }
 
 impl Api {
-    pub(crate) fn new(management: String, token: Option<String>, verbose: bool) -> Self {
+    pub(crate) fn new(management: &str, token: Option<&str>, verbose: bool) -> Self {
         let user_agent = format!("{}/{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+        let token = token.map(|s| s.to_string());
 
         let base = if management.starts_with("http") {
             format!("{}{}", management, v1::VERSION)

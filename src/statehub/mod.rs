@@ -16,6 +16,9 @@ use crate::v1;
 use crate::Location;
 use crate::Output;
 
+use config::Config;
+
+mod config;
 mod helper;
 
 const ABOUT: &str = "statehub CLI tool";
@@ -25,12 +28,12 @@ const ABOUT: &str = "statehub CLI tool";
 pub(crate) struct Cli {
     #[structopt(
         help = "Management server URL or address",
-        default_value = "https://api.statehub.io",
+        // default_value = "https://api.statehub.io",
         short,
         long,
         env = "SHAPI"
     )]
-    management: String,
+    management: Option<String>,
     #[structopt(help = "Authentication token", short, long, env = "SHTOKEN")]
     token: Option<String>,
     #[structopt(long, global = true, help = "Show results as JSON")]
@@ -227,6 +230,9 @@ enum Command {
         #[structopt(help = "Also list zones", long, short)]
         zone: bool,
     },
+
+    #[structopt(about = "Save default configuration file", display_order(2000))]
+    SaveConfig,
 }
 
 impl Cli {
@@ -234,8 +240,18 @@ impl Cli {
         Self::from_args().dispatch().await
     }
 
+    async fn config(&self) -> anyhow::Result<Config> {
+        Config::load()
+    }
+
     async fn dispatch(self) -> anyhow::Result<()> {
-        let statehub = StateHub::new(self.management, self.token, self.json, self.verbose);
+        let config = self
+            .config()
+            .await?
+            .optionally_management_api(self.management)
+            .set_token(self.token);
+
+        let statehub = StateHub::new(config, self.json, self.verbose);
 
         match self.command {
             Command::CreateState {
@@ -301,21 +317,28 @@ impl Cli {
             Command::ListNodes => statehub.list_nodes().await,
             Command::ListPods => statehub.list_pods().await,
             Command::ListRegions { zone } => statehub.list_regions(zone).await,
+            Command::SaveConfig => statehub.save_config().await,
         }
     }
 }
 
 pub(crate) struct StateHub {
+    config: Config,
     api: api::Api,
     json: bool,
     verbose: bool,
 }
 
 impl StateHub {
-    fn new(management: String, token: Option<String>, json: bool, verbose: bool) -> Self {
-        let api = api::Api::new(management, token, verbose);
+    fn new(config: Config, json: bool, verbose: bool) -> Self {
+        let api = api::Api::new(config.api(), config.token(), verbose);
 
-        Self { api, json, verbose }
+        Self {
+            config,
+            api,
+            json,
+            verbose,
+        }
     }
 
     pub(crate) async fn create_state(
@@ -499,6 +522,10 @@ impl StateHub {
             .into_iter()
             .for_each(|pod| println!("{}", pod.show()));
         Ok(())
+    }
+
+    async fn save_config(&self) -> anyhow::Result<()> {
+        self.config.save()
     }
 
     fn confirm(&self, text: impl fmt::Display) -> bool {
