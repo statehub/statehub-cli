@@ -35,6 +35,8 @@ impl Api {
             format!("http://{}:3000{}", management, v1::VERSION)
         };
 
+        log::debug!("Using API at {} with token {:?}", base, token);
+
         Self {
             base,
             token,
@@ -180,6 +182,7 @@ impl Api {
             .optionally_bearer_auth(self.token.as_ref())
             .send()
             .await?
+            .error_for_status()?
             .bytes()
             .await?
             .try_into()
@@ -197,6 +200,7 @@ impl Api {
             .optionally_bearer_auth(self.token.as_ref())
             .send()
             .await?
+            .error_for_status()?
             .bytes()
             .await?
             .try_into()
@@ -216,6 +220,7 @@ impl Api {
             .json(&body)
             .send()
             .await?
+            .error_for_status()?
             .bytes()
             .await?
             .try_into()
@@ -233,6 +238,7 @@ impl Api {
             .optionally_bearer_auth(self.token.as_ref())
             .send()
             .await?
+            .error_for_status()?
             .bytes()
             .await?
             .try_into()
