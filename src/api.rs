@@ -190,6 +190,7 @@ impl Api {
         self.client()?
             .delete(url)
             .optionally_bearer_auth(self.token.as_ref())
+            .inspect()
             .send()
             .await?
             .error_for_status()?
@@ -228,6 +229,7 @@ impl Api {
         self.client()?
             .post(url)
             .optionally_bearer_auth(self.token.as_ref())
+            .inspect()
             .json(&body)
             .send()
             .await?
@@ -247,6 +249,7 @@ impl Api {
         self.client()?
             .put(url)
             .optionally_bearer_auth(self.token.as_ref())
+            .inspect()
             .send()
             .await?
             .error_for_status()?
@@ -291,7 +294,35 @@ trait Inspector {
 
 impl Inspector for reqwest::RequestBuilder {
     fn inspect(self) -> Self {
-        dbg!(&self);
+        if let Some(rb) = self.try_clone() {
+            if let Ok(req) = rb.build() {
+                let mut headers = String::from("");
+                let mut host = String::from("");
+                let method = req.method().as_str();
+                let path = req.url().path();
+                let scheme = req.url().scheme();
+
+                if let Some(req_host) = req.url().host() {
+                    host = req_host.to_string();
+                }
+
+                // append all headers one by one in a new line in string
+                req.headers().into_iter().for_each(|(req_header, value)| {
+                    if let Ok(str_value) = value.to_str() {
+                        headers += format!("{}: {} \n", req_header, str_value).as_str();
+                    }
+                });
+                headers.truncate(headers.len() - 1);
+
+                let raw_req = format!(
+                    "{} {} {} \n {} \n Host: {}",
+                    method, path, scheme, headers, host
+                );
+
+                println!("\n Requested http querry is: \n {} \n", raw_req);
+            }
+        }
+
         self
     }
 }
