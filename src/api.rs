@@ -5,6 +5,7 @@
 
 use std::convert::TryInto;
 use std::fmt;
+use std::fmt::Debug;
 
 use inspector::ResultInspector;
 use serde::{de, ser};
@@ -207,6 +208,7 @@ impl Api {
         self.client()?
             .get(url)
             .optionally_bearer_auth(self.token.as_ref())
+            .inspect()
             .send()
             .await?
             .error_for_status()?
@@ -280,5 +282,16 @@ trait Optionally {
 impl Optionally for reqwest::RequestBuilder {
     fn optionally_bearer_auth(self, token: Option<impl fmt::Display>) -> Self {
         self.optionally(token, Self::bearer_auth)
+    }
+}
+
+trait Inspector {
+    fn inspect(self) -> Self;
+}
+
+impl Inspector for reqwest::RequestBuilder {
+    fn inspect(self) -> Self {
+        dbg!(&self);
+        self
     }
 }
