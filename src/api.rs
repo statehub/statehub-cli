@@ -45,6 +45,15 @@ impl Api {
         }
     }
 
+    pub(crate) async fn is_unauthorized(&self) -> bool {
+        self.get_all_states()
+            .await
+            .err()
+            .and_then(|e| e.downcast::<reqwest::Error>().ok())
+            .and_then(|e| e.status())
+            .map_or(false, |status| status == reqwest::StatusCode::UNAUTHORIZED)
+    }
+
     pub(crate) async fn create_state(&self, state: v1::CreateStateDto) -> ApiResult<v1::State> {
         self.post("/states", state).await
     }

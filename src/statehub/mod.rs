@@ -253,6 +253,8 @@ impl Cli {
 
         let statehub = StateHub::new(config, self.json, self.verbose);
 
+        statehub.validate_auth().await?;
+
         match self.command {
             Command::CreateState {
                 name,
@@ -339,6 +341,15 @@ impl StateHub {
             json,
             verbose,
         }
+    }
+
+    async fn validate_auth(&self) -> anyhow::Result<()> {
+        if self.api.is_unauthorized().await {
+            // log::error!("Unauthorized - perhaps an invalid token?");
+            anyhow::bail!("Unauthorized - perhaps an invalid token?");
+        }
+
+        Ok(())
     }
 
     pub(crate) async fn create_state(
