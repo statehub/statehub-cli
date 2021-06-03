@@ -5,7 +5,6 @@
 
 use std::convert::TryInto;
 use std::fmt;
-use std::fmt::Debug;
 
 use inspector::ResultInspector;
 use serde::{de, ser};
@@ -294,34 +293,12 @@ trait Inspector {
 
 impl Inspector for reqwest::RequestBuilder {
     fn inspect(self) -> Self {
-        if let Some(rb) = self.try_clone() {
-            if let Ok(req) = rb.build() {
-                let mut headers = String::from("");
-                let mut host = String::from("");
-                let method = req.method().as_str();
-                let path = req.url().path();
-                let scheme = req.url().scheme();
+        if let Some(request) = self.try_clone().and_then(|builder| builder.build().ok()) {
+            log::trace!("{} {}", request.method(), request.url());
 
-                if let Some(req_host) = req.url().host() {
-                    host = req_host.to_string();
-                }
-
-                // append all headers one by one in a new line in string
-                req.headers().into_iter().for_each(|(req_header, value)| {
-                    if let Ok(str_value) = value.to_str() {
-                        headers += format!("{}: {} \n", req_header, str_value).as_str();
-                    }
-                });
-                headers.truncate(headers.len() - 1);
-
-                let raw_req = format!(
-                    "{} {} {} \n {} \n Host: {}",
-                    method, path, scheme, headers, host
-                );
-
-                println!("\n Requested http querry is: \n {} \n", raw_req);
-            }
-        }
+            request.headers().iter().for_each(|(header, value)| {
+                log::trace!("{}: {}", header, String::from_utf8_lossy(value.as_bytes()))
+            });
 
         self
     }
