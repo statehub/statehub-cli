@@ -10,6 +10,7 @@ description = "statehub CLI tool"
 keywords = ["statehub", "cli"]
 
 [dependencies]
+secrecy = "0.7.0"
 anyhow = "1.0"
 base64 = "0.13"
 bytes = "1.0"
