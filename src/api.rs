@@ -299,6 +299,7 @@ impl Inspector for reqwest::RequestBuilder {
             request.headers().iter().for_each(|(header, value)| {
                 log::trace!("{}: {}", header, String::from_utf8_lossy(value.as_bytes()))
             });
+        }
 
         self
     }
