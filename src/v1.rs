@@ -90,12 +90,12 @@ pub struct StateName(pub String);
 pub struct ClusterName(pub String);
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CreateStateLocationAws {
+pub struct CreateStateLocationAwsDto {
     pub region: AwsRegion,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CreateStateLocationAzure {
+pub struct CreateStateLocationAzureDto {
     pub region: AzureRegion,
 }
 
