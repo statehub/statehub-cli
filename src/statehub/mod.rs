@@ -381,7 +381,7 @@ impl StateHub {
     }
 
     pub(crate) async fn list_clusters(&self) -> anyhow::Result<()> {
-        self.api.list_clusters().await.handle_output(self.json)
+        self.api.get_all_clusters().await.handle_output(self.json)
     }
 
     async fn register_cluster(

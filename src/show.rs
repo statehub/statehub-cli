@@ -28,10 +28,7 @@ impl Show for v1::State {
 
 impl Show for Vec<v1::State> {
     fn show(self) -> String {
-        self.into_iter()
-            .map(|state| state.name)
-            .map(|name| name.to_string())
-            .collect()
+        self.into_iter().map(Show::show).join("\n")
     }
 }
 
@@ -47,6 +44,12 @@ impl Show for Vec<v1::Cluster> {
             .map(|cluster| cluster.name)
             .map(|name| name.to_string())
             .collect()
+    }
+}
+
+impl Show for () {
+    fn show(self) -> String {
+        String::new()
     }
 }
 

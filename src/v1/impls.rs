@@ -16,7 +16,11 @@ mod gcp;
 
 impl fmt::Display for State {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("State").field("name", &self.name).finish()
+        f.debug_struct("State")
+            .field("name", &self.name.0)
+            .field("aws", &self.locations.aws)
+            .field("azure", &self.locations.azure)
+            .finish()
     }
 }
 

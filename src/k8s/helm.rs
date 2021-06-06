@@ -101,7 +101,7 @@ impl Helm {
                     .arg("--version")
                     .arg(&helm.version)
                     .arg(&helm.chart);
-                for (param, value) in &helm.paramarers {
+                for (param, value) in &helm.parameters {
                     cmd.arg("--set").arg(format!("{}={}", param, value));
                 }
                 if let Some(default_storage_class) = default_storage_class {

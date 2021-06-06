@@ -47,7 +47,7 @@ impl Api {
     }
 
     pub(crate) async fn is_unauthorized(&self) -> bool {
-        self.get_all_states()
+        self.get_all_clusters()
             .await
             .err()
             .and_then(|e| e.downcast::<reqwest::Error>().ok())
@@ -59,7 +59,7 @@ impl Api {
         self.post("/states", state).await
     }
 
-    pub(crate) async fn delete_state(&self, name: v1::StateName) -> ApiResult<v1::State> {
+    pub(crate) async fn delete_state(&self, name: v1::StateName) -> ApiResult<String> {
         let path = format!("/states/{name}", name = name);
         self.del(path).await
     }
@@ -73,7 +73,7 @@ impl Api {
         self.get("/states").await
     }
 
-    pub(crate) async fn list_clusters(&self) -> ApiResult<Vec<v1::Cluster>> {
+    pub(crate) async fn get_all_clusters(&self) -> ApiResult<Vec<v1::Cluster>> {
         self.get("/clusters").await
     }
 

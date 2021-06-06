@@ -81,7 +81,7 @@ pub struct Helm {
     pub repo: String,
     pub chart: String,
     pub version: String,
-    pub paramarers: HashMap<String, String>,
+    pub parameters: HashMap<String, String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
