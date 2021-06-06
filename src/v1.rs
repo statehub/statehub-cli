@@ -26,7 +26,7 @@ pub struct State {
     pub owner: Option<ClusterName>,
     pub provisioning_status: ProvisioningStatus,
     pub allowed_clusters: Option<Vec<ClusterName>>,
-    pub condition: Option<Condition>,
+    pub condition: Condition,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -99,6 +99,12 @@ pub struct CreateStateLocationAzure {
     pub region: AzureRegion,
 }
 
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct StateLocations {
+    aws: Vec<StateLocationAws>,
+    azure: Vec<StateLocationAzure>,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StateLocationAws {
     pub region: AwsRegion,
@@ -117,6 +123,7 @@ pub enum StateLocationStatus {
     Ok,
     Provisioning,
     Recovering,
+    Deleting,
     Error,
 }
 
@@ -134,8 +141,18 @@ pub enum VolumeBindingMode {
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Locations {
-    aws: Vec<AwsRegion>,
-    azure: Vec<AzureRegion>,
+    aws: Vec<ClusterLocationAws>,
+    azure: Vec<ClusterLocationAzure>,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ClusterLocationAws {
+    region: AwsRegion,
+    account_principal: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ClusterLocationAzure {
+    region: AzureRegion,
 }
 
 #[derive(
