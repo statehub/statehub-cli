@@ -59,6 +59,15 @@ impl Api {
         self.post("/states", state).await
     }
 
+    pub(crate) async fn create_volume(
+        &self,
+        state_name: v1::StateName,
+        volume: v1::CreateVolumeDto,
+    ) -> ApiResult<v1::Volume> {
+        let path = format!("/state/{state_name}/valumes", state_name = state_name);
+        self.post(path, volume).await
+    }
+
     pub(crate) async fn delete_state(&self, name: v1::StateName) -> ApiResult<String> {
         let path = format!("/states/{name}", name = name);
         self.del(path).await

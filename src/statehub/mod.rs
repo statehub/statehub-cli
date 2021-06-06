@@ -174,7 +174,16 @@ enum Command {
     },
 
     #[structopt(about = "Manually create new volume", display_order(50))]
-    CreateVolume,
+    CreateVolume {
+        #[structopt(help = "State name")]
+        state: v1::StateName,
+        #[structopt(help = "Volume name")]
+        volume: v1::VolumeName,
+        #[structopt(help = "valume size")]
+        size: u64,
+        #[structopt(help = "volume file system")]
+        fs_type: v1::VolumeFileSystem,
+    },
 
     #[structopt(about = "Manually delete existing volume", display_order(50))]
     DeleteVolume,
@@ -309,7 +318,12 @@ impl Cli {
             Command::SetAvailability => statehub.set_availability().await,
             Command::SetOwner { state, cluster } => statehub.set_owner(state, cluster).await,
             Command::UnsetOwner { state, cluster } => statehub.unset_owner(state, cluster).await,
-            Command::CreateVolume => statehub.create_volume().await,
+            Command::CreateVolume {
+                state,
+                volume,
+                size,
+                fs_type,
+            } => statehub.create_volume(state, volume, size, fs_type).await,
             Command::DeleteVolume => statehub.delete_volume().await,
             Command::CreateNamespace { namespace } => statehub.create_namespace(namespace).await,
             Command::SaveClusterToken { namespace, token } => {
@@ -448,9 +462,25 @@ impl StateHub {
         self.remove_location_helper(&state, &location).await
     }
 
-    pub(crate) async fn create_volume(self) -> anyhow::Result<()> {
+    async fn create_volume(
+        self,
+        state_name: v1::StateName,
+        volume_name: v1::VolumeName,
+        size: u64,
+        fs: v1::VolumeFileSystem,
+    ) -> anyhow::Result<()> {
+        let volume = v1::CreateVolumeDto {
+            name: volume_name.to_string(),
+            size_gi: size,
+            fs_type: fs.to_string(),
+        };
+
+        self.api
+            .create_volume(state_name, volume)
+            .await
+            .handle_output(self.json)
         // Ok(Output::<String>::todo()).handle_output(self.json)
-        anyhow::bail!(self.show(Output::<String>::todo()))
+        //anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     pub(crate) async fn delete_volume(self) -> anyhow::Result<()> {

@@ -247,6 +247,9 @@ pub enum GcpRegion {
     Antarctica,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct VolumeName(pub String);
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Volume {
@@ -264,6 +267,20 @@ pub struct CreateVolumeDto {
     pub name: String,
     pub size_gi: u64,
     pub fs_type: String,
+}
+
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, SerializeDisplay, DeserializeFromStr,
+)]
+pub enum VolumeFileSystem {
+    EXT,
+    EXT2,
+    EXT3,
+    EXT4,
+    JFS,
+    SWAP,
+    FAT,
+    FAT32,
 }
 
 #[derive(
