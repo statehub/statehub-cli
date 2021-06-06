@@ -6,7 +6,7 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-use k8s_openapi::api::core::v1::{Namespace, Node, Pod, Secret};
+use k8s_openapi::api::core::v1::{ConfigMap, Namespace, Node, Pod, Secret};
 use kube::api::{self, Api};
 // use kube::api::{Api, ListParams, PostParams, Resource, WatchEvent};
 use kube::{Client, ResourceExt};
@@ -25,6 +25,7 @@ const DEFAULT_NS: &str = "default";
 const KUBE_SYSTEM_NS: &str = "kube-system";
 const STATEHUB_CLUSTER_TOKEN_SECRET_TYPE: &str = "statehub.io/cluster-token";
 const STATEHUB_CLUSTER_TOKEN_SECRET_NAME: &str = "statehub-cluster-token";
+const STATEHUB_CLUSTER_CONFIGMAP_NAME: &str = "statehub-configmap";
 
 pub(crate) struct Kubectl {
     client: Client,
@@ -37,6 +38,7 @@ impl Kubectl {
         let namespace = namespace.to_string();
         Ok(Self { client, namespace })
     }
+
     pub(crate) async fn default() -> anyhow::Result<Self> {
         Self::with_namespace(DEFAULT_NS).await
     }
@@ -75,6 +77,31 @@ impl Kubectl {
         let pp = self.post_params();
         let namespace = namespaces.create(&pp, &namespace).await?;
         Ok(namespace)
+    }
+
+    async fn create_configmap(
+        &self,
+        name: &str,
+        cluster_id: &str,
+        default_storage_class: &str,
+    ) -> anyhow::Result<ConfigMap> {
+        let configmap_api = self.configmap();
+        let configmap = json::from_value(json::json!({
+            "apiVerion": "v1",
+            "kind": "ConfigMap",
+            "metadata": {
+                "name": name,
+                "namespace": &self.namespace.to_string(),
+            },
+            "data": {
+                "cluster-id": cluster_id,
+                "default-storage-class": default_storage_class,
+            }
+        }))?;
+        let pp = self.post_params();
+        let configmap = configmap_api.create(&pp, &configmap).await?;
+
+        Ok(configmap)
     }
 
     async fn create_secret(
@@ -140,6 +167,10 @@ impl Kubectl {
     fn secrets(&self) -> Api<Secret> {
         Api::namespaced(self.client.clone(), &self.namespace)
     }
+
+    fn configmap(&self) -> Api<ConfigMap> {
+        Api::namespaced(self.client.clone(), &self.namespace)
+    }
 }
 
 pub(crate) async fn get_regions(
@@ -198,6 +229,23 @@ pub(crate) async fn list_nodes() -> anyhow::Result<impl IntoIterator<Item = Node
 
 pub(crate) async fn list_pods() -> anyhow::Result<impl IntoIterator<Item = Pod>> {
     Kubectl::kube_system().await?.all_pods().await
+}
+
+pub(crate) async fn store_configmap(
+    namespace: &str,
+    cluster_name: &str,
+    default_storage_class: &str,
+) -> anyhow::Result<ConfigMap> {
+    let kube = Kubectl::with_namespace(namespace).await?;
+
+    // TODO: consider deleting resoure of config map if already exists
+
+    kube.create_configmap(
+        STATEHUB_CLUSTER_CONFIGMAP_NAME,
+        cluster_name,
+        default_storage_class,
+    )
+    .await
 }
 
 pub(crate) async fn store_cluster_token(namespace: &str, token: &str) -> anyhow::Result<Secret> {

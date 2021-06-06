@@ -16,7 +16,6 @@ use crate::v1;
 use secrecy::SecretString;
 
 pub(crate) type ApiResult<T> = Result<Output<T>, anyhow::Error>;
-
 #[derive(Debug)]
 pub(crate) struct Api {
     base: String,
