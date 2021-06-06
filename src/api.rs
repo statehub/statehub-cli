@@ -5,19 +5,22 @@
 
 use std::convert::TryInto;
 use std::fmt;
+use std::fmt::Debug;
 
 use inspector::ResultInspector;
+use secrecy::ExposeSecret;
 use serde::{de, ser};
 
 use crate::output::Output;
 use crate::v1;
+use secrecy::SecretString;
 
 pub(crate) type ApiResult<T> = Result<Output<T>, anyhow::Error>;
 
 #[derive(Debug)]
 pub(crate) struct Api {
     base: String,
-    token: Option<String>,
+    token: Option<SecretString>,
     verbose: bool,
     user_agent: String,
 }
@@ -25,7 +28,7 @@ pub(crate) struct Api {
 impl Api {
     pub(crate) fn new(management: &str, token: Option<&str>, verbose: bool) -> Self {
         let user_agent = format!("{}/{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
-        let token = token.map(|s| s.to_string());
+        let token = token.map(String::from).map(SecretString::new);
 
         let base = if management.starts_with("http") {
             format!("{}{}", management, v1::VERSION)
@@ -266,7 +269,7 @@ impl Api {
 }
 
 trait Optionally {
-    fn optionally_bearer_auth(self, token: Option<impl fmt::Display>) -> Self;
+    fn optionally_bearer_auth(self, token: Option<&SecretString>) -> Self;
 
     fn optionally<T, F>(self, option: Option<T>, f: F) -> Self
     where
@@ -282,7 +285,8 @@ trait Optionally {
 }
 
 impl Optionally for reqwest::RequestBuilder {
-    fn optionally_bearer_auth(self, token: Option<impl fmt::Display>) -> Self {
+    fn optionally_bearer_auth(self, token: Option<&SecretString>) -> Self {
+        let token = token.map(ExposeSecret::expose_secret);
         self.optionally(token, Self::bearer_auth)
     }
 }
