@@ -22,7 +22,8 @@ pub struct State {
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
     pub storage_class: Option<StorageClass>,
-    pub locations: Locations,
+    #[serde(default)]
+    pub locations: StateLocations,
     pub owner: Option<ClusterName>,
     pub provisioning_status: ProvisioningStatus,
     pub allowed_clusters: Option<Vec<ClusterName>>,
@@ -34,7 +35,7 @@ pub struct State {
 pub struct CreateStateDto {
     pub name: StateName,
     pub storage_class: Option<StorageClass>,
-    pub locations: Locations,
+    pub locations: CreateStateLocationsDto,
     pub owner: Option<ClusterName>,
     pub allowed_clusters: Option<Vec<ClusterName>>,
 }
@@ -90,6 +91,12 @@ pub struct StateName(pub String);
 pub struct ClusterName(pub String);
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CreateStateLocationsDto {
+    aws: Vec<CreateStateLocationAwsDto>,
+    azure: Vec<CreateStateLocationAzureDto>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CreateStateLocationAwsDto {
     pub region: AwsRegion,
 }
@@ -101,20 +108,58 @@ pub struct CreateStateLocationAzureDto {
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct StateLocations {
-    aws: Vec<StateLocationAws>,
-    azure: Vec<StateLocationAzure>,
+    #[serde(default)]
+    pub aws: Vec<StateLocationAws>,
+    #[serde(default)]
+    pub azure: Vec<StateLocationAzure>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct StateLocationAws {
-    pub region: AwsRegion,
-    pub status: StateLocationStatus,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StateLocationAzure {
     pub region: AzureRegion,
     pub status: StateLocationStatus,
+    pub volumes: Vec<StateLocationVolume>,
+    pub private_link_service: Option<PrivateLinkServiceAzure>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StateLocationAws {
+    pub region: AwsRegion,
+    pub status: StateLocationStatus,
+    pub volumes: Vec<StateLocationVolume>,
+    pub private_link_service: Option<PrivateLinkServiceAws>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct PrivateLinkServiceAws {
+    pub id: String,
+    pub name: String,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct PrivateLinkServiceAzure {
+    pub id: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StateLocationVolume {
+    pub status: StateLocationVolumeStatus,
+    pub progress: Option<StateLocationVolumeProgress>,
+    pub name: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StateLocationVolumeStatus {
+    pub status: StateLocationStatus,
+    pub msg: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StateLocationVolumeProgress {
+    pub bytes_syncronized: u64,
+    pub bytes_total: u64,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
@@ -128,6 +173,7 @@ pub enum StateLocationStatus {
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StorageClass {
     pub mount_options: Option<String>,
     pub volume_binding_mode: VolumeBindingMode,
@@ -145,6 +191,7 @@ pub struct Locations {
     azure: Vec<ClusterLocationAzure>,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ClusterLocationAws {
     region: AwsRegion,
     account_principal: String,

@@ -94,7 +94,7 @@ impl Api {
         region: v1::AwsRegion,
     ) -> ApiResult<v1::StateLocationAws> {
         let path = format!("/states/{name}/locations/aws", name = name);
-        let body = v1::CreateStateLocationAws { region };
+        let body = v1::CreateStateLocationAwsDto { region };
         self.post(path, body).await
     }
 
@@ -104,7 +104,7 @@ impl Api {
         region: v1::AzureRegion,
     ) -> ApiResult<v1::StateLocationAzure> {
         let path = format!("/states/{name}/locations/azure", name = name);
-        let body = v1::CreateStateLocationAzure { region };
+        let body = v1::CreateStateLocationAzureDto { region };
         self.post(path, body).await
     }
 

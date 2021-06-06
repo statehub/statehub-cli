@@ -356,7 +356,7 @@ impl StateHub {
         &self,
         name: v1::StateName,
         owner: Option<v1::ClusterName>,
-        locations: v1::Locations,
+        locations: v1::CreateStateLocationsDto,
     ) -> anyhow::Result<()> {
         let state = v1::CreateStateDto {
             name,

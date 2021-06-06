@@ -96,14 +96,26 @@ impl Default for Condition {
     }
 }
 
-impl From<Vec<Location>> for Locations {
+impl From<AwsRegion> for CreateStateLocationAwsDto {
+    fn from(region: AwsRegion) -> Self {
+        Self { region }
+    }
+}
+
+impl From<AzureRegion> for CreateStateLocationAzureDto {
+    fn from(region: AzureRegion) -> Self {
+        Self { region }
+    }
+}
+
+impl From<Vec<Location>> for CreateStateLocationsDto {
     fn from(locations: Vec<Location>) -> Self {
         let mut aws = vec![];
         let mut azure = vec![];
         for location in locations {
             match location {
-                Location::Aws(region) => aws.push(region),
-                Location::Azure(region) => azure.push(region),
+                Location::Aws(region) => aws.push(region.into()),
+                Location::Azure(region) => azure.push(region.into()),
                 // Location::Gcp(region) => gcp.push(region),
             }
         }
@@ -111,11 +123,11 @@ impl From<Vec<Location>> for Locations {
     }
 }
 
-impl Locations {
+impl StateLocations {
     pub(crate) fn contains(&self, location: &Location) -> bool {
         match location {
-            Location::Aws(region) => self.aws.contains(region),
-            Location::Azure(region) => self.azure.contains(region),
+            Location::Aws(region) => self.aws.iter().any(|aws| aws.region == *region),
+            Location::Azure(region) => self.azure.iter().any(|azure| azure.region == *region),
         }
     }
 }
