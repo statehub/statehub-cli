@@ -5,15 +5,14 @@
 
 use std::convert::TryInto;
 use std::fmt;
-use std::fmt::Debug;
 
 use inspector::ResultInspector;
 use secrecy::ExposeSecret;
+use secrecy::SecretString;
 use serde::{de, ser};
 
 use crate::output::Output;
 use crate::v1;
-use secrecy::SecretString;
 
 pub(crate) type ApiResult<T> = Result<Output<T>, anyhow::Error>;
 #[derive(Debug)]
