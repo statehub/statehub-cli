@@ -417,14 +417,19 @@ impl StateHub {
             helm.skip()
         };
 
+        let locations = k8s::collect_node_locations().await?;
+        let cluster = self.api.register_cluster(&cluster).await?;
+
+        log::info!(
+            "Registering {} located in {}",
+            cluster.show(),
+            locations.show()
+        );
         if let Some(ref states) = states {
-            let locations = k8s::collect_node_locations().await?;
             self.adjust_all_states(states, &locations).await?;
         } else {
             self.verbosely("## Skip adding this cluster to any state");
         }
-
-        let cluster = self.api.register_cluster(&cluster).await?;
 
         k8s::validate_namespace(helm.namespace()).await?;
 

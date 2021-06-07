@@ -6,8 +6,10 @@
 use std::fmt;
 use std::str::FromStr;
 
+use itertools::Itertools;
 use thiserror::Error;
 
+use crate::show::Show;
 use crate::v1;
 
 #[derive(Clone, Copy, Debug)]
@@ -46,6 +48,18 @@ impl FromStr for Location {
                 Err(error)
             }
         }
+    }
+}
+
+impl Show for Location {
+    fn show(&self) -> String {
+        format!("{:#}", self)
+    }
+}
+
+impl Show for Vec<Location> {
+    fn show(&self) -> String {
+        self.iter().map(Show::show).join(" and ")
     }
 }
 

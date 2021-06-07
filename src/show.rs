@@ -11,55 +11,52 @@ use itertools::{join, Itertools};
 use crate::v1;
 
 pub(crate) trait Show {
-    fn show(self) -> String;
+    fn show(&self) -> String;
 }
 
 impl Show for String {
-    fn show(self) -> String {
-        self
+    fn show(&self) -> String {
+        self.to_string()
     }
 }
 
 impl Show for v1::State {
-    fn show(self) -> String {
+    fn show(&self) -> String {
         self.to_string()
     }
 }
 
 impl Show for Vec<v1::State> {
-    fn show(self) -> String {
-        self.into_iter().map(Show::show).join("\n")
+    fn show(&self) -> String {
+        self.iter().map(Show::show).join(", ")
     }
 }
 
 impl Show for v1::Cluster {
-    fn show(self) -> String {
-        self.to_string()
+    fn show(&self) -> String {
+        format!("☸ {}", self.name)
     }
 }
 
 impl Show for Vec<v1::Cluster> {
-    fn show(self) -> String {
-        self.into_iter()
-            .map(|cluster| cluster.name)
-            .map(|name| name.to_string())
-            .collect()
+    fn show(&self) -> String {
+        self.iter().map(Show::show).join(", ")
     }
 }
 
 impl Show for () {
-    fn show(self) -> String {
+    fn show(&self) -> String {
         String::new()
     }
 }
 
 impl Show for v1::Volume {
-    fn show(self) -> String {
+    fn show(&self) -> String {
         volume(self)
     }
 }
 
-pub(crate) fn volume(volume: v1::Volume) -> String {
+pub(crate) fn volume(volume: &v1::Volume) -> String {
     let mut out = String::new();
 
     out += &format!("Volume  :{:>60}\n", volume.name);
@@ -70,11 +67,11 @@ pub(crate) fn volume(volume: v1::Volume) -> String {
 }
 
 impl Show for HashMap<Option<String>, Vec<String>> {
-    fn show(self) -> String {
+    fn show(&self) -> String {
         let mut out = String::new();
 
         for (region, nodes) in self {
-            let region = region.unwrap_or_else(|| String::from("No region"));
+            let region = region.as_deref().unwrap_or("No region");
             out += &format!("{}:    {}\n", region, join(nodes, ", "));
         }
         out
@@ -82,13 +79,13 @@ impl Show for HashMap<Option<String>, Vec<String>> {
 }
 
 impl Show for Command {
-    fn show(self) -> String {
+    fn show(&self) -> String {
         format!("{:?}", self).replace(r#" "#, " ")
     }
 }
 
 impl Show for Vec<Command> {
-    fn show(self) -> String {
-        self.into_iter().map(|cmd| cmd.show()).join("\n\n")
+    fn show(&self) -> String {
+        self.iter().map(|cmd| cmd.show()).join("\n\n")
     }
 }

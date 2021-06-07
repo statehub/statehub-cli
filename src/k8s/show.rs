@@ -10,7 +10,7 @@ use crate::show::Show;
 use super::*;
 
 impl Show for Node {
-    fn show(self) -> String {
+    fn show(&self) -> String {
         let condition = self
             .status
             .as_ref()
@@ -37,7 +37,7 @@ impl Show for Node {
 }
 
 impl Show for Pod {
-    fn show(self) -> String {
+    fn show(&self) -> String {
         let status = self
             .status
             .as_ref()
@@ -57,7 +57,7 @@ impl Show for Pod {
 }
 
 impl Show for Namespace {
-    fn show(self) -> String {
+    fn show(&self) -> String {
         format!("Namespace: {}", self.name())
     }
 }
