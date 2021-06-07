@@ -28,19 +28,33 @@ impl Show for v1::State {
 
 impl Show for Vec<v1::State> {
     fn show(&self) -> String {
-        self.iter().map(Show::show).join(", ")
+        self.iter().map(Show::show).join("\n")
     }
 }
 
 impl Show for v1::Cluster {
     fn show(&self) -> String {
-        format!("☸ {}", self.name)
+        format!("☸ {} [{:#}]", self.name, self.locations.show())
     }
 }
 
 impl Show for Vec<v1::Cluster> {
     fn show(&self) -> String {
-        self.iter().map(Show::show).join(", ")
+        self.iter().map(Show::show).join("\n")
+    }
+}
+
+impl Show for v1::ClusterLocations {
+    fn show(&self) -> String {
+        let aws = self
+            .aws
+            .iter()
+            .map(|location| format!("{:#}", location.region));
+        let azure = self
+            .azure
+            .iter()
+            .map(|location| format!("{:#}", location.region));
+        aws.chain(azure).join(", ")
     }
 }
 
