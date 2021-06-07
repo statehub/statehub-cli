@@ -462,11 +462,23 @@ impl StateHub {
     }
 
     async fn add_location(&self, state: v1::StateName, location: Location) -> anyhow::Result<()> {
-        self.add_location_helper(&state, &location).await
+        let state = self.api.get_state(&state).await?;
+        if state.is_available_in(&location) {
+            log::info!("{} is already available in {}", state, location);
+        } else {
+            self.add_location_helper(&state, &location).await?;
+        }
+        Ok(())
     }
 
     async fn remove_location(self, state: v1::StateName, location: Location) -> anyhow::Result<()> {
-        self.remove_location_helper(&state, &location).await
+        let state = self.api.get_state(&state).await?;
+        if state.is_available_in(&location) {
+            self.remove_location_helper(&state, &location).await?;
+        } else {
+            log::info!("{} is not availabe in {}", state, location);
+        }
+        Ok(())
     }
 
     async fn create_volume(
