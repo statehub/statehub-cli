@@ -424,24 +424,24 @@ impl StateHub {
             self.verbosely("## Skip adding this cluster to any state");
         }
 
-        let output = self.api.register_cluster(&cluster).await?;
+        let cluster = self.api.register_cluster(&cluster).await?;
 
         k8s::validate_namespace(helm.namespace()).await?;
 
-        self.setup_cluster_token_helper(&output, &helm).await?;
-        self.setup_configmap_helper(&output, &helm).await?;
+        self.setup_cluster_token_helper(&cluster, &helm).await?;
+        self.setup_configmap_helper(&cluster, &helm).await?;
 
-        helm.execute(&output, self.verbose).await?;
+        helm.execute(&cluster, self.verbose).await?;
 
         if claim_unowned_states {
             if let Some(states) = states {
                 for state in states {
-                    self.api.set_owner(state, &cluster).await?;
+                    self.api.set_owner(state, &cluster.name).await?;
                 }
             }
         }
 
-        output.handle_output(self.json)
+        cluster.handle_output(self.json)
     }
 
     async fn unregister_cluster(&self, name: v1::ClusterName, force: bool) -> anyhow::Result<()> {
