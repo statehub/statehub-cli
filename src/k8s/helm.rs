@@ -40,6 +40,19 @@ impl Helm {
         }
     }
 
+    pub(crate) fn skip(self) -> Self {
+        match self {
+            Self::Do {
+                namespace,
+                default_storage_class,
+            } => Self::Skip {
+                namespace,
+                default_storage_class,
+            },
+            other => other,
+        }
+    }
+
     pub(crate) fn default_storage_class(&self) -> Option<&str> {
         match self {
             Helm::Skip {

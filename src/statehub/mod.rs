@@ -410,11 +410,12 @@ impl StateHub {
         helm: k8s::Helm,
         claim_unowned_states: bool,
     ) -> anyhow::Result<()> {
-        if !k8s::helm_is_found() {
-            anyhow::bail!(
-                "helm is not detected, please make sure helm is installed and is in the PATH"
-            );
-        }
+        let helm = if k8s::helm_is_found() {
+            helm
+        } else {
+            log::warn!("helm is not detected. Will show helm command instead of executing them");
+            helm.skip()
+        };
 
         if let Some(ref states) = states {
             let locations = k8s::collect_node_locations().await?;
