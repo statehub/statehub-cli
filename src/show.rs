@@ -22,7 +22,18 @@ impl Show for String {
 
 impl Show for v1::State {
     fn show(&self) -> String {
-        self.to_string()
+        let owner = if let Some(ref cluster) = self.owner {
+            format!("🔒 {}", cluster)
+        } else {
+            "🔓".to_string()
+        };
+        format!(
+            "☘ {} {} [{:#}] ({})",
+            self.name,
+            self.condition.show(),
+            self.locations.show(),
+            owner,
+        )
     }
 }
 
@@ -55,6 +66,31 @@ impl Show for v1::ClusterLocations {
             .iter()
             .map(|location| format!("{:#}", location.region));
         aws.chain(azure).join(", ")
+    }
+}
+
+impl Show for v1::StateLocations {
+    fn show(&self) -> String {
+        let aws = self
+            .aws
+            .iter()
+            .map(|location| format!("{:#}", location.region));
+        let azure = self
+            .azure
+            .iter()
+            .map(|location| format!("{:#}", location.region));
+        aws.chain(azure).join(", ")
+    }
+}
+
+impl Show for v1::Condition {
+    fn show(&self) -> String {
+        let condition = match self {
+            Self::Green => "🟢",
+            Self::Yellow => "🟡",
+            Self::Red => "🔴",
+        };
+        String::from(condition)
     }
 }
 
