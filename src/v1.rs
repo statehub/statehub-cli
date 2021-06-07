@@ -56,9 +56,19 @@ pub enum Condition {
     Red,
 }
 
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum Provider {
+    Eks,
+    Aks,
+    Kops,
+    Generic,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CreateClusterDto {
     pub name: ClusterName,
+    pub provider: Provider,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -67,7 +77,8 @@ pub struct Cluster {
     pub name: ClusterName,
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
-    pub locations: Locations,
+    #[serde(default)]
+    pub locations: ClusterLocations,
     pub helm: Vec<Helm>,
 }
 
@@ -119,7 +130,7 @@ pub struct StateLocations {
 pub struct StateLocationAzure {
     pub region: AzureRegion,
     pub status: StateLocationStatus,
-    pub volumes: Vec<StateLocationVolume>,
+    pub volumes: Vec<VolumeLocation>,
     pub private_link_service: Option<PrivateLinkServiceAzure>,
 }
 
@@ -128,7 +139,7 @@ pub struct StateLocationAzure {
 pub struct StateLocationAws {
     pub region: AwsRegion,
     pub status: StateLocationStatus,
-    pub volumes: Vec<StateLocationVolume>,
+    pub volumes: Vec<VolumeLocation>,
     pub private_link_service: Option<PrivateLinkServiceAws>,
 }
 
@@ -143,16 +154,16 @@ pub struct PrivateLinkServiceAzure {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct StateLocationVolume {
-    pub status: StateLocationVolumeStatus,
+pub struct VolumeLocation {
+    pub status: LocationVolumeStatus,
     pub progress: Option<StateLocationVolumeProgress>,
     pub name: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct StateLocationVolumeStatus {
-    pub status: StateLocationStatus,
-    pub msg: String,
+pub struct LocationVolumeStatus {
+    pub value: StateLocationStatus,
+    pub msg: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -186,7 +197,7 @@ pub enum VolumeBindingMode {
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct Locations {
+pub struct ClusterLocations {
     aws: Vec<ClusterLocationAws>,
     azure: Vec<ClusterLocationAzure>,
 }
@@ -257,8 +268,10 @@ pub struct Volume {
     pub name: String,
     pub size_gi: u64,
     pub fs_type: String,
-    pub active_location: Locations,
-    pub status: VolumeStatus,
+    pub active_location: Option<String>,
+    pub locations: Vec<VolumeLocation>,
+    created: DateTime<Utc>,
+    modified: DateTime<Utc>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

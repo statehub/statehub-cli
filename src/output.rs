@@ -48,7 +48,7 @@ where
 
     fn try_from(bytes: Bytes) -> Result<Self, Self::Error> {
         let bytes = if bytes.is_empty() {
-            b"{}"
+            b"null"
         } else {
             bytes.as_ref()
         };

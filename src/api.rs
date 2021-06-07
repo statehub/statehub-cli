@@ -68,6 +68,19 @@ impl Api {
         self.post(path, volume).await
     }
 
+    pub(crate) async fn delete_volume(
+        &self,
+        state: v1::StateName,
+        volume: v1::VolumeName,
+    ) -> ApiResult<v1::Volume> {
+        let path = format!(
+            "/states/{name}/volumes/{volume}",
+            name = state,
+            volume = volume
+        );
+        self.del(path).await
+    }
+
     pub(crate) async fn delete_state(&self, name: v1::StateName) -> ApiResult<()> {
         let path = format!("/states/{name}", name = name);
         self.del(path).await
@@ -88,7 +101,8 @@ impl Api {
 
     pub(crate) async fn register_cluster(&self, name: &v1::ClusterName) -> ApiResult<v1::Cluster> {
         let name = name.clone();
-        let body = v1::CreateClusterDto { name };
+        let provider = v1::Provider::Generic;
+        let body = v1::CreateClusterDto { name, provider };
         self.post("/clusters", body).await
     }
 
@@ -174,7 +188,7 @@ impl Api {
         cluster: impl AsRef<v1::ClusterName>,
     ) -> ApiResult<v1::ClusterToken> {
         let path = format!("/clusters/{}/token", cluster.as_ref());
-        self.post(path, "").await
+        self.post::<_, _, (), _>(path, None).await
     }
 
     fn url(&self, path: impl fmt::Display) -> String {
@@ -226,18 +240,21 @@ impl Api {
             .inspect(|output| self.inspect(output))
     }
 
-    async fn post<P, T, U>(&self, path: P, body: T) -> ApiResult<U>
+    async fn post<P, B, T, U>(&self, path: P, body: B) -> ApiResult<U>
     where
         P: fmt::Display,
+        B: Into<Option<T>>,
         T: ser::Serialize,
         U: de::DeserializeOwned + ser::Serialize + fmt::Debug,
     {
+        let body = body.into();
         let url = self.url(path);
         self.client()?
             .post(url)
             .optionally_bearer_auth(self.token.as_ref())
             .inspect()
-            .json(&body)
+            .optionally_json(body.as_ref())
+            // .json(&body)
             .send()
             .await?
             .error_for_status2()
@@ -273,6 +290,9 @@ impl Api {
 
 trait Optionally {
     fn optionally_bearer_auth(self, token: Option<&SecretString>) -> Self;
+    fn optionally_json<T>(self, body: Option<&T>) -> Self
+    where
+        T: ser::Serialize;
 
     fn optionally<T, F>(self, option: Option<T>, f: F) -> Self
     where
@@ -291,6 +311,13 @@ impl Optionally for reqwest::RequestBuilder {
     fn optionally_bearer_auth(self, token: Option<&SecretString>) -> Self {
         let token = token.map(ExposeSecret::expose_secret);
         self.optionally(token, Self::bearer_auth)
+    }
+
+    fn optionally_json<T>(self, body: Option<&T>) -> Self
+    where
+        T: ser::Serialize,
+    {
+        self.optionally(body, Self::json)
     }
 }
 

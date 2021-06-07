@@ -186,7 +186,12 @@ enum Command {
     },
 
     #[structopt(about = "Manually delete existing volume", display_order(50))]
-    DeleteVolume,
+    DeleteVolume {
+        #[structopt(help = "State name")]
+        state: v1::StateName,
+        #[structopt(help = "Volume name")]
+        volume: v1::VolumeName,
+    },
 
     #[structopt(
         about = "Create new namespace",
@@ -324,7 +329,7 @@ impl Cli {
                 size,
                 fs_type,
             } => statehub.create_volume(state, volume, size, fs_type).await,
-            Command::DeleteVolume => statehub.delete_volume().await,
+            Command::DeleteVolume { state, volume } => statehub.delete_volume(state, volume).await,
             Command::CreateNamespace { namespace } => statehub.create_namespace(namespace).await,
             Command::SaveClusterToken { namespace, token } => {
                 statehub.save_cluster_token(namespace, token).await
@@ -483,9 +488,15 @@ impl StateHub {
         //anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
-    pub(crate) async fn delete_volume(self) -> anyhow::Result<()> {
-        // Ok(Output::<String>::todo()).handle_output(self.json)
-        anyhow::bail!(self.show(Output::<String>::todo()))
+    pub(crate) async fn delete_volume(
+        self,
+        state: v1::StateName,
+        volume: v1::VolumeName,
+    ) -> anyhow::Result<()> {
+        self.api
+            .delete_volume(state, volume)
+            .await
+            .handle_output(self.json)
     }
 
     pub(crate) async fn set_availability(self) -> anyhow::Result<()> {
