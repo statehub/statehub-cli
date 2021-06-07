@@ -38,11 +38,6 @@ where
             self.0.show()
         }
     }
-
-    pub(crate) fn try_from_bytes(bytes: Bytes) -> json::Result<Self> {
-        log::debug!("received body: {}", String::from_utf8_lossy(&bytes));
-        json::from_slice(&bytes).map(Output)
-    }
 }
 
 impl<T> TryFrom<Bytes> for Output<T>
@@ -52,7 +47,8 @@ where
     type Error = anyhow::Error;
 
     fn try_from(bytes: Bytes) -> Result<Self, Self::Error> {
-        Self::try_from_bytes(bytes).map_err(anyhow::Error::from)
+        let inner = json::from_slice(&bytes)?;
+        Ok(Self(inner))
     }
 }
 

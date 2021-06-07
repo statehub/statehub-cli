@@ -193,8 +193,7 @@ impl Api {
             .inspect()
             .send()
             .await?
-            .error_for_status()?
-            .bytes()
+            .error_for_status2()
             .await?
             .try_into()
             .inspect(|output| self.inspect(output))
@@ -212,8 +211,7 @@ impl Api {
             .inspect()
             .send()
             .await?
-            .error_for_status()?
-            .bytes()
+            .error_for_status2()
             .await?
             .try_into()
             .inspect(|output| self.inspect(output))
@@ -233,8 +231,7 @@ impl Api {
             .json(&body)
             .send()
             .await?
-            .error_for_status()?
-            .bytes()
+            .error_for_status2()
             .await?
             .try_into()
             .inspect(|output| self.inspect(output))
@@ -252,8 +249,7 @@ impl Api {
             .inspect()
             .send()
             .await?
-            .error_for_status()?
-            .bytes()
+            .error_for_status2()
             .await?
             .try_into()
             .inspect(|output| self.inspect(output))
@@ -304,5 +300,32 @@ impl Inspector for reqwest::RequestBuilder {
         }
 
         self
+    }
+}
+
+#[async_trait::async_trait]
+trait ResponseExt: Sized {
+    async fn split_response(self) -> reqwest::Result<(reqwest::StatusCode, bytes::Bytes)>;
+    async fn error_for_status2(self) -> anyhow::Result<bytes::Bytes> {
+        let (status, bytes) = self.split_response().await?;
+
+        log::trace!("{}", String::from_utf8_lossy(&bytes));
+
+        if status.is_server_error() {
+            anyhow::bail!("Server error {}", status)
+        } else if status.is_client_error() {
+            anyhow::bail!("Client error {}", status)
+        } else {
+            Ok(bytes)
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl ResponseExt for reqwest::Response {
+    async fn split_response(self) -> reqwest::Result<(reqwest::StatusCode, bytes::Bytes)> {
+        let status = self.status();
+        let bytes = self.bytes().await?;
+        Ok((status, bytes))
     }
 }
