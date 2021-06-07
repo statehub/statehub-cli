@@ -64,7 +64,7 @@ impl Api {
         state_name: v1::StateName,
         volume: v1::CreateVolumeDto,
     ) -> ApiResult<v1::Volume> {
-        let path = format!("/state/{state_name}/valumes", state_name = state_name);
+        let path = format!("/state/{state_name}/volumes", state_name = state_name);
         self.post(path, volume).await
     }
 

@@ -273,14 +273,14 @@ pub struct CreateVolumeDto {
     Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, SerializeDisplay, DeserializeFromStr,
 )]
 pub enum VolumeFileSystem {
-    EXT,
-    EXT2,
-    EXT3,
-    EXT4,
-    JFS,
-    SWAP,
-    FAT,
-    FAT32,
+    Ext,
+    Ext2,
+    Ext3,
+    Ext4,
+    Jfs,
+    Swap,
+    Fat,
+    Fat32,
 }
 
 #[derive(

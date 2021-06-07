@@ -46,14 +46,14 @@ impl InvalidVolumeFileSystem {
 impl VolumeFileSystem {
     fn as_str(&self) -> &'static str {
         match self {
-            Self::EXT => "ext",
-            Self::EXT2 => "ext2",
-            Self::EXT3 => "ext3",
-            Self::EXT4 => "ext4",
-            Self::JFS => "jfs",
-            Self::SWAP => "swap",
-            Self::FAT => "fat",
-            Self::FAT32 => "fat32",
+            Self::Ext => "ext",
+            Self::Ext2 => "ext2",
+            Self::Ext3 => "ext3",
+            Self::Ext4 => "ext4",
+            Self::Jfs => "jfs",
+            Self::Swap => "swap",
+            Self::Fat => "fat",
+            Self::Fat32 => "fat32",
         }
     }
 }
@@ -63,14 +63,14 @@ impl str::FromStr for VolumeFileSystem {
 
     fn from_str(fs: &str) -> Result<Self, Self::Err> {
         match fs {
-            "ext" => Ok(Self::EXT),
-            "ext2" => Ok(Self::EXT2),
-            "ext3" => Ok(Self::EXT3),
-            "ext4" => Ok(Self::EXT4),
-            "jfs" => Ok(Self::JFS),
-            "swap" => Ok(Self::SWAP),
-            "fat" => Ok(Self::FAT),
-            "fat32" => Ok(Self::FAT32),
+            "ext" => Ok(Self::Ext),
+            "ext2" => Ok(Self::Ext2),
+            "ext3" => Ok(Self::Ext3),
+            "ext4" => Ok(Self::Ext4),
+            "jfs" => Ok(Self::Jfs),
+            "swap" => Ok(Self::Swap),
+            "fat" => Ok(Self::Fat),
+            "fat32" => Ok(Self::Fat32),
             other => Err(InvalidVolumeFileSystem::new(other)),
         }
     }
