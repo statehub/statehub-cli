@@ -420,11 +420,7 @@ impl StateHub {
         let locations = k8s::collect_node_locations().await?;
         let cluster = self.api.register_cluster(&cluster).await?;
 
-        log::info!(
-            "Registering {} located in {}",
-            cluster.show(),
-            locations.show()
-        );
+        log::info!("Registering {}", cluster.show());
         if let Some(ref states) = states {
             self.adjust_all_states(states, &locations).await?;
         } else {

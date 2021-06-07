@@ -17,18 +17,22 @@ impl StateHub {
 
     pub(super) async fn add_location_helper(
         &self,
-        name: &v1::StateName,
+        state: &v1::State,
         location: &Location,
     ) -> anyhow::Result<()> {
+        log::info!("Extending {} to {}", state, location);
+
+        let name = state.name.clone();
+
         match location {
             Location::Aws(region) => self
                 .api
-                .add_aws_location(name.clone(), *region)
+                .add_aws_location(name, *region)
                 .await
                 .map(|_aws| ()),
             Location::Azure(region) => self
                 .api
-                .add_azure_location(name.clone(), *region)
+                .add_azure_location(name, *region)
                 .await
                 .map(|_azure| ()),
         }
@@ -36,18 +40,22 @@ impl StateHub {
 
     pub(super) async fn remove_location_helper(
         &self,
-        name: &v1::StateName,
+        state: &v1::State,
         location: &Location,
     ) -> anyhow::Result<()> {
+        log::info!("Truncating {} from {}", state, location);
+
+        let name = state.name.clone();
+
         match location {
             Location::Aws(region) => self
                 .api
-                .del_aws_location(name.clone(), *region)
+                .del_aws_location(name, *region)
                 .await
                 .map(|_aws| ()),
             Location::Azure(region) => self
                 .api
-                .del_azure_location(name.clone(), *region)
+                .del_azure_location(name, *region)
                 .await
                 .map(|_azure| ()),
         }
@@ -72,14 +80,11 @@ impl StateHub {
     ) -> anyhow::Result<()> {
         let state = self.api.get_state(name).await?;
 
+        log::info!("Checking {}", state.show());
         for location in locations {
             if !state.is_available_in(location) {
                 // need to extend the state to this location as well
-                self.verbosely(format!(
-                    "Adding {:#} location to state '{}'",
-                    location, state.name
-                ));
-                self.add_location_helper(&state.name, location).await?;
+                self.add_location_helper(&state, location).await?;
             }
         }
 
