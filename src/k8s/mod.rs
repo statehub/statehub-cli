@@ -249,7 +249,7 @@ pub(crate) async fn store_configmap(
 
     kube.create_configmap(
         STATEHUB_CLUSTER_CONFIGMAP_NAME,
-        &cluster_name,
+        cluster_name,
         default_storage_class,
     )
     .await
