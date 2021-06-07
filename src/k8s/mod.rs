@@ -12,6 +12,7 @@ use kube::api::{self, Api};
 use kube::{Client, ResourceExt};
 use serde_json as json;
 
+use crate::v1::ClusterName;
 use crate::Location;
 
 pub(crate) use helm::Helm;
@@ -82,7 +83,7 @@ impl Kubectl {
     async fn create_configmap(
         &self,
         name: &str,
-        cluster_id: &str,
+        cluster_id: &ClusterName,
         default_storage_class: &str,
     ) -> anyhow::Result<ConfigMap> {
         let configmap_api = self.configmap();
@@ -233,16 +234,22 @@ pub(crate) async fn list_pods() -> anyhow::Result<impl IntoIterator<Item = Pod>>
 
 pub(crate) async fn store_configmap(
     namespace: &str,
-    cluster_name: &str,
+    cluster_name: &ClusterName,
     default_storage_class: &str,
 ) -> anyhow::Result<ConfigMap> {
     let kube = Kubectl::with_namespace(namespace).await?;
 
-    // TODO: consider deleting resoure of config map if already exists
+    if kube
+        .delete_secret(STATEHUB_CLUSTER_TOKEN_SECRET_NAME)
+        .await
+        .is_ok()
+    {
+        log::trace!("Removing previous cluster token");
+    }
 
     kube.create_configmap(
         STATEHUB_CLUSTER_CONFIGMAP_NAME,
-        cluster_name,
+        &cluster_name,
         default_storage_class,
     )
     .await
@@ -258,6 +265,7 @@ pub(crate) async fn store_cluster_token(namespace: &str, token: &str) -> anyhow:
     {
         log::trace!("Removing previous cluster token");
     }
+
     kube.create_secret(
         STATEHUB_CLUSTER_TOKEN_SECRET_TYPE,
         STATEHUB_CLUSTER_TOKEN_SECRET_NAME,

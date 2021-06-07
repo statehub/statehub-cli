@@ -86,6 +86,24 @@ impl StateHub {
         Ok(())
     }
 
+    pub(super) async fn setup_configmap_helper(
+        &self,
+        cluster: &v1::Cluster,
+        helm: &k8s::Helm,
+    ) -> anyhow::Result<()> {
+        let token = self.api.issue_cluster_token(&cluster.name).await?;
+        self.verbosely(format!("Issued token {} for {}", token.token, cluster));
+        let namespace = helm.namespace();
+        let default_storage_class = if let Some(storage) = helm.default_storage_class().as_ref() {
+            storage.as_str()
+        } else {
+            "default"
+        };
+
+        k8s::store_configmap(namespace, &cluster.name, default_storage_class).await?;
+        Ok(())
+    }
+
     pub(super) async fn setup_cluster_token_helper(
         &self,
         cluster: &v1::Cluster,

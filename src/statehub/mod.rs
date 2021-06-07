@@ -409,6 +409,7 @@ impl StateHub {
         k8s::validate_namespace(helm.namespace()).await?;
 
         self.setup_cluster_token_helper(&output, &helm).await?;
+        self.setup_configmap_helper(&output, &helm).await?;
 
         helm.execute(&output, self.verbose).await?;
 
@@ -503,10 +504,10 @@ impl StateHub {
             .map(|namespace| println!("{:#?}", namespace))
     }
 
-    async fn _send_configmap(
+    /*async fn _send_configmap(
         &self,
         namespace: String,
-        cluster_name: String,
+        cluster_name: v1::ClusterName,
         default_storage_class: String,
     ) -> anyhow::Result<()> {
         let _configmap =
@@ -517,7 +518,7 @@ impl StateHub {
 
         // TODO: call some api function to send configmap
         Ok(())
-    }
+    }*/
 
     async fn save_cluster_token(&self, namespace: String, token: String) -> anyhow::Result<()> {
         let secret = k8s::store_cluster_token(&namespace, &token).await?;
