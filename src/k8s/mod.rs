@@ -26,7 +26,7 @@ const DEFAULT_NS: &str = "default";
 const KUBE_SYSTEM_NS: &str = "kube-system";
 const STATEHUB_CLUSTER_TOKEN_SECRET_TYPE: &str = "statehub.io/cluster-token";
 const STATEHUB_CLUSTER_TOKEN_SECRET_NAME: &str = "statehub-cluster-token";
-const STATEHUB_CLUSTER_CONFIGMAP_NAME: &str = "statehub-configmap";
+const STATEHUB_CLUSTER_CONFIGMAP_NAME: &str = "statehub";
 
 pub(crate) struct Kubectl {
     client: Client,
@@ -86,13 +86,13 @@ impl Kubectl {
         cluster_id: &ClusterName,
         default_storage_class: &str,
     ) -> anyhow::Result<ConfigMap> {
-        let configmap_api = self.configmap();
+        let configmaps = self.configmaps();
         let configmap = json::from_value(json::json!({
             "apiVerion": "v1",
             "kind": "ConfigMap",
             "metadata": {
                 "name": name,
-                "namespace": &self.namespace.to_string(),
+                "namespace": self.namespace,
             },
             "data": {
                 "cluster-id": cluster_id,
@@ -100,7 +100,7 @@ impl Kubectl {
             }
         }))?;
         let pp = self.post_params();
-        let configmap = configmap_api.create(&pp, &configmap).await?;
+        let configmap = configmaps.create(&pp, &configmap).await?;
 
         Ok(configmap)
     }
@@ -141,6 +141,19 @@ impl Kubectl {
         Ok(())
     }
 
+    async fn delete_configmap(&self, configmap: &str) -> anyhow::Result<()> {
+        log::info!("Deleting configmap {}", configmap);
+        let configmaps = self.configmaps();
+        let dp = self.delete_params();
+        configmaps
+            .delete(configmap, &dp)
+            .await?
+            .map_left(|cm| log::info!("Delete in progress {:#?}", cm))
+            .map_right(|cm| log::info!("Delete succeeded: {:#?}", cm));
+
+        Ok(())
+    }
+
     fn delete_params(&self) -> api::DeleteParams {
         api::DeleteParams::default()
     }
@@ -169,7 +182,7 @@ impl Kubectl {
         Api::namespaced(self.client.clone(), &self.namespace)
     }
 
-    fn configmap(&self) -> Api<ConfigMap> {
+    fn configmaps(&self) -> Api<ConfigMap> {
         Api::namespaced(self.client.clone(), &self.namespace)
     }
 }
@@ -240,11 +253,11 @@ pub(crate) async fn store_configmap(
     let kube = Kubectl::with_namespace(namespace).await?;
 
     if kube
-        .delete_secret(STATEHUB_CLUSTER_TOKEN_SECRET_NAME)
+        .delete_configmap(STATEHUB_CLUSTER_CONFIGMAP_NAME)
         .await
         .is_ok()
     {
-        log::trace!("Removing previous cluster token");
+        log::trace!("Removing previous configmap");
     }
 
     kube.create_configmap(

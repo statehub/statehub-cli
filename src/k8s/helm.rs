@@ -40,16 +40,16 @@ impl Helm {
         }
     }
 
-    pub(crate) fn default_storage_class(&self) -> &Option<String> {
+    pub(crate) fn default_storage_class(&self) -> Option<&str> {
         match self {
             Helm::Skip {
                 namespace: _,
                 default_storage_class,
-            } => default_storage_class,
+            } => default_storage_class.as_deref(),
             Helm::Do {
                 namespace: _,
                 default_storage_class,
-            } => default_storage_class,
+            } => default_storage_class.as_deref(),
         }
     }
 

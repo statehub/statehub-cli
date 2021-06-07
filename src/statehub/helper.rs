@@ -94,11 +94,8 @@ impl StateHub {
         let token = self.api.issue_cluster_token(&cluster.name).await?;
         self.verbosely(format!("Issued token {} for {}", token.token, cluster));
         let namespace = helm.namespace();
-        let default_storage_class = if let Some(storage) = helm.default_storage_class().as_ref() {
-            storage.as_str()
-        } else {
-            "default"
-        };
+
+        let default_storage_class = helm.default_storage_class().unwrap_or("");
 
         k8s::store_configmap(namespace, &cluster.name, default_storage_class).await?;
         Ok(())
