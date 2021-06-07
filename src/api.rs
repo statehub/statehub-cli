@@ -68,7 +68,7 @@ impl Api {
         self.post(path, volume).await
     }
 
-    pub(crate) async fn delete_state(&self, name: v1::StateName) -> ApiResult<String> {
+    pub(crate) async fn delete_state(&self, name: v1::StateName) -> ApiResult<()> {
         let path = format!("/states/{name}", name = name);
         self.del(path).await
     }
