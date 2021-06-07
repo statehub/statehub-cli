@@ -103,8 +103,8 @@ pub struct ClusterName(pub String);
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CreateStateLocationsDto {
-    aws: Vec<CreateStateLocationAwsDto>,
-    azure: Vec<CreateStateLocationAzureDto>,
+    pub aws: Vec<CreateStateLocationAwsDto>,
+    pub azure: Vec<CreateStateLocationAzureDto>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -198,19 +198,19 @@ pub enum VolumeBindingMode {
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct ClusterLocations {
-    aws: Vec<ClusterLocationAws>,
-    azure: Vec<ClusterLocationAzure>,
+    pub aws: Vec<ClusterLocationAws>,
+    pub azure: Vec<ClusterLocationAzure>,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ClusterLocationAws {
-    region: AwsRegion,
-    account_principal: String,
+    pub region: AwsRegion,
+    pub account_principal: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ClusterLocationAzure {
-    region: AzureRegion,
+    pub region: AzureRegion,
 }
 
 #[derive(
@@ -270,8 +270,8 @@ pub struct Volume {
     pub fs_type: String,
     pub active_location: Option<String>,
     pub locations: Vec<VolumeLocation>,
-    created: DateTime<Utc>,
-    modified: DateTime<Utc>,
+    pub created: DateTime<Utc>,
+    pub modified: DateTime<Utc>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
