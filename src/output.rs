@@ -47,7 +47,12 @@ where
     type Error = anyhow::Error;
 
     fn try_from(bytes: Bytes) -> Result<Self, Self::Error> {
-        let inner = json::from_slice(&bytes)?;
+        let bytes = if bytes.is_empty() {
+            b"{}"
+        } else {
+            bytes.as_ref()
+        };
+        let inner = json::from_slice(bytes)?;
         Ok(Self(inner))
     }
 }
