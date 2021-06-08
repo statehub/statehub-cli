@@ -432,7 +432,6 @@ impl StateHub {
             .register_cluster(&cluster, provider, &locations)
             .await?;
 
-        log::info!("All mode locations {:?}", locations);
         log::info!("Registering {}", cluster.show());
         if let Some(ref states) = states {
             self.adjust_all_states(states, &locations).await?;
@@ -547,10 +546,16 @@ impl StateHub {
         state: v1::StateName,
         cluster: v1::ClusterName,
     ) -> anyhow::Result<()> {
-        self.api
-            .unset_owner(state, cluster)
-            .await
-            .handle_output(self.json)
+        let state = self.api.get_state(&state).await?;
+
+        if state.owner == Some(cluster) {
+            self.api
+                .unset_owner(&state.name)
+                .await
+                .handle_output(self.json)
+        } else {
+            anyhow::bail!("Permission denied, you are not theowner of this state.")
+        }
     }
 
     pub(crate) fn show<T>(&self, output: Output<T>) -> String

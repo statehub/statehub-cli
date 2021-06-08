@@ -116,7 +116,7 @@ impl Api {
         self.post("/clusters", body).await
     }
 
-    pub(crate) async fn unregister_cluster(&self, name: v1::ClusterName) -> ApiResult<v1::Cluster> {
+    pub(crate) async fn unregister_cluster(&self, name: v1::ClusterName) -> ApiResult<()> {
         let path = format!("/clusters/{name}", name = name);
         self.del(path).await
     }
@@ -183,13 +183,8 @@ impl Api {
     pub(crate) async fn unset_owner(
         &self,
         state: impl AsRef<v1::StateName>,
-        cluster: impl AsRef<v1::ClusterName>,
     ) -> ApiResult<v1::State> {
-        let path = format!(
-            "/states/{state}/owner/{cluster}",
-            state = state.as_ref(),
-            cluster = cluster.as_ref(),
-        );
+        let path = format!("/states/{state}/owner", state = state.as_ref());
         self.del(path).await
     }
 
