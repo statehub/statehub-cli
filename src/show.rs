@@ -28,7 +28,7 @@ impl Show for v1::State {
             "🔓".to_string()
         };
         format!(
-            "☘ {} {} [{:#}] ({})",
+            "☘{:>16} {} [{:#}] ({})",
             self.name,
             self.condition.show(),
             self.locations.show(),
@@ -74,12 +74,25 @@ impl Show for v1::StateLocations {
         let aws = self
             .aws
             .iter()
-            .map(|location| format!("{:#}", location.region));
+            .map(|location| format!("{:#} {}", location.region, location.status.show()));
         let azure = self
             .azure
             .iter()
-            .map(|location| format!("{:#}", location.region));
+            .map(|location| format!("{:#} {}", location.region, location.status.show()));
         aws.chain(azure).join(", ")
+    }
+}
+
+impl Show for v1::StateLocationStatus {
+    fn show(&self) -> String {
+        let text = match self {
+            Self::Ok => "\u{1f197}",
+            Self::Provisioning => "\u{1f3c3} \u{1f51c}",
+            Self::Recovering => "",
+            Self::Deleting => "",
+            Self::Error => "\u{274c}",
+        };
+        text.into()
     }
 }
 
