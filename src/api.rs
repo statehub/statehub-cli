@@ -196,7 +196,7 @@ impl Api {
         self.post::<_, _, (), _>(path, None).await
     }
 
-    fn url(&self, path: impl fmt::Display) -> String {
+    pub(crate) fn url(&self, path: impl fmt::Display) -> String {
         format!("{}{}", self.base, path)
     }
 
@@ -273,7 +273,7 @@ impl Api {
         P: fmt::Display,
         T: de::DeserializeOwned + ser::Serialize + fmt::Debug,
     {
-        let url = format!("{}{}", self.base, path);
+        let url = self.url(path);
         self.client()?
             .put(url)
             .optionally_bearer_auth(self.token.as_ref())

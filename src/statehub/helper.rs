@@ -98,7 +98,8 @@ impl StateHub {
     ) -> anyhow::Result<()> {
         let namespace = helm.namespace();
         let default_storage_class = helm.default_storage_class().unwrap_or("");
-        k8s::store_configmap(namespace, &cluster.name, default_storage_class).await?;
+        let api = self.api.url("");
+        k8s::store_configmap(namespace, &cluster.name, default_storage_class, &api).await?;
         Ok(())
     }
 

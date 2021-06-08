@@ -83,8 +83,9 @@ impl Kubectl {
     async fn create_configmap(
         &self,
         name: &str,
-        cluster_id: &v1::ClusterName,
+        cluster_name: &v1::ClusterName,
         default_storage_class: &str,
+        api: &str,
     ) -> anyhow::Result<ConfigMap> {
         let configmaps = self.configmaps();
         let configmap = json::from_value(json::json!({
@@ -95,8 +96,9 @@ impl Kubectl {
                 "namespace": self.namespace,
             },
             "data": {
-                "cluster-id": cluster_id,
+                "cluster-name": cluster_name,
                 "default-storage-class": default_storage_class,
+                "api-url": api,
             }
         }))?;
         let pp = self.post_params();
@@ -249,6 +251,7 @@ pub(crate) async fn store_configmap(
     namespace: &str,
     cluster_name: &v1::ClusterName,
     default_storage_class: &str,
+    api: &str,
 ) -> anyhow::Result<ConfigMap> {
     let kube = Kubectl::with_namespace(namespace).await?;
 
@@ -264,6 +267,7 @@ pub(crate) async fn store_configmap(
         STATEHUB_CLUSTER_CONFIGMAP_NAME,
         cluster_name,
         default_storage_class,
+        api,
     )
     .await
 }
