@@ -12,7 +12,7 @@ use kube::api::{self, Api};
 use kube::{Client, ResourceExt};
 use serde_json as json;
 
-use crate::v1::ClusterName;
+use crate::v1;
 use crate::Location;
 
 pub(crate) use helm::Helm;
@@ -83,7 +83,7 @@ impl Kubectl {
     async fn create_configmap(
         &self,
         name: &str,
-        cluster_id: &ClusterName,
+        cluster_id: &v1::ClusterName,
         default_storage_class: &str,
     ) -> anyhow::Result<ConfigMap> {
         let configmaps = self.configmaps();
@@ -247,7 +247,7 @@ pub(crate) async fn list_pods() -> anyhow::Result<impl IntoIterator<Item = Pod>>
 
 pub(crate) async fn store_configmap(
     namespace: &str,
-    cluster_name: &ClusterName,
+    cluster_name: &v1::ClusterName,
     default_storage_class: &str,
 ) -> anyhow::Result<ConfigMap> {
     let kube = Kubectl::with_namespace(namespace).await?;
@@ -298,4 +298,8 @@ pub(crate) fn extract_cluster_token(secret: &Secret) -> Option<Cow<'_, str>> {
         .and_then(|data| data.get("cluster-token"))
         .map(|bytes| bytes.0.as_slice())
         .map(String::from_utf8_lossy)
+}
+
+pub(crate) fn get_default_cluster_name() -> Option<v1::ClusterName> {
+    None
 }

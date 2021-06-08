@@ -76,8 +76,8 @@ enum Command {
 
     #[structopt(about = "Register new cluster", aliases = &["register-cl", "rc"], display_order(10))]
     RegisterCluster {
-        #[structopt(help = "Cluster name")]
-        name: v1::ClusterName,
+        #[structopt(help = "Cluster name, defaults to current k8s context")]
+        name: Option<v1::ClusterName>,
 
         #[structopt(
             help = "List of states to for this cluster to use",
@@ -292,6 +292,13 @@ impl Cli {
                 namespace,
                 skip_helm,
             } => {
+                let name = if let Some(name) = name.or_else(k8s::get_default_cluster_name) {
+                    name
+                } else {
+                    anyhow::bail!(
+                        "No default Kubernetes context found, need to provide cluster name"
+                    );
+                };
                 let no_default_storage_class = if no_state {
                     true
                 } else {
