@@ -107,6 +107,7 @@ impl Helm {
             .map(|helm| {
                 let mut cmd = Command::new("helm");
                 cmd.arg("install")
+                    .arg(&helm.chart)
                     .arg("--namespace")
                     .arg(namespace)
                     .arg("--repo")
