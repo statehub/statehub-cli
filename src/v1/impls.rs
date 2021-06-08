@@ -113,6 +113,36 @@ impl From<AzureRegion> for CreateStateLocationAzureDto {
     }
 }
 
+impl From<AwsRegion> for ClusterLocationAws {
+    fn from(region: AwsRegion) -> Self {
+        Self {
+            region,
+            account_principal: None,
+        }
+    }
+}
+
+impl From<AzureRegion> for ClusterLocationAzure {
+    fn from(region: AzureRegion) -> Self {
+        Self { region }
+    }
+}
+
+impl From<&[Location]> for ClusterLocations {
+    fn from(locations: &[Location]) -> Self {
+        let mut aws = vec![];
+        let mut azure = vec![];
+        for location in locations {
+            match location {
+                Location::Aws(region) => aws.push((*region).into()),
+                Location::Azure(region) => azure.push((*region).into()),
+                // Location::Gcp(region) => gcp.push(region),
+            }
+        }
+        Self { aws, azure }
+    }
+}
+
 impl From<Vec<Location>> for CreateStateLocationsDto {
     fn from(locations: Vec<Location>) -> Self {
         let mut aws = vec![];

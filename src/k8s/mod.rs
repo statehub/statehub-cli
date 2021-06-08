@@ -303,3 +303,8 @@ pub(crate) fn extract_cluster_token(secret: &Secret) -> Option<Cow<'_, str>> {
 pub(crate) fn get_default_cluster_name() -> Option<v1::ClusterName> {
     None
 }
+
+// TODO: implement provider fetch out of cluster
+pub(crate) fn get_cluster_provider(_cluster: &v1::ClusterName) -> v1::Provider {
+    v1::Provider::Generic
+}

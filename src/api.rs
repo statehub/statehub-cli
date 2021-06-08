@@ -11,6 +11,7 @@ use secrecy::ExposeSecret;
 use secrecy::SecretString;
 use serde::{de, ser};
 
+use crate::location::Location;
 use crate::output::Output;
 use crate::v1;
 
@@ -99,10 +100,19 @@ impl Api {
         self.get("/clusters").await
     }
 
-    pub(crate) async fn register_cluster(&self, name: &v1::ClusterName) -> ApiResult<v1::Cluster> {
+    pub(crate) async fn register_cluster(
+        &self,
+        name: &v1::ClusterName,
+        provider: v1::Provider,
+        locations: &[Location],
+    ) -> ApiResult<v1::Cluster> {
         let name = name.clone();
-        let provider = v1::Provider::Generic;
-        let body = v1::CreateClusterDto { name, provider };
+        let locations = locations.into();
+        let body = v1::CreateClusterDto {
+            name,
+            provider,
+            locations,
+        };
         self.post("/clusters", body).await
     }
 

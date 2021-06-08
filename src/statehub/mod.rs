@@ -425,8 +425,14 @@ impl StateHub {
         };
 
         let locations = k8s::collect_node_locations().await?;
-        let cluster = self.api.register_cluster(&cluster).await?;
+        let provider = k8s::get_cluster_provider(&cluster);
 
+        let cluster = self
+            .api
+            .register_cluster(&cluster, provider, &locations)
+            .await?;
+
+        log::info!("All mode locations {:?}", locations);
         log::info!("Registering {}", cluster.show());
         if let Some(ref states) = states {
             self.adjust_all_states(states, &locations).await?;

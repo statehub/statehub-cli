@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use serde_with::{DeserializeFromStr, SerializeDisplay};
+use serde_with::{skip_serializing_none, DeserializeFromStr, SerializeDisplay};
 use uuid::Uuid;
 
 mod impls;
@@ -69,6 +69,7 @@ pub enum Provider {
 pub struct CreateClusterDto {
     pub name: ClusterName,
     pub provider: Provider,
+    pub locations: ClusterLocations,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -201,11 +202,12 @@ pub struct ClusterLocations {
     pub aws: Vec<ClusterLocationAws>,
     pub azure: Vec<ClusterLocationAzure>,
 }
+#[skip_serializing_none]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ClusterLocationAws {
     pub region: AwsRegion,
-    pub account_principal: String,
+    pub account_principal: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
