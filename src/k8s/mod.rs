@@ -9,7 +9,9 @@ use std::collections::HashMap;
 use k8s_openapi::api::core::v1::{ConfigMap, Namespace, Node, Pod, Secret};
 use kube::api::{self, Api};
 // use kube::api::{Api, ListParams, PostParams, Resource, WatchEvent};
+use kube::config::Kubeconfig;
 use kube::{Client, ResourceExt};
+
 use serde_json as json;
 
 use crate::v1;
@@ -304,11 +306,21 @@ pub(crate) fn extract_cluster_token(secret: &Secret) -> Option<Cow<'_, str>> {
         .map(String::from_utf8_lossy)
 }
 
-pub(crate) fn get_default_cluster_name() -> Option<v1::ClusterName> {
-    None
-}
-
 // TODO: implement provider fetch out of cluster
 pub(crate) fn get_cluster_provider(_cluster: &v1::ClusterName) -> v1::Provider {
     v1::Provider::Generic
+}
+
+pub(crate) fn get_cluster_name() -> Option<v1::ClusterName> {
+    Kubeconfig::read()
+        .ok()
+        .and_then(|config| {
+            let contexts = config.contexts;
+            let clusters = config.clusters;
+            config
+                .current_context
+                .or_else(|| contexts.into_iter().next().map(|context| context.name))
+                .or_else(|| clusters.into_iter().next().map(|cluster| cluster.name))
+        })
+        .map(Into::into)
 }
