@@ -628,7 +628,7 @@ impl StateHub {
     ) -> anyhow::Result<()> {
         let default_state = default_state.as_deref().unwrap_or("");
         let api = self.api.url("");
-        let _configmap = k8s::store_configmap(&namespace, &cluster, &default_state, &api).await?;
+        let _configmap = k8s::store_configmap(&namespace, &cluster, default_state, &api).await?;
 
         Ok(())
     }
