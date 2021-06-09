@@ -217,6 +217,14 @@ enum Command {
         #[structopt(help = "Cluster token")]
         token: String,
     },
+    SaveConfigMap {
+        #[structopt(help = "Namespace to install statehub components")]
+        namespace: String,
+        #[structopt(help = "cluster name")]
+        cluster: v1::ClusterName,
+        #[structopt(help = "The name of the state to configure as default storage class")]
+        default_storage_class: Option<String>,
+    },
 
     #[structopt(
         about = "List K8s namespaces",
@@ -339,6 +347,15 @@ impl Cli {
             Command::CreateNamespace { namespace } => statehub.create_namespace(namespace).await,
             Command::SaveClusterToken { namespace, token } => {
                 statehub.save_cluster_token(namespace, token).await
+            }
+            Command::SaveConfigMap {
+                namespace,
+                cluster,
+                default_storage_class,
+            } => {
+                statehub
+                    .save_configmap(namespace, cluster, default_storage_class)
+                    .await
             }
             Command::ListNamespaces => statehub.list_namespaces().await,
             Command::ListNodes => statehub.list_nodes().await,
@@ -600,6 +617,20 @@ impl StateHub {
         if let Some(token) = k8s::extract_cluster_token(&secret) {
             log::debug!("Token: {}", token);
         }
+        Ok(())
+    }
+
+    async fn save_configmap(
+        &self,
+        namespace: String,
+        cluster: v1::ClusterName,
+        default_storage_class: Option<String>,
+    ) -> anyhow::Result<()> {
+        let default_storage_class = default_storage_class.as_deref().unwrap_or("");
+        let api = self.api.url("");
+        let _configmap =
+            k8s::store_configmap(&namespace, &cluster, &default_storage_class, &api).await?;
+
         Ok(())
     }
 
