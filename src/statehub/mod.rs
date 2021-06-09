@@ -293,13 +293,11 @@ impl Cli {
                 namespace,
                 skip_helm,
             } => {
-                let name = if let Some(name) = name.or_else(k8s::get_cluster_name) {
-                    name
-                } else {
-                    anyhow::bail!(
+                let name = name.or_else(k8s::get_cluster_name).ok_or_else(|| {
+                    anyhow::anyhow!(
                         "No default Kubernetes context found, need to provide cluster name"
-                    );
-                };
+                    )
+                })?;
                 let no_default_storage_class = if no_state {
                     true
                 } else {

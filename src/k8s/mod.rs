@@ -11,10 +11,8 @@ use kube::api::{self, Api};
 // use kube::api::{Api, ListParams, PostParams, Resource, WatchEvent};
 use kube::config::Kubeconfig;
 use kube::{Client, ResourceExt};
-
 use serde_json as json;
 
-use crate::utils::strings;
 use crate::v1;
 use crate::Location;
 
@@ -314,19 +312,21 @@ pub(crate) fn get_cluster_provider(_cluster: &v1::ClusterName) -> v1::Provider {
 }
 
 pub(crate) fn get_cluster_name() -> Option<v1::ClusterName> {
-    Kubeconfig::read()
-        .ok()
-        .and_then(|config| {
-            let contexts = config.contexts;
-            let clusters = config.clusters;
-            config
-                .current_context
-                .or_else(|| contexts.into_iter().next().map(|context| context.name))
-                .or_else(|| clusters.into_iter().next().map(|cluster| cluster.name))
-        })
-        .map(|name| {
-            strings::last_delimiter(name.as_str(), CLUSTER_DELIMITER)
-                .to_string()
-                .into()
-        })
+    let config = Kubeconfig::read().ok()?;
+    let contexts = config.contexts;
+    let clusters = config.clusters;
+    config
+        .current_context
+        .or_else(|| contexts.into_iter().next().map(|context| context.name))
+        .or_else(|| clusters.into_iter().next().map(|cluster| cluster.name))
+        .map(rsplit_slash)
+        .map(v1::ClusterName)
+}
+
+fn rsplit_slash(text: String) -> String {
+    if let Some((_, name)) = text.rsplit_once(CLUSTER_DELIMITER) {
+        name.to_string()
+    } else {
+        text
+    }
 }
