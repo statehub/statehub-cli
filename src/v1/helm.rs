@@ -1,6 +1,3 @@
-use super::*;
-mod impls;
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Helm {
     pub repo: String,
