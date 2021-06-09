@@ -18,6 +18,8 @@ use location::Location;
 use output::Output;
 use statehub::Cli;
 
+// utils
+mod utils;
 // statehub API implementation
 mod api;
 // K8s interface and helpers

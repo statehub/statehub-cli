@@ -14,6 +14,7 @@ use kube::{Client, ResourceExt};
 
 use serde_json as json;
 
+use crate::utils::strings;
 use crate::v1;
 use crate::Location;
 
@@ -29,6 +30,7 @@ const KUBE_SYSTEM_NS: &str = "kube-system";
 const STATEHUB_CLUSTER_TOKEN_SECRET_TYPE: &str = "statehub.io/cluster-token";
 const STATEHUB_CLUSTER_TOKEN_SECRET_NAME: &str = "statehub-cluster-token";
 const STATEHUB_CLUSTER_CONFIGMAP_NAME: &str = "statehub";
+const CLUSTER_DELIMITER: char = '/';
 
 pub(crate) struct Kubectl {
     client: Client,
@@ -322,5 +324,9 @@ pub(crate) fn get_cluster_name() -> Option<v1::ClusterName> {
                 .or_else(|| contexts.into_iter().next().map(|context| context.name))
                 .or_else(|| clusters.into_iter().next().map(|cluster| cluster.name))
         })
-        .map(Into::into)
+        .map(|name| {
+            strings::last_delimiter(name.as_str(), CLUSTER_DELIMITER)
+                .to_string()
+                .into()
+        })
 }
