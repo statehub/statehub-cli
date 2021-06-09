@@ -5,6 +5,7 @@
 
 use std::fmt;
 
+use dialoguer::{theme, Confirm};
 use serde::{de::DeserializeOwned, Serialize};
 use structopt::StructOpt;
 // use structopt::clap;
@@ -354,17 +355,20 @@ pub(crate) struct StateHub {
     config: Config,
     api: api::Api,
     json: bool,
+    theme: theme::SimpleTheme,
     verbose: bool,
 }
 
 impl StateHub {
     fn new(config: Config, json: bool, verbose: bool) -> Self {
         let api = api::Api::new(config.api(), config.token(), verbose);
+        let theme = theme::SimpleTheme;
 
         Self {
             config,
             api,
             json,
+            theme,
             verbose,
         }
     }
@@ -629,10 +633,18 @@ impl StateHub {
         self.config.save()
     }
 
-    fn confirm(&self, text: impl fmt::Display) -> bool {
-        print!("{}", text);
-        let yes: String = text_io::read!();
-        yes == "y" || yes == "yes"
+    fn confirm(&self, prompt: impl Into<String>) -> bool {
+        let theme = self.theme();
+        Confirm::with_theme(theme)
+            .with_prompt(prompt)
+            .default(false)
+            .show_default(true)
+            .interact()
+            .unwrap_or(false)
+    }
+
+    fn theme(&self) -> &dyn theme::Theme {
+        &self.theme
     }
 
     fn verbosely(&self, text: impl fmt::Display) {
