@@ -9,7 +9,7 @@ use std::str::FromStr;
 use itertools::Itertools;
 use thiserror::Error;
 
-use crate::show::Show;
+use crate::traits::Show;
 use crate::v1;
 
 #[derive(Clone, Copy, Debug)]

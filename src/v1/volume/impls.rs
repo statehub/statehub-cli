@@ -82,3 +82,54 @@ impl fmt::Display for VolumeFileSystem {
         text.fmt(f)
     }
 }
+
+impl VolumeStatus {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Ok => "ok",
+            Self::Degraded => "degraded",
+            Self::Error => "error",
+            Self::Syncing => "syncing",
+            Self::Pending => "pending",
+        }
+    }
+}
+
+impl fmt::Display for VolumeStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.as_str().fmt(f)
+    }
+}
+
+impl str::FromStr for VolumeStatus {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let status = match s {
+            "ok" => Self::Ok,
+            "degraded" => Self::Degraded,
+            "error" => Self::Error,
+            "syncing" => Self::Syncing,
+            "pending" => Self::Pending,
+            other => anyhow::bail!("Inknown volume status: {}", other),
+        };
+
+        Ok(status)
+    }
+}
+
+impl Show for Volume {
+    fn show(&self) -> String {
+        volume(self)
+    }
+}
+
+pub(crate) fn volume(volume: &Volume) -> String {
+    let mut out = String::new();
+
+    out += &format!("Volume  :{:>60}\n", volume.name);
+    out += &format!("Size    :{:>56} GiB\n", volume.size_gi);
+    out += &format!("FS Type :{:>60}\n", volume.fs_type);
+
+    out
+}

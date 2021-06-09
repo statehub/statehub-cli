@@ -6,7 +6,7 @@
 use std::process::Command;
 use tokio::process::Command as AsyncCmd;
 
-use crate::show::Show;
+use crate::traits::Show;
 use crate::v1;
 
 #[derive(Debug)]

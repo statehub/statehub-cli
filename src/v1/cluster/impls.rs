@@ -1,0 +1,103 @@
+use super::*;
+
+impl fmt::Display for Cluster {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Cluster").field("name", &self.name).finish()
+    }
+}
+
+impl From<String> for ClusterName {
+    fn from(name: String) -> Self {
+        Self(name)
+    }
+}
+
+impl From<&str> for ClusterName {
+    fn from(text: &str) -> Self {
+        text.to_string().into()
+    }
+}
+
+impl fmt::Display for ClusterName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl str::FromStr for ClusterName {
+    type Err = Infallible;
+
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        Ok(text.into())
+    }
+}
+
+impl AsRef<Self> for ClusterName {
+    fn as_ref(&self) -> &Self {
+        self
+    }
+}
+
+impl ops::Deref for ClusterName {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.deref()
+    }
+}
+
+impl From<AwsRegion> for ClusterLocationAws {
+    fn from(region: AwsRegion) -> Self {
+        Self {
+            region,
+            account_principal: None,
+        }
+    }
+}
+
+impl From<AzureRegion> for ClusterLocationAzure {
+    fn from(region: AzureRegion) -> Self {
+        Self { region }
+    }
+}
+
+impl From<&[Location]> for ClusterLocations {
+    fn from(locations: &[Location]) -> Self {
+        let mut aws = vec![];
+        let mut azure = vec![];
+        for location in locations {
+            match location {
+                Location::Aws(region) => aws.push((*region).into()),
+                Location::Azure(region) => azure.push((*region).into()),
+                // Location::Gcp(region) => gcp.push(region),
+            }
+        }
+        Self { aws, azure }
+    }
+}
+
+impl Show for Cluster {
+    fn show(&self) -> String {
+        format!("☸ {} [{:#}]", self.name, self.locations.show())
+    }
+}
+
+impl Show for Vec<Cluster> {
+    fn show(&self) -> String {
+        self.iter().map(Show::show).join("\n")
+    }
+}
+
+impl Show for ClusterLocations {
+    fn show(&self) -> String {
+        let aws = self
+            .aws
+            .iter()
+            .map(|location| format!("{:#}", location.region));
+        let azure = self
+            .azure
+            .iter()
+            .map(|location| format!("{:#}", location.region));
+        aws.chain(azure).join(", ")
+    }
+}

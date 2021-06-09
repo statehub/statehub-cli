@@ -5,7 +5,7 @@
 
 use std::fmt;
 
-use crate::show::Show;
+use crate::traits::Show;
 
 use super::*;
 

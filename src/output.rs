@@ -10,7 +10,7 @@ use bytes::Bytes;
 use serde::{de, ser};
 use serde_json as json;
 
-use crate::show::Show;
+use crate::traits::Show;
 
 /// `Output` wraps different form of data returned by the API
 #[derive(Debug)]

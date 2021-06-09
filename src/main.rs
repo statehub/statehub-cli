@@ -30,7 +30,8 @@ mod output;
 mod show;
 // Main tool bussines logic
 mod statehub;
-
+// custom traits
+mod traits;
 // stathub API v1 definitions
 pub mod v1;
 

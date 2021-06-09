@@ -3,9 +3,6 @@
 // Use is subject to license terms.
 //
 
-use std::fmt;
-use std::str;
-
 use super::*;
 
 impl CloudRegion for GcpRegion {

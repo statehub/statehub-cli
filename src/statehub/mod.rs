@@ -12,7 +12,7 @@ use structopt::StructOpt;
 
 use crate::api;
 use crate::k8s;
-use crate::show::Show;
+use crate::traits::Show;
 use crate::v1;
 use crate::Location;
 use crate::Output;
