@@ -223,7 +223,7 @@ enum Command {
         #[structopt(help = "cluster name")]
         cluster: v1::ClusterName,
         #[structopt(help = "The name of the state to configure as default storage class")]
-        default_storage_class: Option<String>,
+        default_state: Option<String>,
     },
 
     #[structopt(
@@ -351,10 +351,10 @@ impl Cli {
             Command::SaveConfigMap {
                 namespace,
                 cluster,
-                default_storage_class,
+                default_state,
             } => {
                 statehub
-                    .save_configmap(namespace, cluster, default_storage_class)
+                    .save_configmap(namespace, cluster, default_state)
                     .await
             }
             Command::ListNamespaces => statehub.list_namespaces().await,
@@ -624,12 +624,11 @@ impl StateHub {
         &self,
         namespace: String,
         cluster: v1::ClusterName,
-        default_storage_class: Option<String>,
+        default_state: Option<String>,
     ) -> anyhow::Result<()> {
-        let default_storage_class = default_storage_class.as_deref().unwrap_or("");
+        let default_state = default_state.as_deref().unwrap_or("");
         let api = self.api.url("");
-        let _configmap =
-            k8s::store_configmap(&namespace, &cluster, &default_storage_class, &api).await?;
+        let _configmap = k8s::store_configmap(&namespace, &cluster, &default_state, &api).await?;
 
         Ok(())
     }
