@@ -3,7 +3,9 @@
 // Use is subject to license terms.
 //
 
+use std::convert::Infallible;
 use std::fmt;
+use std::ops;
 use std::str;
 
 use crate::location::{InvalidRegion, Location};
@@ -31,6 +33,12 @@ impl From<String> for StateName {
     }
 }
 
+impl From<&str> for StateName {
+    fn from(text: &str) -> Self {
+        text.to_string().into()
+    }
+}
+
 impl fmt::Display for StateName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
@@ -38,16 +46,24 @@ impl fmt::Display for StateName {
 }
 
 impl str::FromStr for StateName {
-    type Err = String;
+    type Err = Infallible;
 
     fn from_str(text: &str) -> Result<Self, Self::Err> {
-        Ok(text.to_string().into())
+        Ok(text.into())
     }
 }
 
 impl AsRef<Self> for StateName {
     fn as_ref(&self) -> &Self {
         self
+    }
+}
+
+impl ops::Deref for StateName {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.deref()
     }
 }
 
@@ -69,6 +85,12 @@ impl From<String> for ClusterName {
     }
 }
 
+impl From<&str> for ClusterName {
+    fn from(text: &str) -> Self {
+        text.to_string().into()
+    }
+}
+
 impl fmt::Display for ClusterName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
@@ -76,16 +98,24 @@ impl fmt::Display for ClusterName {
 }
 
 impl str::FromStr for ClusterName {
-    type Err = String;
+    type Err = Infallible;
 
     fn from_str(text: &str) -> Result<Self, Self::Err> {
-        Ok(text.to_string().into())
+        Ok(text.into())
     }
 }
 
 impl AsRef<Self> for ClusterName {
     fn as_ref(&self) -> &Self {
         self
+    }
+}
+
+impl ops::Deref for ClusterName {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.deref()
     }
 }
 
