@@ -76,6 +76,9 @@ enum Command {
 
     #[structopt(about = "Register new cluster", aliases = &["register-cl", "rc"], display_order(10))]
     RegisterCluster {
+        #[structopt(help = "Cluster name, defaults to current k8s context")]
+        name: Option<v1::ClusterName>,
+
         #[structopt(
             help = "List of states to for this cluster to use",
             long,
@@ -280,6 +283,7 @@ impl Cli {
             Command::ShowState { name } => statehub.show_state(&name).await,
             Command::ListClusters => statehub.list_clusters().await,
             Command::RegisterCluster {
+                name,
                 states,
                 no_state,
                 no_default_storage_class,
@@ -288,7 +292,7 @@ impl Cli {
                 namespace,
                 skip_helm,
             } => {
-                let name = if let Some(name) = k8s::get_cluster_name() {
+                let name = if let Some(name) = name.or_else(k8s::get_cluster_name) {
                     name
                 } else {
                     anyhow::bail!(
