@@ -303,7 +303,7 @@ impl Cli {
                 } else {
                     no_default_storage_class
                 };
-                let default_storage_class = if no_default_storage_class {
+                let default_state = if no_default_storage_class {
                     None
                 } else if default_storage_class.is_none() {
                     states.first().map(|state| state.to_string())
@@ -312,7 +312,7 @@ impl Cli {
                 };
                 let states = if no_state { None } else { Some(states) };
                 let claim_unowned_states = !no_state_owner;
-                let helm = k8s::Helm::new(namespace, default_storage_class, skip_helm);
+                let helm = k8s::Helm::new(namespace, default_state, skip_helm);
                 statehub
                     .register_cluster(name, states, helm, claim_unowned_states)
                     .await

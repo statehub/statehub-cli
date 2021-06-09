@@ -13,29 +13,25 @@ use crate::v1;
 pub(crate) enum Helm {
     Skip {
         namespace: String,
-        default_storage_class: Option<String>,
+        default_state: Option<String>,
     },
     Do {
         namespace: String,
-        default_storage_class: Option<String>,
+        default_state: Option<String>,
     },
 }
 
 impl Helm {
-    pub(crate) fn new(
-        namespace: String,
-        default_storage_class: Option<String>,
-        skip_helm: bool,
-    ) -> Self {
+    pub(crate) fn new(namespace: String, default_state: Option<String>, skip_helm: bool) -> Self {
         if skip_helm {
             Self::Skip {
                 namespace,
-                default_storage_class,
+                default_state,
             }
         } else {
             Self::Do {
                 namespace,
-                default_storage_class,
+                default_state,
             }
         }
     }
@@ -44,25 +40,19 @@ impl Helm {
         match self {
             Self::Do {
                 namespace,
-                default_storage_class,
+                default_state,
             } => Self::Skip {
                 namespace,
-                default_storage_class,
+                default_state,
             },
             other => other,
         }
     }
 
-    pub(crate) fn default_storage_class(&self) -> Option<&str> {
+    pub(crate) fn default_state(&self) -> Option<&str> {
         match self {
-            Helm::Skip {
-                namespace: _,
-                default_storage_class,
-            } => default_storage_class.as_deref(),
-            Helm::Do {
-                namespace: _,
-                default_storage_class,
-            } => default_storage_class.as_deref(),
+            Helm::Skip { default_state, .. } => default_state.as_deref(),
+            Helm::Do { default_state, .. } => default_state.as_deref(),
         }
     }
 
@@ -91,16 +81,6 @@ impl Helm {
     }
 
     fn command(&self, cluster: &v1::Cluster) -> Vec<Command> {
-        let (namespace, default_storage_class) = match self {
-            Helm::Skip {
-                namespace,
-                default_storage_class,
-            } => (namespace, default_storage_class),
-            Helm::Do {
-                namespace,
-                default_storage_class,
-            } => (namespace, default_storage_class),
-        };
         cluster
             .helm
             .iter()
@@ -109,7 +89,7 @@ impl Helm {
                 cmd.arg("install")
                     .arg(&helm.chart)
                     .arg("--namespace")
-                    .arg(namespace)
+                    .arg(self.namespace())
                     .arg("--repo")
                     .arg(&helm.repo)
                     .arg("--version")
@@ -118,14 +98,6 @@ impl Helm {
                 for (param, value) in &helm.parameters {
                     cmd.arg("--set").arg(format!("{}={}", param, value));
                 }
-                if let Some(default_storage_class) = default_storage_class {
-                    cmd.arg("--set").arg(format!(
-                        "cluster.default_storage_class={}",
-                        default_storage_class
-                    ));
-                }
-                cmd.arg("--set")
-                    .arg(format!("cluster.name={}", cluster.name));
                 cmd
             })
             .collect()

@@ -86,7 +86,7 @@ impl Kubectl {
         &self,
         name: &str,
         cluster_name: &v1::ClusterName,
-        default_storage_class: &str,
+        default_state: &str,
         api: &str,
     ) -> anyhow::Result<ConfigMap> {
         let configmaps = self.configmaps();
@@ -99,7 +99,7 @@ impl Kubectl {
             },
             "data": {
                 "cluster-name": cluster_name,
-                "default-storage-class": default_storage_class,
+                "default-state": default_state,
                 "api-url": api,
             }
         }))?;
@@ -252,7 +252,7 @@ pub(crate) async fn list_pods() -> anyhow::Result<impl IntoIterator<Item = Pod>>
 pub(crate) async fn store_configmap(
     namespace: &str,
     cluster_name: &v1::ClusterName,
-    default_storage_class: &str,
+    default_state: &str,
     api: &str,
 ) -> anyhow::Result<ConfigMap> {
     let kube = Kubectl::with_namespace(namespace).await?;
@@ -268,7 +268,7 @@ pub(crate) async fn store_configmap(
     kube.create_configmap(
         STATEHUB_CLUSTER_CONFIGMAP_NAME,
         cluster_name,
-        default_storage_class,
+        default_state,
         api,
     )
     .await
