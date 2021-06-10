@@ -445,7 +445,11 @@ impl StateHub {
     }
 
     pub(crate) async fn show_state(self, state: &v1::StateName) -> anyhow::Result<()> {
-        self.api.get_state(state).await.handle_output(self.json)
+        self.api
+            .get_state(state)
+            .await
+            .map(Detailed)
+            .handle_output(self.json)
     }
 
     async fn list_states(&self) -> anyhow::Result<()> {

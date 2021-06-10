@@ -54,6 +54,13 @@ impl State {
     pub(crate) fn is_available_in(&self, location: &Location) -> bool {
         self.locations.contains(location)
     }
+
+    fn show_owner(&self) -> String {
+        self.owner
+            .as_ref()
+            .map(|cluster| format!("🔒 {}", cluster))
+            .unwrap_or_else(|| "🔓".to_string())
+    }
 }
 
 impl Default for VolumeBindingMode {
@@ -106,17 +113,31 @@ impl StateLocations {
 
 impl Show for State {
     fn show(&self) -> String {
-        let owner = if let Some(ref cluster) = self.owner {
-            format!("🔒 {}", cluster)
-        } else {
-            "🔓".to_string()
-        };
         format!(
             "☘{:>16} {} [{:#}] ({})",
             self.name,
             self.condition.show(),
             self.locations.show(),
-            owner,
+            self.show_owner(),
+        )
+    }
+
+    fn detailed_show(&self) -> String {
+        let storage_class = self
+            .storage_class
+            .as_ref()
+            .map(|sc| sc.name.as_str())
+            .unwrap_or("");
+        format!(
+            "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+            format_args!("State:         {}", self.name),
+            format_args!("Id:            {}", self.id),
+            format_args!("Locations:     {}", self.locations.show()),
+            format_args!("Storage Class: {}", storage_class),
+            format_args!("Owner:         {}", self.show_owner()),
+            format_args!("Created:       {}", self.created),
+            format_args!("Modified:      {}", self.modified),
+            format_args!("Condition:     {}", self.condition.show())
         )
     }
 }
