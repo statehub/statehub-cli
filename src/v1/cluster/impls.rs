@@ -1,3 +1,10 @@
+//
+// Copyright (c) 2021 RepliXio Ltd. All rights reserved.
+// Use is subject to license terms.
+//
+
+use crate::k8s;
+
 use super::*;
 
 impl fmt::Display for Cluster {
@@ -79,6 +86,20 @@ impl From<&[Location]> for ClusterLocations {
 impl Show for Cluster {
     fn show(&self) -> String {
         format!("☸ {} [{:#}]", self.name, self.locations.show())
+    }
+
+    fn detailed_show(&self) -> String {
+        let helm = k8s::Helm::new("statehub-system".to_string(), None, true);
+        let helm = helm.command(self);
+        format!(
+            "{}\n{}\n{}\n{}\n{}\n{}",
+            format_args!("Cluster:     {}", self.name),
+            format_args!("Id:          {}", self.id),
+            format_args!("Locations:   {}", self.locations.show()),
+            format_args!("Created:     {}", self.created),
+            format_args!("Modified:    {}", self.modified),
+            format_args!("Helm install:\n{}", helm.show())
+        )
     }
 }
 

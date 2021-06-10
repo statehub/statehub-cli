@@ -80,7 +80,7 @@ impl Helm {
         Ok(())
     }
 
-    fn command(&self, cluster: &v1::Cluster) -> Vec<Command> {
+    pub(crate) fn command(&self, cluster: &v1::Cluster) -> Vec<Command> {
         cluster
             .helm
             .iter()

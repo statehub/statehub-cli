@@ -96,6 +96,11 @@ impl Api {
         self.get("/states").await
     }
 
+    pub(crate) async fn get_cluster(&self, name: &v1::ClusterName) -> ApiResult<v1::Cluster> {
+        let path = format!("/clusters/{name}", name = name);
+        self.get(path).await
+    }
+
     pub(crate) async fn get_all_clusters(&self) -> ApiResult<Vec<v1::Cluster>> {
         self.get("/clusters").await
     }

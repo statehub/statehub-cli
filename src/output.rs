@@ -7,18 +7,18 @@ use std::convert::TryFrom;
 use std::{fmt, ops};
 
 use bytes::Bytes;
-use serde::{de, ser};
+use serde::{de, Deserialize, Serialize};
 use serde_json as json;
 
 use crate::traits::Show;
 
 /// `Output` wraps different form of data returned by the API
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct Output<T>(T);
 
 impl<T> Output<T>
 where
-    T: de::DeserializeOwned + ser::Serialize,
+    T: de::DeserializeOwned + Serialize,
 {
     pub(crate) fn todo() -> Output<String> {
         let text = String::from("NOT IMPLEMENTED YET");
@@ -40,9 +40,22 @@ where
     }
 }
 
+impl<T> Show for Output<T>
+where
+    T: Show,
+{
+    fn show(&self) -> String {
+        self.0.show()
+    }
+
+    fn detailed_show(&self) -> String {
+        self.0.detailed_show()
+    }
+}
+
 impl<T> TryFrom<Bytes> for Output<T>
 where
-    T: de::DeserializeOwned + ser::Serialize,
+    T: de::DeserializeOwned + Serialize,
 {
     type Error = anyhow::Error;
 

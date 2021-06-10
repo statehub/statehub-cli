@@ -6,4 +6,7 @@ pub(crate) trait CloudRegion {
 
 pub(crate) trait Show {
     fn show(&self) -> String;
+    fn detailed_show(&self) -> String {
+        self.show()
+    }
 }

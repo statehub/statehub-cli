@@ -12,6 +12,7 @@ use structopt::StructOpt;
 
 use crate::api;
 use crate::k8s;
+use crate::show::Detailed;
 use crate::traits::Show;
 use crate::v1;
 use crate::Location;
@@ -129,6 +130,12 @@ enum Command {
         force: bool,
         #[structopt(help = "Cluster name")]
         name: v1::ClusterName,
+    },
+
+    #[structopt(about = "Show registered cluster details", aliases = &["show-cl", "sc"], display_order(10))]
+    ShowCluster {
+        #[structopt(help = "Cluster name")]
+        name: Option<v1::ClusterName>,
     },
 
     #[structopt(
@@ -328,6 +335,14 @@ impl Cli {
             Command::UnregisterCluster { force, name } => {
                 statehub.unregister_cluster(name, force).await
             }
+            Command::ShowCluster { name } => {
+                let name = name.or_else(k8s::get_cluster_name).ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "No default Kubernetes context found, need to provide cluster name"
+                    )
+                })?;
+                statehub.show_cluster(name).await
+            }
             Command::AddLocation { state, location } => {
                 statehub.add_location(state, location).await
             }
@@ -474,6 +489,14 @@ impl StateHub {
         }
 
         cluster.handle_output(self.json)
+    }
+
+    async fn show_cluster(&self, name: v1::ClusterName) -> anyhow::Result<()> {
+        self.api
+            .get_cluster(&name)
+            .await
+            .map(Detailed)
+            .handle_output(self.json)
     }
 
     async fn unregister_cluster(&self, name: v1::ClusterName, force: bool) -> anyhow::Result<()> {
@@ -686,16 +709,26 @@ trait HandleOutput {
     fn handle_output(self, json: bool) -> anyhow::Result<()>;
 }
 
-impl<T> HandleOutput for api::ApiResult<T>
+impl<T> HandleOutput for anyhow::Result<T>
 where
-    T: DeserializeOwned + Serialize + Show,
+    T: HandleOutput,
 {
     fn handle_output(self, json: bool) -> anyhow::Result<()> {
-        self.and_then(|output| output.handle_output(json))
+        self?.handle_output(json)
     }
 }
 
 impl<T> HandleOutput for Output<T>
+where
+    T: DeserializeOwned + Serialize + Show,
+{
+    fn handle_output(self, json: bool) -> anyhow::Result<()> {
+        println!("{}", self.into_text(json));
+        Ok(())
+    }
+}
+
+impl<T> HandleOutput for Detailed<Output<T>>
 where
     T: DeserializeOwned + Serialize + Show,
 {
