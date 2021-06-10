@@ -116,7 +116,7 @@ enum Command {
         #[structopt(
             help = "Namespace to install statehub components",
             long,
-            default_value = "statehub"
+            default_value = "statehub-system"
         )]
         namespace: String,
 
@@ -203,12 +203,12 @@ enum Command {
 
     #[structopt(
         about = "Create new namespace",
-        alias = "c-ns",
+        aliases = &["cns", "c-ns", "create-ns"],
         display_order(1000),
         // setting(clap::AppSettings::Hidden)
     )]
     CreateNamespace {
-        #[structopt(help = "Namespace name")]
+        #[structopt(help = "Namespace name", default_value = "statehub-system")]
         namespace: String,
     },
 
@@ -224,12 +224,24 @@ enum Command {
         #[structopt(help = "Cluster token")]
         token: String,
     },
-    SaveConfigMap {
-        #[structopt(help = "Namespace to install statehub components")]
-        namespace: String,
+
+    #[structopt(
+        about = "Setup statehub configmap",
+        aliases = &["scm", "setup-cm"],
+        display_order(1000),
+        // setting(clap::AppSettings::Hidden)
+    )]
+    SetupConfigmap {
         #[structopt(help = "cluster name")]
         cluster: v1::ClusterName,
-        #[structopt(help = "The name of the state to configure as default storage class")]
+        #[structopt(
+            help = "Namespace to install statehub components",
+            default_value = "statehub-system"
+        )]
+        namespace: String,
+        #[structopt(
+            help = "The name of the state to configure as default storage class, nothing by default"
+        )]
         default_state: Option<String>,
     },
 
@@ -363,13 +375,13 @@ impl Cli {
             Command::SaveClusterToken { namespace, token } => {
                 statehub.save_cluster_token(namespace, token).await
             }
-            Command::SaveConfigMap {
+            Command::SetupConfigmap {
                 namespace,
                 cluster,
                 default_state,
             } => {
                 statehub
-                    .save_configmap(namespace, cluster, default_state)
+                    .setup_configmap(namespace, cluster, default_state)
                     .await
             }
             Command::ListNamespaces => statehub.list_namespaces().await,
@@ -643,7 +655,7 @@ impl StateHub {
         Ok(())
     }
 
-    async fn save_configmap(
+    async fn setup_configmap(
         &self,
         namespace: String,
         cluster: v1::ClusterName,
