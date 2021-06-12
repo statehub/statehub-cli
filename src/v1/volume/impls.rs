@@ -111,7 +111,7 @@ impl str::FromStr for VolumeStatus {
             "error" => Self::Error,
             "syncing" => Self::Syncing,
             "pending" => Self::Pending,
-            other => anyhow::bail!("Inknown volume status: {}", other),
+            other => anyhow::bail!("Unknown volume status: {}", other),
         };
 
         Ok(status)
