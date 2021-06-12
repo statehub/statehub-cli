@@ -12,7 +12,7 @@ use thiserror::Error;
 use crate::traits::Show;
 use crate::v1;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub(crate) enum Location {
     Aws(v1::AwsRegion),
     Azure(v1::AzureRegion),
@@ -25,6 +25,18 @@ impl fmt::Display for Location {
             Self::Aws(region) => region.fmt(f),
             Self::Azure(region) => region.fmt(f),
         }
+    }
+}
+
+impl From<v1::AwsRegion> for Location {
+    fn from(region: v1::AwsRegion) -> Self {
+        Self::Aws(region)
+    }
+}
+
+impl From<v1::AzureRegion> for Location {
+    fn from(region: v1::AzureRegion) -> Self {
+        Self::Azure(region)
     }
 }
 
