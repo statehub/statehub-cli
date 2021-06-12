@@ -31,14 +31,14 @@ impl AsRef<Self> for VolumeName {
 }
 
 #[derive(Debug, Error)]
-#[error(r#"Invalid file system type ""#)]
+#[error(r#"Invalid file system type "{file_system}"#)]
 pub struct InvalidVolumeFileSystem {
     file_system: String,
 }
 
 impl InvalidVolumeFileSystem {
     pub(crate) fn new(fs: &str) -> Self {
-        let file_system = format!("unrecognized {} file system", &fs);
+        let file_system = fs.to_string();
         Self { file_system }
     }
 }
