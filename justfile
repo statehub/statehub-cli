@@ -1,5 +1,7 @@
 build:
     cargo build --workspace --all-targets
+static:
+    cargo build --target x86_64-unknown-linux-musl
 clean:
     cargo clean
 test:
