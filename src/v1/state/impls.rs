@@ -238,7 +238,7 @@ impl Show for StateLocations {
     fn detailed_show(&self) -> String {
         let aws = self.aws.iter().map(|location| {
             format!(
-                " {:#}:\n  {}\n  {},",
+                " {:#}:\n  {}\n  {}",
                 location.region,
                 format_args!("Status: {}", location.status.show()),
                 format_args!(
@@ -253,11 +253,17 @@ impl Show for StateLocations {
         });
         let azure = self.azure.iter().map(|location| {
             format!(
-                " {:#}:\n  {}\n  {}\n  {},",
+                " {:#}:\n  {}\n {}",
                 location.region,
                 format_args!("Status: {}", location.status.show()),
-                format_args!("Status: {}", location.status.show()),
-                format_args!("Status: {}", location.status.show()),
+                format_args!(
+                    "PLS   : {}",
+                    location
+                        .private_link_service
+                        .as_ref()
+                        .map(|pls| pls.detailed_show())
+                        .unwrap_or_else(|| String::from("None"))
+                )
             )
         });
 
