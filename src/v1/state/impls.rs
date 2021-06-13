@@ -253,7 +253,7 @@ impl Show for StateLocations {
         });
         let azure = self.azure.iter().map(|location| {
             format!(
-                " {:#}:\n  {}\n {}",
+                " {:#}:\n  {}\n  {}",
                 location.region,
                 format_args!("Status: {}", location.status.show()),
                 format_args!(
