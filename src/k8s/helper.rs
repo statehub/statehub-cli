@@ -10,6 +10,7 @@ use kube::api::ResourceExt;
 
 const K8S_TOPOLOGY_REGION: &str = "topology.kubernetes.io/region";
 const K8S_TOPOLOGY_ZONE: &str = "topology.kubernetes.io/zone";
+const AKS_CLUSTER: &str = "kubernetes.azure.com/cluster";
 
 trait LabelsExt: ResourceExt {
     fn label(&self, label: impl AsRef<str>) -> Option<&str> {
@@ -49,4 +50,15 @@ pub(super) fn group_nodes_by_zone(
             zones.entry(zone).or_default().push(name);
             zones
         })
+}
+
+pub(super) fn is_aks(nodes: impl IntoIterator<Item = Node>) -> bool {
+    nodes
+        .into_iter()
+        .filter_map(|node| node.label(AKS_CLUSTER).map(String::from))
+        .any(|label| label.starts_with("MC_"))
+}
+
+pub(super) fn is_eks() -> bool {
+    true
 }

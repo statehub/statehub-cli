@@ -17,7 +17,7 @@ use crate::v1;
 use crate::Location;
 
 pub(crate) use helm::Helm;
-use helper::{group_nodes_by_region, group_nodes_by_zone};
+use helper::{group_nodes_by_region, group_nodes_by_zone, is_aks, is_eks};
 
 mod helm;
 mod helper;
@@ -307,8 +307,18 @@ pub(crate) fn extract_cluster_token(secret: &Secret) -> Option<Cow<'_, str>> {
 }
 
 // TODO: implement provider fetch out of cluster
-pub(crate) fn get_cluster_provider(_cluster: &v1::ClusterName) -> v1::Provider {
-    v1::Provider::Generic
+pub(crate) async fn get_cluster_provider(
+    _cluster: &v1::ClusterName,
+) -> anyhow::Result<v1::Provider> {
+    let kube = Kubectl::default().await?;
+    let nodes = kube.all_nodes().await?;
+    if is_aks(nodes) {
+        Ok(v1::Provider::Aks)
+    } else if is_eks() {
+        Ok(v1::Provider::Eks)
+    } else {
+        Ok(v1::Provider::Generic)
+    }
 }
 
 pub(crate) fn get_cluster_name() -> Option<v1::ClusterName> {

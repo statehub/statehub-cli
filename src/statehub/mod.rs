@@ -475,7 +475,7 @@ impl StateHub {
         };
 
         let locations = k8s::collect_node_locations().await?;
-        let provider = k8s::get_cluster_provider(&cluster);
+        let provider = k8s::get_cluster_provider(&cluster).await?;
 
         let cluster = self
             .api
