@@ -33,7 +33,7 @@ pub struct VolumeLocation {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StateLocationVolumeProgress {
-    pub bytes_syncronized: u64,
+    pub bytes_synchronized: u64,
     pub bytes_total: u64,
 }
 
