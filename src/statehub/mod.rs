@@ -122,6 +122,9 @@ enum Command {
 
         #[structopt(help = "Skip running 'helm install'", long)]
         skip_helm: bool,
+
+        #[structopt(help = "K8s cluster provider [default: autodetect]", long)]
+        provider: Option<v1::Provider>,
     },
 
     #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"], display_order(10))]
@@ -319,6 +322,7 @@ impl Cli {
                 no_state_owner,
                 namespace,
                 skip_helm,
+                provider,
             } => {
                 let name = name.or_else(k8s::get_cluster_name).ok_or_else(|| {
                     anyhow::anyhow!(
@@ -341,7 +345,7 @@ impl Cli {
                 let claim_unowned_states = !no_state_owner;
                 let helm = k8s::Helm::new(namespace, default_state, skip_helm);
                 statehub
-                    .register_cluster(name, states, helm, claim_unowned_states)
+                    .register_cluster(name, provider, states, helm, claim_unowned_states)
                     .await
             }
             Command::UnregisterCluster { force, name } => {
@@ -463,6 +467,7 @@ impl StateHub {
     async fn register_cluster(
         &self,
         cluster: v1::ClusterName,
+        provider: Option<v1::Provider>,
         states: Option<Vec<v1::StateName>>,
         helm: k8s::Helm,
         claim_unowned_states: bool,
@@ -475,14 +480,23 @@ impl StateHub {
         };
 
         let locations = k8s::collect_node_locations().await?;
-        let provider = k8s::get_cluster_provider(&cluster).await?;
+        let provider = if let Some(provider) = provider {
+            provider
+        } else {
+            k8s::get_cluster_provider(&cluster).await?
+        };
 
         let cluster = self
             .api
             .register_cluster(&cluster, provider, &locations)
             .await?;
 
-        log::info!("Registering {}", cluster.show());
+        self.inform(format!(
+            "Registering {} cluster {} in {}",
+            provider,
+            cluster.show(),
+            locations.show()
+        ));
         if let Some(ref states) = states {
             self.adjust_all_states(states, &locations).await?;
         } else {
@@ -718,6 +732,10 @@ impl StateHub {
         if self.verbose {
             println!("{}", text)
         }
+    }
+
+    fn inform(&self, text: impl fmt::Display) {
+        println!("{}", text)
     }
 }
 

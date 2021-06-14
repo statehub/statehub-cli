@@ -3,6 +3,8 @@
 // Use is subject to license terms.
 //
 
+use std::str;
+
 use crate::k8s;
 
 use super::*;
@@ -120,5 +122,36 @@ impl Show for ClusterLocations {
             .iter()
             .map(|location| format!("{:#}", location.region));
         aws.chain(azure).join(", ")
+    }
+}
+
+impl Provider {
+    pub(crate) fn as_str(&self) -> &'static str {
+        match self {
+            Self::Eks => "eks",
+            Self::Aks => "aks",
+            Self::Kops => "kops",
+            Self::Generic => "generic",
+        }
+    }
+}
+
+impl fmt::Display for Provider {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.as_str().fmt(f)
+    }
+}
+
+impl str::FromStr for Provider {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "eks" => Ok(Self::Eks),
+            "aks" => Ok(Self::Aks),
+            "kops" => Ok(Self::Kops),
+            "genetic" => Ok(Self::Generic),
+            other => anyhow::bail!("Invalid K8s provider: {}", other),
+        }
     }
 }
