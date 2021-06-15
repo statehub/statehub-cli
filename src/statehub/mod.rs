@@ -73,9 +73,6 @@ enum Command {
         name: v1::StateName,
     },
 
-    #[structopt(about = "List registered clusters", aliases = &["list-cluster", "list-cl", "lc"], display_order(10))]
-    ListClusters,
-
     #[structopt(about = "Register new cluster", aliases = &["register-cl", "rc"], display_order(10))]
     RegisterCluster {
         #[structopt(help = "Cluster name, defaults to current k8s context")]
@@ -127,7 +124,7 @@ enum Command {
         provider: Option<v1::Provider>,
     },
 
-    #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"], display_order(10))]
+    #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"], display_order(11))]
     UnregisterCluster {
         #[structopt(help = "Skip confirmation", long, short)]
         force: bool,
@@ -135,7 +132,10 @@ enum Command {
         name: v1::ClusterName,
     },
 
-    #[structopt(about = "Show registered cluster details", aliases = &["show-cl", "sc"], display_order(10))]
+    #[structopt(about = "List registered clusters", aliases = &["list-cluster", "list-cl", "lc"], display_order(12))]
+    ListClusters,
+
+    #[structopt(about = "Show registered cluster details", aliases = &["show-cl", "sc"], display_order(13))]
     ShowCluster {
         #[structopt(help = "Cluster name")]
         name: Option<v1::ClusterName>,
@@ -325,7 +325,6 @@ impl Cli {
             Command::DeleteState { name: state } => statehub.delete_state(state).await,
             Command::ListStates => statehub.list_states().await,
             Command::ShowState { name } => statehub.show_state(&name).await,
-            Command::ListClusters => statehub.list_clusters().await,
             Command::RegisterCluster {
                 name,
                 states,
@@ -364,6 +363,7 @@ impl Cli {
             Command::UnregisterCluster { force, name } => {
                 statehub.unregister_cluster(name, force).await
             }
+            Command::ListClusters => statehub.list_clusters().await,
             Command::ShowCluster { name } => {
                 let name = name.or_else(k8s::get_cluster_name).ok_or_else(|| {
                     anyhow::anyhow!(
