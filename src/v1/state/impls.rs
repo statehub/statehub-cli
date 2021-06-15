@@ -3,6 +3,8 @@
 // Use is subject to license terms.
 //
 
+use std::cmp;
+
 use chrono_humanize::HumanTime;
 
 use super::*;
@@ -103,6 +105,17 @@ impl State {
         volumes
     }
 
+    fn count_volumes(&self) -> String {
+        let aws = self.locations.aws.len();
+        let azure = self.locations.azure.len();
+        let count = cmp::max(aws, azure);
+        if count == 1 {
+            String::from("(1 volume)")
+        } else {
+            format!("({} volumes)", count)
+        }
+    }
+
     fn show_volumes(&self) -> String {
         self.collect_volumes()
             .into_iter()
@@ -187,9 +200,10 @@ impl StateLocations {
 impl Show for State {
     fn show(&self) -> String {
         format!(
-            "☘ {:>24} {} [{:#}] ({})",
+            "☘ {:>24} {} {:<12} [{:#}] ({})",
             self.name,
             self.condition.show(),
+            self.count_volumes(),
             self.locations.show(),
             self.show_owner(),
         )
