@@ -83,8 +83,14 @@ impl StateHub {
         log::info!("Checking {}", state.show());
         for location in locations {
             if !state.is_available_in(location) {
-                // need to extend the state to this location as well
+                self.inform(format!("Extdending state {} to {}", state.name, location));
                 self.add_location_helper(&state, location).await?;
+            } else {
+                log::info!(
+                    "Skipping state {} which is already available in {}",
+                    state.name,
+                    location
+                );
             }
         }
 
