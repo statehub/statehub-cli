@@ -5,6 +5,8 @@
 
 use std::str;
 
+use chrono_humanize::HumanTime;
+
 use crate::k8s;
 
 use super::*;
@@ -98,8 +100,8 @@ impl Show for Cluster {
             format_args!("Cluster:     {}", self.name),
             format_args!("Id:          {}", self.id),
             format_args!("Locations:   {}", self.locations.show()),
-            format_args!("Created:     {}", self.created),
-            format_args!("Modified:    {}", self.modified),
+            format_args!("Created:     {}", HumanTime::from(self.created)),
+            format_args!("Modified:    {}", HumanTime::from(self.modified)),
             format_args!("Helm install:\n{}", helm.show())
         )
     }
