@@ -97,6 +97,11 @@ impl Api {
         self.put(path).await
     }
 
+    pub(crate) async fn list_volumes(&self, state: v1::StateName) -> ApiResult<Vec<v1::Volume>> {
+        let path = format!("/states/{state}/volumes", state = state,);
+        self.get(path).await
+    }
+
     pub(crate) async fn delete_state(&self, name: v1::StateName) -> ApiResult<()> {
         let path = format!("/states/{name}", name = name);
         self.del(path).await

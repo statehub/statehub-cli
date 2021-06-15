@@ -219,6 +219,16 @@ enum Command {
     },
 
     #[structopt(
+        about = "List volumes in the given state",
+        aliases = &["list-volume", "list-v", "lv"],
+        display_order(50)
+    )]
+    ListVolumes {
+        #[structopt(help = "State name")]
+        state: v1::StateName,
+    },
+
+    #[structopt(
         about = "Create new namespace",
         aliases = &["cns", "c-ns", "create-ns"],
         display_order(1000),
@@ -394,6 +404,7 @@ impl Cli {
                 volume,
                 primary,
             } => statehub.set_volume_primary(state, volume, primary).await,
+            Command::ListVolumes { state } => statehub.list_volumes(state).await,
             Command::CreateNamespace { namespace } => statehub.create_namespace(namespace).await,
             Command::SaveClusterToken { namespace, token } => {
                 statehub.save_cluster_token(namespace, token).await
@@ -626,6 +637,10 @@ impl StateHub {
             .set_volume_primary(state, volume, primary)
             .await
             .handle_output(self.json)
+    }
+
+    async fn list_volumes(&self, state: v1::StateName) -> anyhow::Result<()> {
+        self.api.list_volumes(state).await.handle_output(self.json)
     }
 
     pub(crate) async fn set_availability(self) -> anyhow::Result<()> {

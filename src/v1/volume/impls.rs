@@ -1,5 +1,11 @@
+//
+// Copyright (c) 2021 RepliXio Ltd. All rights reserved.
+// Use is subject to license terms.
+//
+
 use std::fmt;
 use std::str;
+
 use thiserror::Error;
 
 use super::*;
@@ -121,6 +127,21 @@ impl str::FromStr for VolumeStatus {
 impl Show for Volume {
     fn show(&self) -> String {
         volume(self)
+    }
+}
+
+impl Show for Vec<Volume> {
+    fn show(&self) -> String {
+        self.iter()
+            .map(|volume| {
+                format!(
+                    "{:<32} {:>8} GiB active: {}",
+                    volume.name,
+                    volume.size_gi,
+                    volume.active_location.as_deref().unwrap_or("None"),
+                )
+            })
+            .join("\n")
     }
 }
 
