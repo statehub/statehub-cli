@@ -458,7 +458,7 @@ impl StateHub {
         Ok(())
     }
 
-    pub(crate) async fn create_state(
+    async fn create_state(
         &self,
         name: v1::StateName,
         owner: Option<v1::ClusterName>,
@@ -474,11 +474,11 @@ impl StateHub {
         self.api.create_state(state).await.handle_output(self.json)
     }
 
-    pub(crate) async fn delete_state(&self, name: v1::StateName) -> anyhow::Result<()> {
+    async fn delete_state(&self, name: v1::StateName) -> anyhow::Result<()> {
         self.api.delete_state(name).await.handle_output(self.json)
     }
 
-    pub(crate) async fn show_state(self, state: &v1::StateName) -> anyhow::Result<()> {
+    async fn show_state(self, state: &v1::StateName) -> anyhow::Result<()> {
         self.api
             .get_state(state)
             .await
@@ -490,7 +490,7 @@ impl StateHub {
         self.api.get_all_states().await.handle_output(self.json)
     }
 
-    pub(crate) async fn list_clusters(&self) -> anyhow::Result<()> {
+    async fn list_clusters(&self) -> anyhow::Result<()> {
         self.api.get_all_clusters().await.handle_output(self.json)
     }
 
@@ -616,7 +616,7 @@ impl StateHub {
         //anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
-    pub(crate) async fn delete_volume(
+    async fn delete_volume(
         self,
         state: v1::StateName,
         volume: v1::VolumeName,
@@ -643,12 +643,12 @@ impl StateHub {
         self.api.list_volumes(state).await.handle_output(self.json)
     }
 
-    pub(crate) async fn set_availability(self) -> anyhow::Result<()> {
+    async fn set_availability(self) -> anyhow::Result<()> {
         // Ok(Output::<String>::todo()).handle_output(self.json)
         anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
-    pub(crate) async fn set_owner(
+    async fn set_owner(
         &self,
         state: v1::StateName,
         cluster: v1::ClusterName,
@@ -659,7 +659,7 @@ impl StateHub {
             .handle_output(self.json)
     }
 
-    pub(crate) async fn unset_owner(
+    async fn unset_owner(
         &self,
         state: v1::StateName,
         cluster: v1::ClusterName,
