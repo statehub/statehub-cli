@@ -140,7 +140,12 @@ impl Provider {
 
 impl fmt::Display for Provider {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.as_str().fmt(f)
+        let text = self.as_str();
+        if f.alternate() {
+            text.to_uppercase().fmt(f)
+        } else {
+            text.fmt(f)
+        }
     }
 }
 

@@ -492,7 +492,7 @@ impl StateHub {
             .await?;
 
         self.inform(format!(
-            "Registering {} cluster {} in {}",
+            "Registering {:#} cluster {} in {}",
             provider,
             cluster.name,
             locations.show()
