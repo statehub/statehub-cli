@@ -187,7 +187,7 @@ impl StateLocations {
 impl Show for State {
     fn show(&self) -> String {
         format!(
-            "☘{:>16} {} [{:#}] ({})",
+            "☘ {:>24} {} [{:#}] ({})",
             self.name,
             self.condition.show(),
             self.locations.show(),
@@ -274,11 +274,11 @@ impl Show for StateLocations {
 impl Show for StateLocationStatus {
     fn show(&self) -> String {
         let text = match self {
-            Self::Ok => "\u{1f197}",
-            Self::Provisioning => "\u{1f3c3} \u{1f51c}",
-            Self::Recovering => "",
-            Self::Deleting => "",
-            Self::Error => "\u{274c}",
+            Self::Ok => "🆗",
+            Self::Provisioning => "⤴ 🔜",
+            Self::Recovering => "🔄",
+            Self::Deleting => "⤵",
+            Self::Error => "❌",
         };
         text.into()
     }

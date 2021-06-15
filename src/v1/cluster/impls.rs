@@ -89,7 +89,7 @@ impl From<&[Location]> for ClusterLocations {
 
 impl Show for Cluster {
     fn show(&self) -> String {
-        format!("☸ {} [{:#}]", self.name, self.locations.show())
+        format!("☸ {:>24} [{:#}]", self.name, self.locations.show())
     }
 
     fn detailed_show(&self) -> String {
