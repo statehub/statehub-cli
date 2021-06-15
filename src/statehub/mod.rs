@@ -184,7 +184,7 @@ enum Command {
         cluster: v1::ClusterName,
     },
 
-    #[structopt(about = "Manually create new volume", display_order(50))]
+    #[structopt(about = "Manually create new volume", aliases = &["create-v", "cv"], display_order(50))]
     CreateVolume {
         #[structopt(help = "State name")]
         state: v1::StateName,
@@ -196,7 +196,7 @@ enum Command {
         fs_type: v1::VolumeFileSystem,
     },
 
-    #[structopt(about = "Manually delete existing volume", display_order(50))]
+    #[structopt(about = "Manually delete existing volume", aliases = &["delete-v", "dv"], display_order(50))]
     DeleteVolume {
         #[structopt(help = "State name")]
         state: v1::StateName,
@@ -206,6 +206,7 @@ enum Command {
 
     #[structopt(
         about = "Manually choose primary location for volume",
+        aliases = &["set-v", "sv"],
         display_order(50)
     )]
     SetVolume {
