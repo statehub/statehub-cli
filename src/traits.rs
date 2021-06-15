@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2021 RepliXio Ltd. All rights reserved.
+// Use is subject to license terms.
+//
+
 pub(crate) trait CloudRegion {
     const VENDOR: &'static str;
     const VENDOR_PREFIX: &'static str;
