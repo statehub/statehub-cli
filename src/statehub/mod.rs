@@ -494,7 +494,7 @@ impl StateHub {
         self.inform(format!(
             "Registering {} cluster {} in {}",
             provider,
-            cluster.show(),
+            cluster.name,
             locations.show()
         ));
         if let Some(ref states) = states {
