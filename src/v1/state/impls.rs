@@ -106,8 +106,20 @@ impl State {
     }
 
     fn count_volumes(&self) -> String {
-        let aws = self.locations.aws.len();
-        let azure = self.locations.azure.len();
+        let aws = self
+            .locations
+            .aws
+            .iter()
+            .map(|aws| aws.volumes.len())
+            .max()
+            .unwrap_or_default();
+        let azure = self
+            .locations
+            .azure
+            .iter()
+            .map(|azure| azure.volumes.len())
+            .max()
+            .unwrap_or_default();
         let count = cmp::max(aws, azure);
         if count == 1 {
             String::from("(1 volume)")
