@@ -205,6 +205,19 @@ enum Command {
     },
 
     #[structopt(
+        about = "Manually choose primary location for volume",
+        display_order(50)
+    )]
+    SetVolume {
+        #[structopt(help = "State name")]
+        state: v1::StateName,
+        #[structopt(help = "Volume name")]
+        volume: v1::VolumeName,
+        #[structopt(help = "Primary location specification", long, short)]
+        primary: Location,
+    },
+
+    #[structopt(
         about = "Create new namespace",
         aliases = &["cns", "c-ns", "create-ns"],
         display_order(1000),
@@ -375,6 +388,11 @@ impl Cli {
                 fs_type,
             } => statehub.create_volume(state, volume, size, fs_type).await,
             Command::DeleteVolume { state, volume } => statehub.delete_volume(state, volume).await,
+            Command::SetVolume {
+                state,
+                volume,
+                primary,
+            } => statehub.set_volume_primary(state, volume, primary).await,
             Command::CreateNamespace { namespace } => statehub.create_namespace(namespace).await,
             Command::SaveClusterToken { namespace, token } => {
                 statehub.save_cluster_token(namespace, token).await
@@ -593,6 +611,18 @@ impl StateHub {
     ) -> anyhow::Result<()> {
         self.api
             .delete_volume(state, volume)
+            .await
+            .handle_output(self.json)
+    }
+
+    async fn set_volume_primary(
+        &self,
+        state: v1::StateName,
+        volume: v1::VolumeName,
+        primary: Location,
+    ) -> anyhow::Result<()> {
+        self.api
+            .set_volume_primary(state, volume, primary)
             .await
             .handle_output(self.json)
     }

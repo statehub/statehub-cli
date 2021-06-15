@@ -82,6 +82,21 @@ impl Api {
         self.del(path).await
     }
 
+    pub(crate) async fn set_volume_primary(
+        &self,
+        state: v1::StateName,
+        volume: v1::VolumeName,
+        primary: Location,
+    ) -> ApiResult<v1::Volume> {
+        let path = format!(
+            "/states/{state}/volumes/{volume}/activeLocation/{primary:#}",
+            state = state,
+            volume = volume,
+            primary = primary,
+        );
+        self.put(path).await
+    }
+
     pub(crate) async fn delete_state(&self, name: v1::StateName) -> ApiResult<()> {
         let path = format!("/states/{name}", name = name);
         self.del(path).await
