@@ -542,15 +542,7 @@ impl StateHub {
         helm.execute(&cluster, self.verbose).await?;
 
         if claim_unowned_states {
-            if let Some(states) = states {
-                for name in states {
-                    let state = self.api.get_state(&name).await?;
-                    if state.owner.is_none() {
-                        self.verbosely(format!("Claiming ownership of state {}", name));
-                        self.api.set_owner(name, &cluster.name).await?;
-                    }
-                }
-            }
+            self.claim_unowned_states_helper(&cluster, states).await?;
         }
 
         cluster.handle_output(self.json)

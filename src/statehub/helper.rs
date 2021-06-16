@@ -121,6 +121,22 @@ impl StateHub {
         Ok(())
     }
 
+    pub(super) async fn claim_unowned_states_helper(
+        &self,
+        cluster: &v1::Cluster,
+        states: Option<Vec<v1::StateName>>,
+    ) -> anyhow::Result<()> {
+        if let Some(states) = states {
+            for state in states {
+                if self.api.get_state(&state).await?.owner.is_none() {
+                    self.verbosely(format!("Claiming ownership of state {}", state));
+                    self.api.set_owner(state, &cluster.name).await?;
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub(super) async fn relinquish_states_helper(
         &self,
         cluster: &v1::ClusterName,
