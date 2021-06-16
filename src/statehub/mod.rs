@@ -295,7 +295,7 @@ enum Command {
     )]
     ListPods,
 
-    #[structopt(about = "List K8s node regions", display_order(1000))]
+    #[structopt(about = "List K8s node regions", aliases = &["list-r", "lr"], display_order(1000))]
     ListRegions {
         #[structopt(help = "Also list zones", long, short)]
         zone: bool,
