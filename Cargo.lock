@@ -1308,7 +1308,7 @@ checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
 name = "statehub"
-version = "0.0.19"
+version = "0.0.20"
 dependencies = [
  "anyhow",
  "async-trait",
