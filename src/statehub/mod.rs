@@ -438,7 +438,7 @@ pub(crate) struct StateHub {
 
 impl StateHub {
     fn new(config: Config, json: bool, verbose: bool) -> Self {
-        let api = api::Api::new(config.api(), config.token(), verbose);
+        let api = api::Api::new(config.api(), config.token());
         let theme = theme::SimpleTheme;
 
         Self {

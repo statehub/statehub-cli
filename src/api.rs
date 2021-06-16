@@ -20,12 +20,11 @@ pub(crate) type ApiResult<T> = Result<Output<T>, anyhow::Error>;
 pub(crate) struct Api {
     base: String,
     token: Option<SecretString>,
-    verbose: bool,
     user_agent: String,
 }
 
 impl Api {
-    pub(crate) fn new(management: &str, token: Option<&str>, verbose: bool) -> Self {
+    pub(crate) fn new(management: &str, token: Option<&str>) -> Self {
         let user_agent = format!("{}/{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
         let token = token.map(String::from).map(SecretString::new);
 
@@ -42,7 +41,6 @@ impl Api {
         Self {
             base,
             token,
-            verbose,
             user_agent,
         }
     }
@@ -229,9 +227,7 @@ impl Api {
     where
         T: fmt::Debug,
     {
-        if self.verbose {
-            println!("{}", output);
-        }
+        log::debug!("Output {}", output);
     }
 
     async fn del<P, T>(&self, path: P) -> ApiResult<T>
