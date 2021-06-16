@@ -63,17 +63,16 @@ impl Helm {
         }
     }
 
-    pub(crate) async fn execute(&self, cluster: &v1::Cluster, verbose: bool) -> anyhow::Result<()> {
+    pub(crate) async fn execute(&self, cluster: &v1::Cluster) -> anyhow::Result<()> {
         let commands = self.command(cluster);
         match self {
             Helm::Skip { .. } => println!("Manually run\n{}", commands.show()),
             Helm::Do { .. } => {
                 for cmd in commands {
+                    let input = cmd.show();
                     let output = AsyncCmd::from(cmd).output().await?;
                     let stdout = String::from_utf8_lossy(&output.stdout);
-                    if verbose {
-                        println!("{}", stdout);
-                    }
+                    log::debug!("{}\n{}", input, stdout);
                 }
             }
         };

@@ -531,7 +531,7 @@ impl StateHub {
         if let Some(ref states) = states {
             self.adjust_all_states(states, &locations).await?;
         } else {
-            self.verbosely("## Skip adding this cluster to any state");
+            self.verbosely("Skip adding this cluster to any state");
         }
 
         k8s::validate_namespace(helm.namespace()).await?;
@@ -539,7 +539,7 @@ impl StateHub {
         self.setup_cluster_token_helper(&cluster, &helm).await?;
         self.setup_configmap_helper(&cluster, &helm).await?;
 
-        helm.execute(&cluster, self.verbose).await?;
+        helm.execute(&cluster).await?;
 
         if claim_unowned_states {
             self.claim_unowned_states_helper(&cluster, states).await?;
