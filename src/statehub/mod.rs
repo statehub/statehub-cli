@@ -3,6 +3,7 @@
 // Use is subject to license terms.
 //
 
+use std::collections::HashMap;
 use std::fmt;
 
 use dialoguer::{theme, Confirm};
@@ -683,12 +684,6 @@ impl StateHub {
         output.into_text(self.json)
     }
 
-    async fn list_regions(&self, zone: bool) -> anyhow::Result<()> {
-        k8s::get_regions(zone)
-            .await
-            .map(|nodes| println!("{}", nodes.show()))
-    }
-
     async fn create_namespace(&self, namespace: String) -> anyhow::Result<()> {
         k8s::validate_namespace(namespace)
             .await
@@ -714,6 +709,18 @@ impl StateHub {
         let _configmap = k8s::store_configmap(&namespace, &cluster, default_state, &api).await?;
 
         Ok(())
+    }
+
+    async fn list_regions(&self, zone: bool) -> anyhow::Result<()> {
+        k8s::get_regions(zone)
+            .await
+            .map(|map| {
+                map.into_iter()
+                    .map(|(key, value)| (key.unwrap_or_default(), value))
+                    .collect::<HashMap<_, _>>()
+            })
+            .map(Output::from)
+            .handle_output(self.json)
     }
 
     async fn list_namespaces(&self) -> anyhow::Result<()> {

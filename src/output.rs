@@ -38,6 +38,10 @@ where
             self.0.show()
         }
     }
+
+    pub(crate) fn from(inner: T) -> Self {
+        Self(inner)
+    }
 }
 
 impl<T> Show for Output<T>

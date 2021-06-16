@@ -26,12 +26,16 @@ impl Show for () {
     }
 }
 
-impl Show for HashMap<Option<String>, Vec<String>> {
+impl Show for HashMap<String, Vec<String>> {
     fn show(&self) -> String {
         let mut out = String::new();
 
         for (region, nodes) in self {
-            let region = region.as_deref().unwrap_or("No region");
+            let region = if region.is_empty() {
+                "No region"
+            } else {
+                region.as_str()
+            };
             out += &format!("{}:    {}\n", region, join(nodes, ", "));
         }
         out
