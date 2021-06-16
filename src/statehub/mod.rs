@@ -617,8 +617,6 @@ impl StateHub {
             .create_volume(state_name, volume)
             .await
             .handle_output(self.json)
-        // Ok(Output::<String>::todo()).handle_output(self.json)
-        //anyhow::bail!(self.show(Output::<String>::todo()))
     }
 
     async fn delete_volume(
