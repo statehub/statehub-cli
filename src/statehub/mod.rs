@@ -543,8 +543,12 @@ impl StateHub {
 
         if claim_unowned_states {
             if let Some(states) = states {
-                for state in states {
-                    self.api.set_owner(state, &cluster.name).await?;
+                for name in states {
+                    let state = self.api.get_state(&name).await?;
+                    if state.owner.is_none() {
+                        self.verbosely(format!("Claiming ownership of state {}", name));
+                        self.api.set_owner(name, &cluster.name).await?;
+                    }
                 }
             }
         }
