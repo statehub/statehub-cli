@@ -375,11 +375,11 @@ trait ResponseExt: Sized {
 
         if status.is_server_error() {
             anyhow::bail!("Server error {}", status)
-        } else if status.is_client_error() {
-            anyhow::bail!("Client error {}", status)
-        } else {
-            Ok(bytes)
         }
+        if status.is_client_error() {
+            anyhow::bail!("Client error {}", status)
+        }
+        Ok(bytes)
     }
 }
 
