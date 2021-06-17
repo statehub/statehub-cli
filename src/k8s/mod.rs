@@ -300,8 +300,7 @@ pub(crate) fn helm_is_found() -> bool {
 pub(crate) fn extract_cluster_token(secret: &Secret) -> Option<Cow<'_, str>> {
     secret
         .data
-        .as_ref()
-        .and_then(|data| data.get("cluster-token"))
+        .get("cluster-token")
         .map(|bytes| bytes.0.as_slice())
         .map(String::from_utf8_lossy)
 }

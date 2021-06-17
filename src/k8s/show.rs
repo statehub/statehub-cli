@@ -14,7 +14,7 @@ impl Show for Node {
         let condition = self
             .status
             .as_ref()
-            .and_then(|status| status.conditions.as_deref())
+            .map(|status| status.conditions.as_slice())
             .unwrap_or_default()
             .iter()
             .find(|condition| condition.status == "True")

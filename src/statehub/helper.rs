@@ -6,15 +6,6 @@
 use super::*;
 
 impl StateHub {
-    // async fn get_states_helper(&self, names: &[v1::StateName]) -> anyhow::Result<Vec<v1::State>> {
-    //     let mut states = vec![];
-    //     for name in names {
-    //         let state = self.api.get_state(name).await?.into_inner()?;
-    //         states.push(state);
-    //     }
-    //     Ok(states)
-    // }
-
     pub(super) async fn add_location_helper(
         &self,
         state: &v1::State,
