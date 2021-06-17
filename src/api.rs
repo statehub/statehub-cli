@@ -280,7 +280,8 @@ impl Api {
             .optionally_bearer_auth(self.token.as_ref())
             .inspect()
             .optionally_json(body.as_ref())
-            .retry()
+            // Don't retry post!
+            .send()
             .await?
             .error_for_status2()
             .await?
