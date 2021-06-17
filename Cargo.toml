@@ -1,6 +1,6 @@
 [package]
 name = "statehub"
-version = "0.0.21"
+version = "0.0.22"
 authors = ["The RepliXio developers <info@replix.io>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
