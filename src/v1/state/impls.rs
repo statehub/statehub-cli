@@ -6,8 +6,11 @@
 use std::cmp;
 
 use chrono_humanize::HumanTime;
+use console::Emoji;
 
 use super::*;
+
+mod show;
 
 impl fmt::Display for State {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -150,6 +153,12 @@ impl State {
 }
 
 impl StateLocationStatus {
+    const OK: Emoji<'static, 'static> = Emoji("🆗", "V");
+    const PROVISIONING: Emoji<'static, 'static> = Emoji("⤴ 🔜", "+");
+    const RECOVERING: Emoji<'static, 'static> = Emoji("🔄", "~");
+    const DELETING: Emoji<'static, 'static> = Emoji("⤵", "-");
+    const ERROR: Emoji<'static, 'static> = Emoji("❌", "X");
+
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Ok => "ok",
@@ -164,12 +173,6 @@ impl StateLocationStatus {
 impl Default for VolumeBindingMode {
     fn default() -> Self {
         Self::WaitForFirstConsumer
-    }
-}
-
-impl Default for Condition {
-    fn default() -> Self {
-        Self::Green
     }
 }
 
@@ -209,126 +212,14 @@ impl StateLocations {
     }
 }
 
-impl Show for State {
-    fn show(&self) -> String {
-        format!(
-            "☘ {:>24} {} {:<12} [{:#}] ({})",
-            self.name,
-            self.condition.show(),
-            self.count_volumes(),
-            self.locations.show(),
-            self.show_owner(),
-        )
-    }
-
-    fn detailed_show(&self) -> String {
-        let storage_class = self
-            .storage_class
-            .as_ref()
-            .map(|sc| sc.name.as_str())
-            .unwrap_or("");
-        format!(
-            "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
-            format_args!("State:         {}", self.name),
-            format_args!("Id:            {}", self.id),
-            format_args!("Storage Class: {}", storage_class),
-            format_args!("Owner:         {}", self.show_owner()),
-            format_args!("Created:       {}", HumanTime::from(self.created)),
-            format_args!("Modified:      {}", HumanTime::from(self.modified)),
-            format_args!("Condition:     {}", self.condition.show()),
-            format_args!("Locations:\n{}", self.locations.detailed_show()),
-            format_args!("Volumes:\n{}", self.show_volumes())
-        )
-    }
+impl Condition {
+    pub const GREEN: Emoji<'static, 'static> = Emoji("🟢", "G");
+    pub const YELLOW: Emoji<'static, 'static> = Emoji("🟡", "Y");
+    pub const RED: Emoji<'static, 'static> = Emoji("🔴", "R");
 }
 
-impl Show for Vec<State> {
-    fn show(&self) -> String {
-        self.iter().map(Show::show).join("\n")
-    }
-}
-
-impl Show for StateLocations {
-    fn show(&self) -> String {
-        let aws = self
-            .aws
-            .iter()
-            .map(|location| format!("{:#} {}", location.region, location.status.show()));
-        let azure = self
-            .azure
-            .iter()
-            .map(|location| format!("{:#} {}", location.region, location.status.show()));
-        aws.chain(azure).join(", ")
-    }
-
-    fn detailed_show(&self) -> String {
-        let aws = self.aws.iter().map(|location| {
-            format!(
-                " {:#}:\n  {}\n  {}",
-                location.region,
-                format_args!("Status: {}", location.status.show()),
-                format_args!(
-                    "PLS   : {}",
-                    location
-                        .private_link_service
-                        .as_ref()
-                        .map(|pls| pls.detailed_show())
-                        .unwrap_or_else(|| String::from("None"))
-                ),
-            )
-        });
-        let azure = self.azure.iter().map(|location| {
-            format!(
-                " {:#}:\n  {}\n  {}",
-                location.region,
-                format_args!("Status: {}", location.status.show()),
-                format_args!(
-                    "PLS   : {}",
-                    location
-                        .private_link_service
-                        .as_ref()
-                        .map(|pls| pls.detailed_show())
-                        .unwrap_or_else(|| String::from("None"))
-                )
-            )
-        });
-
-        aws.chain(azure).join("\n")
-    }
-}
-
-impl Show for StateLocationStatus {
-    fn show(&self) -> String {
-        let text = match self {
-            Self::Ok => "🆗",
-            Self::Provisioning => "⤴ 🔜",
-            Self::Recovering => "🔄",
-            Self::Deleting => "⤵",
-            Self::Error => "❌",
-        };
-        text.into()
-    }
-}
-
-impl Show for Condition {
-    fn show(&self) -> String {
-        let condition = match self {
-            Self::Green => "🟢",
-            Self::Yellow => "🟡",
-            Self::Red => "🔴",
-        };
-        String::from(condition)
-    }
-}
-
-impl Show for PrivateLinkServiceAws {
-    fn show(&self) -> String {
-        format!("{} / {}", self.id, self.name)
-    }
-}
-
-impl Show for PrivateLinkServiceAzure {
-    fn show(&self) -> String {
-        self.id.clone()
+impl Default for Condition {
+    fn default() -> Self {
+        Self::Green
     }
 }

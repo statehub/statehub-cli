@@ -83,7 +83,7 @@ impl StateHub {
         log::info!("Checking {}", state.show());
         for location in locations {
             if !state.is_available_in(location) {
-                self.inform(format!("Extdending state {} to {}", state.name, location));
+                self.inform(format!("Extdending state {} to {}", state.name, location))?;
                 self.add_location_helper(&state, location).await?;
             } else {
                 log::info!(
@@ -115,7 +115,7 @@ impl StateHub {
         helm: &k8s::Helm,
     ) -> anyhow::Result<()> {
         let token = self.api.issue_cluster_token(&cluster.name).await?;
-        self.verbosely(format!("Issued token {} for {}", token.token, cluster));
+        self.verbosely(format!("Issued token {} for {}", token.token, cluster))?;
         let namespace = helm.namespace();
         k8s::store_cluster_token(namespace, &token.token).await?;
         Ok(())
@@ -129,7 +129,7 @@ impl StateHub {
         if let Some(states) = states {
             for state in states {
                 if self.api.get_state(&state).await?.owner.is_none() {
-                    self.verbosely(format!("Claiming ownership of state {}", state));
+                    self.verbosely(format!("Claiming ownership of state {}", state))?;
                     self.api.set_owner(state, &cluster.name).await?;
                 }
             }

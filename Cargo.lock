@@ -1316,6 +1316,7 @@ dependencies = [
  "bytes",
  "chrono",
  "chrono-humanize",
+ "console",
  "dialoguer",
  "directories",
  "dotenv",
