@@ -3,6 +3,10 @@
 // Use is subject to license terms.
 //
 
+use std::time::Duration;
+
+use tokio::time;
+
 use super::*;
 
 impl StateHub {
@@ -10,23 +14,72 @@ impl StateHub {
         &self,
         state: &v1::State,
         location: &Location,
+        wait: bool,
     ) -> anyhow::Result<()> {
         log::info!("Extending {} to {}", state, location);
 
-        let name = state.name.clone();
-
         match location {
-            Location::Aws(region) => self
-                .api
-                .add_aws_location(name, *region)
-                .await
-                .map(|_aws| ()),
-            Location::Azure(region) => self
-                .api
-                .add_azure_location(name, *region)
-                .await
-                .map(|_azure| ()),
+            Location::Aws(region) => {
+                self.add_aws_location_helper(&state.name, *region, wait)
+                    .await?;
+            }
+            Location::Azure(region) => {
+                self.add_azure_location_helper(&state.name, *region, wait)
+                    .await?;
+            }
         }
+
+        Ok(())
+    }
+
+    async fn add_aws_location_helper(
+        &self,
+        name: &v1::StateName,
+        region: v1::AwsRegion,
+        wait: bool,
+    ) -> anyhow::Result<Output<v1::StateLocationAws>> {
+        let aws = self.api.add_aws_location(name, region).await?;
+        if wait {
+            let delay = Duration::from_secs(5);
+            loop {
+                if self
+                    .api
+                    .get_aws_location(name, region)
+                    .await?
+                    .status
+                    .is_final()
+                {
+                    break;
+                }
+                time::sleep(delay).await;
+            }
+        }
+        Ok(aws)
+    }
+
+    async fn add_azure_location_helper(
+        &self,
+        name: &v1::StateName,
+        region: v1::AzureRegion,
+        wait: bool,
+    ) -> anyhow::Result<Output<v1::StateLocationAzure>> {
+        let azure = self.api.add_azure_location(name, region).await?;
+        if wait {
+            let delay = Duration::from_secs(5);
+            loop {
+                if self
+                    .api
+                    .get_azure_location(name, region)
+                    .await?
+                    .status
+                    .is_final()
+                {
+                    break;
+                }
+                time::sleep(delay).await;
+            }
+        }
+        Ok(azure)
     }
 
     pub(super) async fn remove_location_helper(
@@ -70,6 +123,7 @@ impl StateHub {
         locations: &[Location],
     ) -> anyhow::Result<()> {
         let state = self.api.get_state(name).await?;
+        let wait = false;
 
         log::info!("Checking {}", state.show());
         for location in locations {
@@ -81,7 +135,7 @@ impl StateHub {
                 );
             } else {
                 self.inform(format!("Extdending state {} to {}", state.name, location))?;
-                self.add_location_helper(&state, location).await?;
+                self.add_location_helper(&state, location, wait).await?;
             }
         }
 

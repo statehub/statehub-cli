@@ -154,6 +154,8 @@ enum Command {
         state: v1::StateName,
         #[structopt(help = "Location specification")]
         location: Location,
+        #[structopt(help = "Wait until new location is ready", long)]
+        wait: bool,
     },
 
     #[structopt(
@@ -386,9 +388,11 @@ impl Cli {
                 })?;
                 statehub.show_cluster(name).await
             }
-            Command::AddLocation { state, location } => {
-                statehub.add_location(state, location).await
-            }
+            Command::AddLocation {
+                state,
+                location,
+                wait,
+            } => statehub.add_location(state, location, wait).await,
             Command::RemoveLocation { state, location } => {
                 statehub.remove_location(state, location).await
             }
@@ -589,12 +593,21 @@ impl StateHub {
         }
     }
 
-    async fn add_location(&self, state: v1::StateName, location: Location) -> anyhow::Result<()> {
+    async fn add_location(
+        &self,
+        state: v1::StateName,
+        location: Location,
+        wait: bool,
+    ) -> anyhow::Result<()> {
         let state = self.api.get_state(&state).await?;
         if state.is_available_in(&location) {
-            log::info!("{} is already available in {}", state, location);
+            self.inform(format_args!(
+                "State {} is already available in {:#}",
+                state, location
+            ))?;
         } else {
-            self.add_location_helper(&state, &location).await?;
+            self.inform(format_args!("Extending state {} to {:#}", state, location))?;
+            self.add_location_helper(&state, &location, wait).await?;
         }
         Ok(())
     }

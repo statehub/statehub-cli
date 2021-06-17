@@ -144,23 +144,26 @@ impl Api {
         self.del(path).await
     }
 
+    pub(crate) async fn get_aws_location(
+        &self,
+        name: &v1::StateName,
+        region: v1::AwsRegion,
+    ) -> ApiResult<v1::StateLocationAws> {
+        let path = format!(
+            "/states/{name}/locations/aws/{region}",
+            name = name,
+            region = region
+        );
+        self.get(path).await
+    }
+
     pub(crate) async fn add_aws_location(
         &self,
-        name: v1::StateName,
+        name: &v1::StateName,
         region: v1::AwsRegion,
     ) -> ApiResult<v1::StateLocationAws> {
         let path = format!("/states/{name}/locations/aws", name = name);
         let body = v1::CreateStateLocationAwsDto { region };
-        self.post(path, body).await
-    }
-
-    pub(crate) async fn add_azure_location(
-        &self,
-        name: v1::StateName,
-        region: v1::AzureRegion,
-    ) -> ApiResult<v1::StateLocationAzure> {
-        let path = format!("/states/{name}/locations/azure", name = name);
-        let body = v1::CreateStateLocationAzureDto { region };
         self.post(path, body).await
     }
 
@@ -175,6 +178,29 @@ impl Api {
             region = region
         );
         self.del(path).await
+    }
+
+    pub(crate) async fn get_azure_location(
+        &self,
+        name: &v1::StateName,
+        region: v1::AzureRegion,
+    ) -> ApiResult<v1::StateLocationAzure> {
+        let path = format!(
+            "/states/{name}/locations/azure/{region}",
+            name = name,
+            region = region
+        );
+        self.get(path).await
+    }
+
+    pub(crate) async fn add_azure_location(
+        &self,
+        name: &v1::StateName,
+        region: v1::AzureRegion,
+    ) -> ApiResult<v1::StateLocationAzure> {
+        let path = format!("/states/{name}/locations/azure", name = name);
+        let body = v1::CreateStateLocationAzureDto { region };
+        self.post(path, body).await
     }
 
     pub(crate) async fn del_azure_location(

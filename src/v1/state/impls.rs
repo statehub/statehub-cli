@@ -14,11 +14,15 @@ mod show;
 
 impl fmt::Display for State {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("State")
-            .field("name", &self.name.0)
-            .field("aws", &self.locations.aws)
-            .field("azure", &self.locations.azure)
-            .finish()
+        if f.alternate() {
+            f.debug_struct("State")
+                .field("name", &self.name.0)
+                .field("aws", &self.locations.aws)
+                .field("azure", &self.locations.azure)
+                .finish()
+        } else {
+            self.name.fmt(f)
+        }
     }
 }
 
@@ -166,6 +170,16 @@ impl StateLocationStatus {
             Self::Recovering => "recovering",
             Self::Deleting => "deleting",
             Self::Error => "error",
+        }
+    }
+
+    pub fn is_final(&self) -> bool {
+        match self {
+            Self::Ok => true,
+            Self::Provisioning => false,
+            Self::Recovering => false,
+            Self::Deleting => false,
+            Self::Error => true,
         }
     }
 }
