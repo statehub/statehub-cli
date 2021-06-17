@@ -240,7 +240,7 @@ impl Api {
             .delete(url)
             .optionally_bearer_auth(self.token.as_ref())
             .inspect()
-            .send()
+            .retry()
             .await?
             .error_for_status2()
             .await?
@@ -258,7 +258,7 @@ impl Api {
             .get(url)
             .optionally_bearer_auth(self.token.as_ref())
             .inspect()
-            .send()
+            .retry()
             .await?
             .error_for_status2()
             .await?
@@ -280,8 +280,7 @@ impl Api {
             .optionally_bearer_auth(self.token.as_ref())
             .inspect()
             .optionally_json(body.as_ref())
-            // .json(&body)
-            .send()
+            .retry()
             .await?
             .error_for_status2()
             .await?
@@ -299,7 +298,7 @@ impl Api {
             .put(url)
             .optionally_bearer_auth(self.token.as_ref())
             .inspect()
-            .send()
+            .retry()
             .await?
             .error_for_status2()
             .await?
@@ -362,6 +361,29 @@ impl Inspector for reqwest::RequestBuilder {
         }
 
         self
+    }
+}
+
+#[async_trait::async_trait]
+trait Retry {
+    async fn retry(self) -> reqwest::Result<reqwest::Response>;
+}
+
+#[async_trait::async_trait]
+impl Retry for reqwest::RequestBuilder {
+    async fn retry(self) -> reqwest::Result<reqwest::Response> {
+        loop {
+            if let Some(builder) = self.try_clone() {
+                let response = builder.send().await?;
+                if response.status().is_server_error() {
+                    log::trace!("Retrying on server error {}", response.status());
+                    continue;
+                }
+                break Ok(response);
+            } else {
+                break self.send().await;
+            }
+        }
     }
 }
 
