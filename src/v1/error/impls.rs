@@ -145,4 +145,18 @@ mod tests {
             assert_eq!(cluster, "zulu");
         }
     }
+
+    #[test]
+    fn cluster_is_state_owner() {
+        let text = r#"{"httpCode":409,"httpStatus":"Conflict","error":{"errorCode":"ClusterIsStateOwner","cluster":"zulu","state":"time"},"msg":"string"}"#;
+        let err: Error = json::from_str(text).unwrap();
+        assert!(matches!(
+            err.error,
+            StateHubError::ClusterIsStateOwner { .. }
+        ));
+        if let StateHubError::ClusterIsStateOwner { cluster, state } = err.error {
+            assert_eq!(cluster, "zulu");
+            assert_eq!(state, "time");
+        }
+    }
 }

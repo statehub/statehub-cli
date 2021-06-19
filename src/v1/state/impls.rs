@@ -66,6 +66,12 @@ impl ops::Deref for StateName {
     }
 }
 
+impl PartialEq<&str> for StateName {
+    fn eq(&self, other: &&str) -> bool {
+        self.0.eq(other)
+    }
+}
+
 impl State {
     pub(crate) fn is_available_in(&self, location: &Location) -> bool {
         self.locations.contains(location)
