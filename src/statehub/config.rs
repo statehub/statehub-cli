@@ -62,14 +62,14 @@ impl Config {
         }
     }
 
-    pub(crate) fn save(&self) -> anyhow::Result<()> {
+    pub(crate) fn save(&self) -> anyhow::Result<PathBuf> {
         let dir = Self::config_dir()?;
         fs::create_dir_all(dir).context("Creating config filesystem hierarchy")?;
         let path = Self::config_file()?;
-        log::info!("Saving config to file {}", path.display());
         let contents = toml::to_string_pretty(self).context("Serializing config")?;
-
-        fs::write(path, contents).context("Writing config")
+        fs::write(&path, contents)
+            .context("Writing config")
+            .map(|_| path)
     }
 
     fn config_dir() -> anyhow::Result<PathBuf> {

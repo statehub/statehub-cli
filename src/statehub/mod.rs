@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::io;
 
+use anyhow::Context;
 use console::Term;
 use dialoguer::{theme, Confirm};
 use serde::{de::DeserializeOwned, Serialize};
@@ -775,7 +776,10 @@ impl StateHub {
     }
 
     async fn save_config(&self) -> anyhow::Result<()> {
-        self.config.save()
+        self.config.save().and_then(|path| {
+            self.inform(format_args!("Saving config to {}", path.display()))
+                .context("Inform")
+        })
     }
 
     fn confirm(&self, prompt: impl Into<String>) -> bool {
@@ -802,7 +806,6 @@ impl StateHub {
 
     fn inform(&self, text: impl fmt::Display) -> io::Result<()> {
         self.stdout.write_line(&text.to_string())
-        // println!("{}", text)
     }
 }
 
