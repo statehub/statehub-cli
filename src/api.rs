@@ -10,6 +10,7 @@ use inspector::ResultInspector;
 use secrecy::ExposeSecret;
 use secrecy::SecretString;
 use serde::{de, ser};
+use serde_json as json;
 
 use crate::location::Location;
 use crate::output::Output;
@@ -422,9 +423,15 @@ trait ResponseExt: Sized {
         if status.is_server_error() {
             anyhow::bail!("Server error {}", status)
         }
+
         if status.is_client_error() {
-            anyhow::bail!("Client error {}", status)
+            let unknown_error = |_| anyhow::anyhow!("Unexpected client error: {}", status);
+            let err = json::from_slice::<v1::Error>(&bytes)
+                .map_or_else(unknown_error, anyhow::Error::from);
+
+            return Err(err);
         }
+
         Ok(bytes)
     }
 }
