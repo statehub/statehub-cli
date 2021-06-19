@@ -3,15 +3,16 @@
 // Use is subject to license terms.
 //
 
-use chrono::{DateTime, Utc};
-use itertools::Itertools;
-use serde::{Deserialize, Serialize};
-use serde_with::{skip_serializing_none, DeserializeFromStr, SerializeDisplay};
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::fmt;
 use std::ops;
 use std::str;
+
+use chrono::{DateTime, Utc};
+use itertools::Itertools;
+use serde::{Deserialize, Serialize};
+use serde_with::{skip_serializing_none, DeserializeFromStr, SerializeDisplay};
 use uuid::Uuid;
 
 use crate::location::{InvalidRegion, Location};
