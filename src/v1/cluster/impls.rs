@@ -57,6 +57,12 @@ impl ops::Deref for ClusterName {
     }
 }
 
+impl PartialEq<&str> for ClusterName {
+    fn eq(&self, other: &&str) -> bool {
+        self.0.eq(other)
+    }
+}
+
 impl From<AwsRegion> for ClusterLocationAws {
     fn from(region: AwsRegion) -> Self {
         Self {
