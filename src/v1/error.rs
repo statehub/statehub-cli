@@ -44,6 +44,9 @@ pub enum StateHubError {
     StateNameConflict {
         state: StateName,
     },
+    StateNotFound {
+        state: StateName,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, SerializeDisplay, DeserializeFromStr)]
