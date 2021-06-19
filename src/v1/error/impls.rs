@@ -159,4 +159,15 @@ mod tests {
             assert_eq!(state, "time");
         }
     }
+
+    #[test]
+    fn state_name_conflict() {
+        let text = r#"{"httpCode":409,"httpStatus":"Conflict","error":{"errorCode":"StateNameConflict","state":"time"},"msg":"string"}"#;
+
+        let err: Error = json::from_str(text).unwrap();
+        assert!(matches!(err.error, StateHubError::StateNameConflict { .. }));
+        if let StateHubError::StateNameConflict { state } = err.error {
+            assert_eq!(state, "time");
+        }
+    }
 }

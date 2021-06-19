@@ -41,6 +41,9 @@ pub enum StateHubError {
         cluster: ClusterName,
         state: StateName,
     },
+    StateNameConflict {
+        state: StateName,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, SerializeDisplay, DeserializeFromStr)]
