@@ -17,13 +17,13 @@ mod impls;
 pub struct Error {
     http_code: u16,
     http_status: String,
-    error: StateHubError,
+    error: StatehubError,
     msg: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "errorCode")]
-pub enum StateHubError {
+pub enum StatehubError {
     InvalidToken,
     #[serde(rename_all = "camelCase")]
     ClusterNotAuthorized {

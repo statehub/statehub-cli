@@ -24,7 +24,7 @@ pub use cluster::{
     Cluster, ClusterLocationAws, ClusterLocationAzure, ClusterLocations, ClusterName, ClusterToken,
     CreateClusterDto, Provider,
 };
-pub use error::{Error, Permission, StateHubError};
+pub use error::{Error, Permission, StatehubError};
 pub use gcp::GcpRegion;
 pub use helm::Helm;
 pub use state::{

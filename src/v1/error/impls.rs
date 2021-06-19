@@ -120,7 +120,7 @@ mod tests {
     fn invalid_token() {
         let text = r#"{"httpCode":401,"httpStatus":"Unauthorized","error":{"errorCode":"InvalidToken"},"msg":"string"}"#;
         let err: Error = json::from_str(text).unwrap();
-        assert!(matches!(err.error, StateHubError::InvalidToken));
+        assert!(matches!(err.error, StatehubError::InvalidToken));
     }
 
     #[test]
@@ -129,7 +129,7 @@ mod tests {
         let err: Error = json::from_str(text).unwrap();
         assert!(matches!(
             err.error,
-            StateHubError::ClusterNotAuthorized {
+            StatehubError::ClusterNotAuthorized {
                 permission: Permission::ReadClusters,
                 ..
             }
@@ -140,8 +140,8 @@ mod tests {
     fn cluster_not_found() {
         let text = r#"{"httpCode":404,"httpStatus":"Not Found","error":{"errorCode":"ClusterNotFound","cluster":"zulu"},"msg":"string"}"#;
         let err: Error = json::from_str(text).unwrap();
-        assert!(matches!(err.error, StateHubError::ClusterNotFound { .. }));
-        if let StateHubError::ClusterNotFound { cluster } = err.error {
+        assert!(matches!(err.error, StatehubError::ClusterNotFound { .. }));
+        if let StatehubError::ClusterNotFound { cluster } = err.error {
             assert_eq!(cluster, "zulu");
         }
     }
@@ -152,9 +152,9 @@ mod tests {
         let err: Error = json::from_str(text).unwrap();
         assert!(matches!(
             err.error,
-            StateHubError::ClusterIsStateOwner { .. }
+            StatehubError::ClusterIsStateOwner { .. }
         ));
-        if let StateHubError::ClusterIsStateOwner { cluster, state } = err.error {
+        if let StatehubError::ClusterIsStateOwner { cluster, state } = err.error {
             assert_eq!(cluster, "zulu");
             assert_eq!(state, "time");
         }
@@ -165,8 +165,8 @@ mod tests {
         let text = r#"{"httpCode":409,"httpStatus":"Conflict","error":{"errorCode":"StateNameConflict","state":"time"},"msg":"string"}"#;
 
         let err: Error = json::from_str(text).unwrap();
-        assert!(matches!(err.error, StateHubError::StateNameConflict { .. }));
-        if let StateHubError::StateNameConflict { state } = err.error {
+        assert!(matches!(err.error, StatehubError::StateNameConflict { .. }));
+        if let StatehubError::StateNameConflict { state } = err.error {
             assert_eq!(state, "time");
         }
     }
