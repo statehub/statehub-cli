@@ -218,30 +218,27 @@ impl Api {
 
     pub(crate) async fn set_owner(
         &self,
-        state: impl AsRef<v1::StateName>,
-        cluster: impl AsRef<v1::ClusterName>,
+        state: &v1::StateName,
+        cluster: &v1::ClusterName,
     ) -> ApiResult<v1::State> {
         let path = format!(
             "/states/{state}/owner/{cluster}",
-            state = state.as_ref(),
-            cluster = cluster.as_ref(),
+            state = state,
+            cluster = cluster,
         );
         self.put(path).await
     }
 
-    pub(crate) async fn unset_owner(
-        &self,
-        state: impl AsRef<v1::StateName>,
-    ) -> ApiResult<v1::State> {
-        let path = format!("/states/{state}/owner", state = state.as_ref());
+    pub(crate) async fn unset_owner(&self, state: &v1::StateName) -> ApiResult<v1::State> {
+        let path = format!("/states/{state}/owner", state = state);
         self.del(path).await
     }
 
     pub(crate) async fn issue_cluster_token(
         &self,
-        cluster: impl AsRef<v1::ClusterName>,
+        cluster: &v1::ClusterName,
     ) -> ApiResult<v1::ClusterToken> {
-        let path = format!("/clusters/{}/token", cluster.as_ref());
+        let path = format!("/clusters/{}/token", cluster);
         self.post::<_, _, (), _>(path, None).await
     }
 

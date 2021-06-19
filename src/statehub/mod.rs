@@ -682,7 +682,7 @@ impl StateHub {
         cluster: v1::ClusterName,
     ) -> anyhow::Result<()> {
         self.api
-            .set_owner(state, cluster)
+            .set_owner(&state, &cluster)
             .await
             .handle_output(&self.stdout, self.json)
     }

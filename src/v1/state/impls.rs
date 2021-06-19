@@ -52,9 +52,9 @@ impl str::FromStr for StateName {
     }
 }
 
-impl AsRef<Self> for StateName {
-    fn as_ref(&self) -> &Self {
-        self
+impl AsRef<str> for StateName {
+    fn as_ref(&self) -> &str {
+        self.0.as_ref()
     }
 }
 

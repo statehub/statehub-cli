@@ -30,9 +30,9 @@ impl str::FromStr for VolumeName {
     }
 }
 
-impl AsRef<Self> for VolumeName {
-    fn as_ref(&self) -> &Self {
-        self
+impl AsRef<str> for VolumeName {
+    fn as_ref(&self) -> &str {
+        self.0.as_ref()
     }
 }
 

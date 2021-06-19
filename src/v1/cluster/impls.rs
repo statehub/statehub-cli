@@ -43,9 +43,9 @@ impl str::FromStr for ClusterName {
     }
 }
 
-impl AsRef<Self> for ClusterName {
-    fn as_ref(&self) -> &Self {
-        self
+impl AsRef<str> for ClusterName {
+    fn as_ref(&self) -> &str {
+        self.0.as_ref()
     }
 }
 

@@ -175,7 +175,7 @@ impl StateHub {
             for state in states {
                 if self.api.get_state(&state).await?.owner.is_none() {
                     self.verbosely(format!("Claiming ownership of state {}", state))?;
-                    self.api.set_owner(state, &cluster.name).await?;
+                    self.api.set_owner(&state, &cluster.name).await?;
                 }
             }
         }
@@ -189,7 +189,7 @@ impl StateHub {
         for state in self.api.get_all_states().await? {
             if state.owner.as_ref() == Some(cluster) {
                 log::info!("Relinquish ownership for state {}", state.name);
-                self.api.unset_owner(state.name).await?;
+                self.api.unset_owner(&state.name).await?;
             } else if let Some(owner) = state.owner {
                 log::debug!("Skipping state {} (owned by {})", state.name, owner);
             } else {
