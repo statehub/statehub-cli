@@ -32,10 +32,14 @@ pub enum StateHubError {
         resource_type: String,
     },
     ClusterNameConflict {
-        cluster: String,
+        cluster: ClusterName,
     },
     ClusterNotFound {
-        cluster: String,
+        cluster: ClusterName,
+    },
+    ClusterIsStateOwner {
+        cluster: ClusterName,
+        state: StateName,
     },
 }
 
