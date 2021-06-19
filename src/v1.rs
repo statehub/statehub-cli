@@ -24,6 +24,7 @@ pub use cluster::{
     Cluster, ClusterLocationAws, ClusterLocationAzure, ClusterLocations, ClusterName, ClusterToken,
     CreateClusterDto, Provider,
 };
+pub use error::{Error, Permission, StateHubError};
 pub use gcp::GcpRegion;
 pub use helm::Helm;
 pub use state::{
@@ -39,6 +40,7 @@ pub use volume::{
 mod aws;
 mod azure;
 mod cluster;
+mod error;
 mod gcp;
 mod helm;
 mod state;
