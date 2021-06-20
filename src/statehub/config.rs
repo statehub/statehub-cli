@@ -9,17 +9,19 @@ use std::path::PathBuf;
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct Config {
     version: String,
     api: String,
+    console: String,
     token: Option<String>,
 }
 
 impl Config {
     const FILENAME: &'static str = "config.toml";
-    const VERSION: &'static str = "1";
+    const VERSION: &'static str = "2";
     const DEFAULT_API: &'static str = "https://api.statehub.io";
+    const DEFAULT_CONSOLE: &'static str = "https://console.statehub.io";
 
     pub(crate) fn api(&self) -> &str {
         self.api.as_str()
@@ -52,13 +54,21 @@ impl Config {
 
     pub(crate) fn load() -> anyhow::Result<Self> {
         let path = Self::config_file()?;
-        if path.exists() {
-            fs::read(path)
-                .context("Reading config file")
-                .and_then(|bytes| toml::from_slice::<Self>(&bytes).context("Parsing config file"))
-                .and_then(|config| config.validate_config())
+        anyhow::ensure!(path.exists(), "Config file does not exist");
+        let config = fs::read_to_string(path)
+            .context("Reading config file")
+            .and_then(|text| toml::from_str::<toml::Value>(&text).context("Parsing config file"))?;
+
+        Ok(Self::rolling_load(config))
+    }
+
+    fn rolling_load(config: toml::Value) -> Self {
+        if let Ok(v1) = ConfigV1::validate_config(&config) {
+            v1.into()
+        } else if let Ok(v2) = ConfigV2::validate_config(&config) {
+            v2.into()
         } else {
-            Ok(Self::default())
+            Self::default()
         }
     }
 
@@ -81,28 +91,76 @@ impl Config {
     fn config_file() -> anyhow::Result<PathBuf> {
         Self::config_dir().map(|dir| dir.join(Self::FILENAME))
     }
-
-    fn validate_config(self) -> anyhow::Result<Self> {
-        if self.version != Self::VERSION {
-            anyhow::bail!(
-                "Version mismatch; expecting {}, found {}",
-                Self::VERSION,
-                self.version
-            )
-        }
-        Ok(self)
-    }
 }
 
 impl Default for Config {
     fn default() -> Self {
         let version = Self::VERSION.to_string();
         let api = Self::DEFAULT_API.to_string();
+        let console = Self::DEFAULT_CONSOLE.to_string();
         let token = None;
         Self {
             version,
             api,
+            console,
             token,
         }
+    }
+}
+
+impl From<ConfigV2> for Config {
+    fn from(v2: ConfigV2) -> Self {
+        Self {
+            version: v2.version,
+            api: v2.api,
+            console: v2.console,
+            token: v2.token,
+        }
+    }
+}
+
+impl From<ConfigV1> for Config {
+    fn from(v1: ConfigV1) -> Self {
+        Self {
+            version: v1.version,
+            api: v1.api,
+            console: String::from(Self::DEFAULT_CONSOLE),
+            token: v1.token,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub(crate) struct ConfigV2 {
+    version: String,
+    api: String,
+    console: String,
+    token: Option<String>,
+}
+
+impl ConfigV2 {
+    const VERSION: &'static str = "2";
+
+    fn validate_config(config: &toml::Value) -> anyhow::Result<Self> {
+        let version = config.get("version").and_then(|version| version.as_str());
+        anyhow::ensure!(version == Some(Self::VERSION), "Unknown version");
+        config.clone().try_into().context("Converting to ConfigV2")
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub(crate) struct ConfigV1 {
+    version: String,
+    api: String,
+    token: Option<String>,
+}
+
+impl ConfigV1 {
+    const VERSION: &'static str = "1";
+
+    fn validate_config(config: &toml::Value) -> anyhow::Result<Self> {
+        let version = config.get("version").and_then(|version| version.as_str());
+        anyhow::ensure!(version == Some(Self::VERSION), "Unknown version");
+        config.clone().try_into().context("Converting to ConfigV1")
     }
 }
