@@ -13,7 +13,7 @@ use kube::config::Kubeconfig;
 use kube::{Client, ResourceExt};
 use serde_json as json;
 
-use crate::v1;
+use crate::v0;
 use crate::Location;
 
 pub(crate) use helm::Helm;
@@ -85,7 +85,7 @@ impl Kubectl {
     async fn create_configmap(
         &self,
         name: &str,
-        cluster_name: &v1::ClusterName,
+        cluster_name: &v0::ClusterName,
         default_state: &str,
         api: &str,
     ) -> anyhow::Result<ConfigMap> {
@@ -251,7 +251,7 @@ pub(crate) async fn list_pods() -> anyhow::Result<impl IntoIterator<Item = Pod>>
 
 pub(crate) async fn store_configmap(
     namespace: &str,
-    cluster_name: &v1::ClusterName,
+    cluster_name: &v0::ClusterName,
     default_state: &str,
     api: &str,
 ) -> anyhow::Result<ConfigMap> {
@@ -307,20 +307,20 @@ pub(crate) fn extract_cluster_token(secret: &Secret) -> Option<Cow<'_, str>> {
 
 // TODO: implement provider fetch out of cluster
 pub(crate) async fn get_cluster_provider(
-    _cluster: &v1::ClusterName,
-) -> anyhow::Result<v1::Provider> {
+    _cluster: &v0::ClusterName,
+) -> anyhow::Result<v0::Provider> {
     let kube = Kubectl::default().await?;
     let nodes = kube.all_nodes().await?;
     if is_aks(nodes) {
-        Ok(v1::Provider::Aks)
+        Ok(v0::Provider::Aks)
     } else if is_eks() {
-        Ok(v1::Provider::Eks)
+        Ok(v0::Provider::Eks)
     } else {
-        Ok(v1::Provider::Generic)
+        Ok(v0::Provider::Generic)
     }
 }
 
-pub(crate) fn get_cluster_name() -> Option<v1::ClusterName> {
+pub(crate) fn get_cluster_name() -> Option<v0::ClusterName> {
     let config = Kubeconfig::read().ok()?;
     let contexts = config.contexts;
     let clusters = config.clusters;
@@ -329,7 +329,7 @@ pub(crate) fn get_cluster_name() -> Option<v1::ClusterName> {
         .or_else(|| contexts.into_iter().next().map(|context| context.name))
         .or_else(|| clusters.into_iter().next().map(|cluster| cluster.name))
         .map(rsplit_slash)
-        .map(v1::ClusterName)
+        .map(v0::ClusterName)
 }
 
 fn rsplit_slash(text: String) -> String {

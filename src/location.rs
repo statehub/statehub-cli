@@ -10,12 +10,12 @@ use itertools::Itertools;
 use thiserror::Error;
 
 use crate::traits::Show;
-use crate::v1;
+use crate::v0;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub(crate) enum Location {
-    Aws(v1::AwsRegion),
-    Azure(v1::AzureRegion),
+    Aws(v0::AwsRegion),
+    Azure(v0::AzureRegion),
     // Gcp(v1::GcpRegion),
 }
 
@@ -28,14 +28,14 @@ impl fmt::Display for Location {
     }
 }
 
-impl From<v1::AwsRegion> for Location {
-    fn from(region: v1::AwsRegion) -> Self {
+impl From<v0::AwsRegion> for Location {
+    fn from(region: v0::AwsRegion) -> Self {
         Self::Aws(region)
     }
 }
 
-impl From<v1::AzureRegion> for Location {
-    fn from(region: v1::AzureRegion) -> Self {
+impl From<v0::AzureRegion> for Location {
+    fn from(region: v0::AzureRegion) -> Self {
         Self::Azure(region)
     }
 }
@@ -44,8 +44,8 @@ impl FromStr for Location {
     type Err = String;
 
     fn from_str(text: &str) -> Result<Self, Self::Err> {
-        let aws = text.parse::<v1::AwsRegion>();
-        let azure = text.parse::<v1::AzureRegion>();
+        let aws = text.parse::<v0::AwsRegion>();
+        let azure = text.parse::<v0::AzureRegion>();
         // let gcp = text.parse::<v1::GcpRegion>();
 
         match (aws, azure) {

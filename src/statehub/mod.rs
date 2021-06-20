@@ -18,7 +18,7 @@ use crate::api;
 use crate::k8s;
 use crate::show::Detailed;
 use crate::traits::Show;
-use crate::v1;
+use crate::v0;
 use crate::Location;
 use crate::Output;
 
@@ -55,9 +55,9 @@ enum Command {
     #[structopt(about = "Create new state", aliases = &["create-st", "cs"], display_order(20))]
     CreateState {
         #[structopt(help = "State name")]
-        name: v1::StateName,
+        name: v0::StateName,
         #[structopt(long, short, help = "Defalt owning cluster")]
-        owner: Option<v1::ClusterName>,
+        owner: Option<v0::ClusterName>,
         #[structopt(long, short, help = "Location definition")]
         location: Vec<Location>,
     },
@@ -65,7 +65,7 @@ enum Command {
     #[structopt(about = "Delete existing state", aliases = &["delete-st", "ds"], display_order(20))]
     DeleteState {
         #[structopt(help = "State name")]
-        name: v1::StateName,
+        name: v0::StateName,
     },
 
     #[structopt(about = "List available states", aliases = &["list-state", "list-st", "ls"], display_order(20))]
@@ -74,13 +74,13 @@ enum Command {
     #[structopt(about = "Show state details", aliases = &["show-s", "ss"], display_order(20))]
     ShowState {
         #[structopt(help = "State name")]
-        name: v1::StateName,
+        name: v0::StateName,
     },
 
     #[structopt(about = "Register new cluster", aliases = &["register-cl", "rc"], display_order(10))]
     RegisterCluster {
         #[structopt(help = "Cluster name, defaults to current k8s context")]
-        name: Option<v1::ClusterName>,
+        name: Option<v0::ClusterName>,
 
         #[structopt(
             help = "List of states to for this cluster to use",
@@ -88,7 +88,7 @@ enum Command {
             alias = "state",
             default_value = "default"
         )]
-        states: Vec<v1::StateName>,
+        states: Vec<v0::StateName>,
 
         #[structopt(
             help = "Skip adding this cluster locations to any state",
@@ -125,7 +125,7 @@ enum Command {
         skip_helm: bool,
 
         #[structopt(help = "K8s cluster provider [default: autodetect]", long)]
-        provider: Option<v1::Provider>,
+        provider: Option<v0::Provider>,
     },
 
     #[structopt(about = "Unregister existing cluster", aliases = &["unregister-cl", "uc"], display_order(11))]
@@ -133,7 +133,7 @@ enum Command {
         #[structopt(help = "Skip confirmation", long, short)]
         force: bool,
         #[structopt(help = "Cluster name")]
-        name: v1::ClusterName,
+        name: v0::ClusterName,
     },
 
     #[structopt(about = "List registered clusters", aliases = &["list-cluster", "list-cl", "lc"], display_order(12))]
@@ -142,7 +142,7 @@ enum Command {
     #[structopt(about = "Show registered cluster details", aliases = &["show-cl", "sc"], display_order(13))]
     ShowCluster {
         #[structopt(help = "Cluster name")]
-        name: Option<v1::ClusterName>,
+        name: Option<v0::ClusterName>,
     },
 
     #[structopt(
@@ -152,7 +152,7 @@ enum Command {
     )]
     AddLocation {
         #[structopt(help = "State name")]
-        state: v1::StateName,
+        state: v0::StateName,
         #[structopt(help = "Location specification")]
         location: Location,
         #[structopt(help = "Wait until new location is ready", long)]
@@ -166,7 +166,7 @@ enum Command {
     )]
     RemoveLocation {
         #[structopt(help = "State name")]
-        state: v1::StateName,
+        state: v0::StateName,
         #[structopt(help = "Location specification")]
         location: Location,
     },
@@ -177,37 +177,37 @@ enum Command {
     #[structopt(about = "Set cluster as the state owner", display_order(40))]
     SetOwner {
         #[structopt(help = "State name")]
-        state: v1::StateName,
+        state: v0::StateName,
         #[structopt(help = "Cluster name")]
-        cluster: v1::ClusterName,
+        cluster: v0::ClusterName,
     },
 
     #[structopt(about = "Clear state owner", display_order(40))]
     UnsetOwner {
         #[structopt(help = "State name")]
-        state: v1::StateName,
+        state: v0::StateName,
         #[structopt(help = "Cluster name")]
-        cluster: v1::ClusterName,
+        cluster: v0::ClusterName,
     },
 
     #[structopt(about = "Manually create new volume", aliases = &["create-v", "cv"], display_order(50))]
     CreateVolume {
         #[structopt(help = "State name")]
-        state: v1::StateName,
+        state: v0::StateName,
         #[structopt(help = "Volume name")]
-        volume: v1::VolumeName,
+        volume: v0::VolumeName,
         #[structopt(help = "valume size")]
         size: u64,
         #[structopt(help = "volume file system")]
-        fs_type: v1::VolumeFileSystem,
+        fs_type: v0::VolumeFileSystem,
     },
 
     #[structopt(about = "Manually delete existing volume", aliases = &["delete-v", "dv"], display_order(50))]
     DeleteVolume {
         #[structopt(help = "State name")]
-        state: v1::StateName,
+        state: v0::StateName,
         #[structopt(help = "Volume name")]
-        volume: v1::VolumeName,
+        volume: v0::VolumeName,
     },
 
     #[structopt(
@@ -217,9 +217,9 @@ enum Command {
     )]
     SetVolume {
         #[structopt(help = "State name")]
-        state: v1::StateName,
+        state: v0::StateName,
         #[structopt(help = "Volume name")]
-        volume: v1::VolumeName,
+        volume: v0::VolumeName,
         #[structopt(help = "Primary location specification", long, short)]
         primary: Location,
     },
@@ -231,7 +231,7 @@ enum Command {
     )]
     ListVolumes {
         #[structopt(help = "State name")]
-        state: v1::StateName,
+        state: v0::StateName,
     },
 
     #[structopt(
@@ -266,7 +266,7 @@ enum Command {
     )]
     SetupConfigmap {
         #[structopt(help = "cluster name")]
-        cluster: v1::ClusterName,
+        cluster: v0::ClusterName,
         #[structopt(
             help = "Namespace to install statehub components",
             default_value = "statehub-system"
@@ -471,11 +471,11 @@ impl StateHub {
 
     async fn create_state(
         &self,
-        name: v1::StateName,
-        owner: Option<v1::ClusterName>,
-        locations: v1::CreateStateLocationsDto,
+        name: v0::StateName,
+        owner: Option<v0::ClusterName>,
+        locations: v0::CreateStateLocationsDto,
     ) -> anyhow::Result<()> {
-        let state = v1::CreateStateDto {
+        let state = v0::CreateStateDto {
             name,
             storage_class: None,
             owner,
@@ -488,14 +488,14 @@ impl StateHub {
             .handle_output(&self.stdout, self.json)
     }
 
-    async fn delete_state(&self, name: v1::StateName) -> anyhow::Result<()> {
+    async fn delete_state(&self, name: v0::StateName) -> anyhow::Result<()> {
         self.api
             .delete_state(name)
             .await
             .handle_output(&self.stdout, self.json)
     }
 
-    async fn show_state(self, state: &v1::StateName) -> anyhow::Result<()> {
+    async fn show_state(self, state: &v0::StateName) -> anyhow::Result<()> {
         self.api
             .get_state(state)
             .await
@@ -519,9 +519,9 @@ impl StateHub {
 
     async fn register_cluster(
         &self,
-        cluster: v1::ClusterName,
-        provider: Option<v1::Provider>,
-        states: Option<Vec<v1::StateName>>,
+        cluster: v0::ClusterName,
+        provider: Option<v0::Provider>,
+        states: Option<Vec<v0::StateName>>,
         helm: k8s::Helm,
         claim_unowned_states: bool,
     ) -> anyhow::Result<()> {
@@ -570,7 +570,7 @@ impl StateHub {
         cluster.handle_output(&self.stdout, self.json)
     }
 
-    async fn show_cluster(&self, name: v1::ClusterName) -> anyhow::Result<()> {
+    async fn show_cluster(&self, name: v0::ClusterName) -> anyhow::Result<()> {
         self.api
             .get_cluster(&name)
             .await
@@ -578,7 +578,7 @@ impl StateHub {
             .handle_output(&self.stdout, self.json)
     }
 
-    async fn unregister_cluster(&self, name: v1::ClusterName, force: bool) -> anyhow::Result<()> {
+    async fn unregister_cluster(&self, name: v0::ClusterName, force: bool) -> anyhow::Result<()> {
         if force || self.confirm("Are you sure?") {
             log::info!("Make sure all the pods using statehub are terminated");
             log::info!("Uninstall helm");
@@ -596,7 +596,7 @@ impl StateHub {
 
     async fn add_location(
         &self,
-        state: v1::StateName,
+        state: v0::StateName,
         location: Location,
         wait: bool,
     ) -> anyhow::Result<()> {
@@ -613,7 +613,7 @@ impl StateHub {
         Ok(())
     }
 
-    async fn remove_location(self, state: v1::StateName, location: Location) -> anyhow::Result<()> {
+    async fn remove_location(self, state: v0::StateName, location: Location) -> anyhow::Result<()> {
         let state = self.api.get_state(&state).await?;
         if state.is_available_in(&location) {
             self.remove_location_helper(&state, &location).await?;
@@ -625,12 +625,12 @@ impl StateHub {
 
     async fn create_volume(
         self,
-        state_name: v1::StateName,
-        volume_name: v1::VolumeName,
+        state_name: v0::StateName,
+        volume_name: v0::VolumeName,
         size: u64,
-        fs: v1::VolumeFileSystem,
+        fs: v0::VolumeFileSystem,
     ) -> anyhow::Result<()> {
-        let volume = v1::CreateVolumeDto {
+        let volume = v0::CreateVolumeDto {
             name: volume_name.to_string(),
             size_gi: size,
             fs_type: fs.to_string(),
@@ -644,8 +644,8 @@ impl StateHub {
 
     async fn delete_volume(
         self,
-        state: v1::StateName,
-        volume: v1::VolumeName,
+        state: v0::StateName,
+        volume: v0::VolumeName,
     ) -> anyhow::Result<()> {
         self.api
             .delete_volume(state, volume)
@@ -655,8 +655,8 @@ impl StateHub {
 
     async fn set_volume_primary(
         &self,
-        state: v1::StateName,
-        volume: v1::VolumeName,
+        state: v0::StateName,
+        volume: v0::VolumeName,
         primary: Location,
     ) -> anyhow::Result<()> {
         self.api
@@ -665,7 +665,7 @@ impl StateHub {
             .handle_output(&self.stdout, self.json)
     }
 
-    async fn list_volumes(&self, state: v1::StateName) -> anyhow::Result<()> {
+    async fn list_volumes(&self, state: v0::StateName) -> anyhow::Result<()> {
         self.api
             .list_volumes(state)
             .await
@@ -679,8 +679,8 @@ impl StateHub {
 
     async fn set_owner(
         &self,
-        state: v1::StateName,
-        cluster: v1::ClusterName,
+        state: v0::StateName,
+        cluster: v0::ClusterName,
     ) -> anyhow::Result<()> {
         self.api
             .set_owner(&state, &cluster)
@@ -690,8 +690,8 @@ impl StateHub {
 
     async fn unset_owner(
         &self,
-        state: v1::StateName,
-        cluster: v1::ClusterName,
+        state: v0::StateName,
+        cluster: v0::ClusterName,
     ) -> anyhow::Result<()> {
         let state = self.api.get_state(&state).await?;
 
@@ -729,7 +729,7 @@ impl StateHub {
     async fn setup_configmap(
         &self,
         namespace: String,
-        cluster: v1::ClusterName,
+        cluster: v0::ClusterName,
         default_state: Option<String>,
     ) -> anyhow::Result<()> {
         let default_state = default_state.as_deref().unwrap_or("");

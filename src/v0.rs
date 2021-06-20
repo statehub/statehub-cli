@@ -46,4 +46,4 @@ mod helm;
 mod state;
 mod volume;
 
-pub const VERSION: &str = "";
+pub const VERSION: &str = "/v0";

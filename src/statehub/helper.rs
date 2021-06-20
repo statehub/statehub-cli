@@ -12,7 +12,7 @@ use super::*;
 impl StateHub {
     pub(super) async fn add_location_helper(
         &self,
-        state: &v1::State,
+        state: &v0::State,
         location: &Location,
         wait: bool,
     ) -> anyhow::Result<()> {
@@ -34,10 +34,10 @@ impl StateHub {
 
     async fn add_aws_location_helper(
         &self,
-        name: &v1::StateName,
-        region: v1::AwsRegion,
+        name: &v0::StateName,
+        region: v0::AwsRegion,
         wait: bool,
-    ) -> anyhow::Result<Output<v1::StateLocationAws>> {
+    ) -> anyhow::Result<Output<v0::StateLocationAws>> {
         let aws = self.api.add_aws_location(name, region).await?;
         if wait {
             let delay = Duration::from_secs(5);
@@ -59,10 +59,10 @@ impl StateHub {
 
     async fn add_azure_location_helper(
         &self,
-        name: &v1::StateName,
-        region: v1::AzureRegion,
+        name: &v0::StateName,
+        region: v0::AzureRegion,
         wait: bool,
-    ) -> anyhow::Result<Output<v1::StateLocationAzure>> {
+    ) -> anyhow::Result<Output<v0::StateLocationAzure>> {
         let azure = self.api.add_azure_location(name, region).await?;
         if wait {
             let delay = Duration::from_secs(5);
@@ -84,7 +84,7 @@ impl StateHub {
 
     pub(super) async fn remove_location_helper(
         &self,
-        state: &v1::State,
+        state: &v0::State,
         location: &Location,
     ) -> anyhow::Result<()> {
         log::info!("Truncating {} from {}", state, location);
@@ -107,7 +107,7 @@ impl StateHub {
 
     pub(super) async fn adjust_all_states(
         &self,
-        names: &[v1::StateName],
+        names: &[v0::StateName],
         locations: &[Location],
     ) -> anyhow::Result<()> {
         for name in names {
@@ -119,7 +119,7 @@ impl StateHub {
 
     async fn adjust_state_locations(
         &self,
-        name: &v1::StateName,
+        name: &v0::StateName,
         locations: &[Location],
     ) -> anyhow::Result<()> {
         let state = self.api.get_state(name).await?;
@@ -144,7 +144,7 @@ impl StateHub {
 
     pub(super) async fn setup_configmap_helper(
         &self,
-        cluster: &v1::Cluster,
+        cluster: &v0::Cluster,
         helm: &k8s::Helm,
     ) -> anyhow::Result<()> {
         let namespace = helm.namespace();
@@ -156,7 +156,7 @@ impl StateHub {
 
     pub(super) async fn setup_cluster_token_helper(
         &self,
-        cluster: &v1::Cluster,
+        cluster: &v0::Cluster,
         helm: &k8s::Helm,
     ) -> anyhow::Result<()> {
         let token = self.api.issue_cluster_token(&cluster.name).await?;
@@ -168,8 +168,8 @@ impl StateHub {
 
     pub(super) async fn claim_unowned_states_helper(
         &self,
-        cluster: &v1::Cluster,
-        states: Option<Vec<v1::StateName>>,
+        cluster: &v0::Cluster,
+        states: Option<Vec<v0::StateName>>,
     ) -> anyhow::Result<()> {
         if let Some(states) = states {
             for state in states {
@@ -184,7 +184,7 @@ impl StateHub {
 
     pub(super) async fn relinquish_states_helper(
         &self,
-        cluster: &v1::ClusterName,
+        cluster: &v0::ClusterName,
     ) -> anyhow::Result<()> {
         for state in self.api.get_all_states().await? {
             if state.owner.as_ref() == Some(cluster) {

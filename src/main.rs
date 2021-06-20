@@ -32,8 +32,8 @@ mod show;
 mod statehub;
 // custom traits
 mod traits;
-// stathub API v1 definitions
-pub mod v1;
+// stathub API v0 definitions
+pub mod v0;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

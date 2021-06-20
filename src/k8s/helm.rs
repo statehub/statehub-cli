@@ -7,7 +7,7 @@ use std::process::Command;
 use tokio::process::Command as AsyncCmd;
 
 use crate::traits::Show;
-use crate::v1;
+use crate::v0;
 
 #[derive(Debug)]
 pub(crate) enum Helm {
@@ -63,7 +63,7 @@ impl Helm {
         }
     }
 
-    pub(crate) async fn execute(&self, cluster: &v1::Cluster) -> anyhow::Result<()> {
+    pub(crate) async fn execute(&self, cluster: &v0::Cluster) -> anyhow::Result<()> {
         let commands = self.command(cluster);
         match self {
             Helm::Skip { .. } => println!("Manually run\n{}", commands.show()),
@@ -79,7 +79,7 @@ impl Helm {
         Ok(())
     }
 
-    pub(crate) fn command(&self, cluster: &v1::Cluster) -> Vec<Command> {
+    pub(crate) fn command(&self, cluster: &v0::Cluster) -> Vec<Command> {
         cluster
             .helm
             .iter()

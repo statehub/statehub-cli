@@ -14,7 +14,7 @@ use serde_json as json;
 
 use crate::location::Location;
 use crate::output::Output;
-use crate::v1;
+use crate::v0;
 
 pub(crate) type ApiResult<T> = Result<Output<T>, anyhow::Error>;
 #[derive(Debug)]
@@ -30,11 +30,11 @@ impl Api {
         let token = token.map(String::from).map(SecretString::new);
 
         let base = if management.starts_with("http") {
-            format!("{}{}", management, v1::VERSION)
+            format!("{}{}", management, v0::VERSION)
         } else if management.starts_with("api.") && management.ends_with(".statehub.io") {
-            format!("https://{}{}", management, v1::VERSION)
+            format!("https://{}{}", management, v0::VERSION)
         } else {
-            format!("http://{}:3000{}", management, v1::VERSION)
+            format!("http://{}:3000{}", management, v0::VERSION)
         };
 
         log::debug!("Using API at {} with token {:?}", base, token);
@@ -55,24 +55,24 @@ impl Api {
             .map_or(false, |status| status == reqwest::StatusCode::UNAUTHORIZED)
     }
 
-    pub(crate) async fn create_state(&self, state: v1::CreateStateDto) -> ApiResult<v1::State> {
+    pub(crate) async fn create_state(&self, state: v0::CreateStateDto) -> ApiResult<v0::State> {
         self.post("/states", state).await
     }
 
     pub(crate) async fn create_volume(
         &self,
-        state_name: v1::StateName,
-        volume: v1::CreateVolumeDto,
-    ) -> ApiResult<v1::Volume> {
+        state_name: v0::StateName,
+        volume: v0::CreateVolumeDto,
+    ) -> ApiResult<v0::Volume> {
         let path = format!("/states/{state_name}/volumes", state_name = state_name);
         self.post(path, volume).await
     }
 
     pub(crate) async fn delete_volume(
         &self,
-        state: v1::StateName,
-        volume: v1::VolumeName,
-    ) -> ApiResult<v1::Volume> {
+        state: v0::StateName,
+        volume: v0::VolumeName,
+    ) -> ApiResult<v0::Volume> {
         let path = format!(
             "/states/{name}/volumes/{volume}",
             name = state,
@@ -83,10 +83,10 @@ impl Api {
 
     pub(crate) async fn set_volume_primary(
         &self,
-        state: v1::StateName,
-        volume: v1::VolumeName,
+        state: v0::StateName,
+        volume: v0::VolumeName,
         primary: Location,
-    ) -> ApiResult<v1::Volume> {
+    ) -> ApiResult<v0::Volume> {
         let path = format!(
             "/states/{state}/volumes/{volume}/activeLocation/{primary:#}",
             state = state,
@@ -96,43 +96,43 @@ impl Api {
         self.put(path).await
     }
 
-    pub(crate) async fn list_volumes(&self, state: v1::StateName) -> ApiResult<Vec<v1::Volume>> {
+    pub(crate) async fn list_volumes(&self, state: v0::StateName) -> ApiResult<Vec<v0::Volume>> {
         let path = format!("/states/{state}/volumes", state = state,);
         self.get(path).await
     }
 
-    pub(crate) async fn delete_state(&self, name: v1::StateName) -> ApiResult<()> {
+    pub(crate) async fn delete_state(&self, name: v0::StateName) -> ApiResult<()> {
         let path = format!("/states/{name}", name = name);
         self.del(path).await
     }
 
-    pub(crate) async fn get_state(&self, name: &v1::StateName) -> ApiResult<v1::State> {
+    pub(crate) async fn get_state(&self, name: &v0::StateName) -> ApiResult<v0::State> {
         let path = format!("/states/{name}", name = name);
         self.get(path).await
     }
 
-    pub(crate) async fn get_all_states(&self) -> ApiResult<Vec<v1::State>> {
+    pub(crate) async fn get_all_states(&self) -> ApiResult<Vec<v0::State>> {
         self.get("/states").await
     }
 
-    pub(crate) async fn get_cluster(&self, name: &v1::ClusterName) -> ApiResult<v1::Cluster> {
+    pub(crate) async fn get_cluster(&self, name: &v0::ClusterName) -> ApiResult<v0::Cluster> {
         let path = format!("/clusters/{name}", name = name);
         self.get(path).await
     }
 
-    pub(crate) async fn get_all_clusters(&self) -> ApiResult<Vec<v1::Cluster>> {
+    pub(crate) async fn get_all_clusters(&self) -> ApiResult<Vec<v0::Cluster>> {
         self.get("/clusters").await
     }
 
     pub(crate) async fn register_cluster(
         &self,
-        name: &v1::ClusterName,
-        provider: v1::Provider,
+        name: &v0::ClusterName,
+        provider: v0::Provider,
         locations: &[Location],
-    ) -> ApiResult<v1::Cluster> {
+    ) -> ApiResult<v0::Cluster> {
         let name = name.clone();
         let locations = locations.into();
-        let body = v1::CreateClusterDto {
+        let body = v0::CreateClusterDto {
             name,
             provider,
             locations,
@@ -140,16 +140,16 @@ impl Api {
         self.post("/clusters", body).await
     }
 
-    pub(crate) async fn unregister_cluster(&self, name: v1::ClusterName) -> ApiResult<()> {
+    pub(crate) async fn unregister_cluster(&self, name: v0::ClusterName) -> ApiResult<()> {
         let path = format!("/clusters/{name}", name = name);
         self.del(path).await
     }
 
     pub(crate) async fn get_aws_location(
         &self,
-        name: &v1::StateName,
-        region: v1::AwsRegion,
-    ) -> ApiResult<v1::StateLocationAws> {
+        name: &v0::StateName,
+        region: v0::AwsRegion,
+    ) -> ApiResult<v0::StateLocationAws> {
         let path = format!(
             "/states/{name}/locations/aws/{region}",
             name = name,
@@ -160,19 +160,19 @@ impl Api {
 
     pub(crate) async fn add_aws_location(
         &self,
-        name: &v1::StateName,
-        region: v1::AwsRegion,
-    ) -> ApiResult<v1::StateLocationAws> {
+        name: &v0::StateName,
+        region: v0::AwsRegion,
+    ) -> ApiResult<v0::StateLocationAws> {
         let path = format!("/states/{name}/locations/aws", name = name);
-        let body = v1::CreateStateLocationAwsDto { region };
+        let body = v0::CreateStateLocationAwsDto { region };
         self.post(path, body).await
     }
 
     pub(crate) async fn del_aws_location(
         &self,
-        name: v1::StateName,
-        region: v1::AwsRegion,
-    ) -> ApiResult<v1::StateLocationAws> {
+        name: v0::StateName,
+        region: v0::AwsRegion,
+    ) -> ApiResult<v0::StateLocationAws> {
         let path = format!(
             "/states/{name}/locations/aws/{region}",
             name = name,
@@ -183,9 +183,9 @@ impl Api {
 
     pub(crate) async fn get_azure_location(
         &self,
-        name: &v1::StateName,
-        region: v1::AzureRegion,
-    ) -> ApiResult<v1::StateLocationAzure> {
+        name: &v0::StateName,
+        region: v0::AzureRegion,
+    ) -> ApiResult<v0::StateLocationAzure> {
         let path = format!(
             "/states/{name}/locations/azure/{region}",
             name = name,
@@ -196,19 +196,19 @@ impl Api {
 
     pub(crate) async fn add_azure_location(
         &self,
-        name: &v1::StateName,
-        region: v1::AzureRegion,
-    ) -> ApiResult<v1::StateLocationAzure> {
+        name: &v0::StateName,
+        region: v0::AzureRegion,
+    ) -> ApiResult<v0::StateLocationAzure> {
         let path = format!("/states/{name}/locations/azure", name = name);
-        let body = v1::CreateStateLocationAzureDto { region };
+        let body = v0::CreateStateLocationAzureDto { region };
         self.post(path, body).await
     }
 
     pub(crate) async fn del_azure_location(
         &self,
-        name: v1::StateName,
-        region: v1::AzureRegion,
-    ) -> ApiResult<v1::StateLocationAzure> {
+        name: v0::StateName,
+        region: v0::AzureRegion,
+    ) -> ApiResult<v0::StateLocationAzure> {
         let path = format!(
             "/states/{name}/locations/azure/{region}",
             name = name,
@@ -219,9 +219,9 @@ impl Api {
 
     pub(crate) async fn set_owner(
         &self,
-        state: &v1::StateName,
-        cluster: &v1::ClusterName,
-    ) -> ApiResult<v1::State> {
+        state: &v0::StateName,
+        cluster: &v0::ClusterName,
+    ) -> ApiResult<v0::State> {
         let path = format!(
             "/states/{state}/owner/{cluster}",
             state = state,
@@ -230,15 +230,15 @@ impl Api {
         self.put(path).await
     }
 
-    pub(crate) async fn unset_owner(&self, state: &v1::StateName) -> ApiResult<v1::State> {
+    pub(crate) async fn unset_owner(&self, state: &v0::StateName) -> ApiResult<v0::State> {
         let path = format!("/states/{state}/owner", state = state);
         self.del(path).await
     }
 
     pub(crate) async fn issue_cluster_token(
         &self,
-        cluster: &v1::ClusterName,
-    ) -> ApiResult<v1::ClusterToken> {
+        cluster: &v0::ClusterName,
+    ) -> ApiResult<v0::ClusterToken> {
         let path = format!("/clusters/{}/token", cluster);
         self.post::<_, _, (), _>(path, None).await
     }
@@ -426,7 +426,7 @@ trait ResponseExt: Sized {
 
         if status.is_client_error() {
             let unknown_error = |_| anyhow::anyhow!("Unexpected client error: {}", status);
-            let err = json::from_slice::<v1::Error>(&bytes)
+            let err = json::from_slice::<v0::Error>(&bytes)
                 .map_or_else(unknown_error, anyhow::Error::from);
 
             return Err(err);
