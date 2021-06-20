@@ -31,3 +31,5 @@ branch := "develop"
 merge_request:
     git push -o merge_request.create -o merge_request.target={{branch}}
 alias mr := merge_request
+release:
+    cargo release --skip-publish patch
