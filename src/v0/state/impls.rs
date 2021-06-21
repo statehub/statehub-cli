@@ -73,6 +73,10 @@ impl PartialEq<&str> for StateName {
 }
 
 impl State {
+    const STATE: Emoji<'static, 'static> = Emoji("☘", "o");
+    const OWNED: Emoji<'static, 'static> = Emoji("🔒 ", "");
+    const UNOWNED: Emoji<'static, 'static> = Emoji("🔓", "-");
+
     pub(crate) fn is_available_in(&self, location: &Location) -> bool {
         self.locations.contains(location)
     }
@@ -80,8 +84,8 @@ impl State {
     fn show_owner(&self) -> String {
         self.owner
             .as_ref()
-            .map(|cluster| format!("🔒 {}", cluster))
-            .unwrap_or_else(|| "🔓".to_string())
+            .map(|cluster| format!("{}{}", Self::OWNED, cluster))
+            .unwrap_or_else(|| format!("{}", Self::UNOWNED))
     }
 
     fn collect_volumes(&self) -> HashMap<String, HashMap<Location, &VolumeLocation>> {
@@ -163,11 +167,11 @@ impl State {
 }
 
 impl StateLocationStatus {
-    const OK: Emoji<'static, 'static> = Emoji("🆗", "V");
+    const OK: Emoji<'static, 'static> = Emoji("🆗", "v");
     const PROVISIONING: Emoji<'static, 'static> = Emoji("⤴ 🔜", "+");
     const RECOVERING: Emoji<'static, 'static> = Emoji("🔄", "~");
     const DELETING: Emoji<'static, 'static> = Emoji("⤵", "-");
-    const ERROR: Emoji<'static, 'static> = Emoji("❌", "X");
+    const ERROR: Emoji<'static, 'static> = Emoji("❌", "x");
 
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -233,9 +237,9 @@ impl StateLocations {
 }
 
 impl Condition {
-    pub const GREEN: Emoji<'static, 'static> = Emoji("🟢", "G");
-    pub const YELLOW: Emoji<'static, 'static> = Emoji("🟡", "Y");
-    pub const RED: Emoji<'static, 'static> = Emoji("🔴", "R");
+    pub const GREEN: Emoji<'static, 'static> = Emoji("🟢", "v");
+    pub const YELLOW: Emoji<'static, 'static> = Emoji("🟡", "!");
+    pub const RED: Emoji<'static, 'static> = Emoji("🔴", "x");
 }
 
 impl Default for Condition {
