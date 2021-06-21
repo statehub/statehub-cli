@@ -27,6 +27,10 @@ impl Config {
         self.api.as_str()
     }
 
+    pub(crate) fn console(&self) -> &str {
+        self.console.as_str()
+    }
+
     pub(crate) fn optionally_management_api(self, api: Option<String>) -> Self {
         if let Some(api) = api {
             Self { api, ..self }
@@ -34,6 +38,15 @@ impl Config {
             self
         }
     }
+
+    pub(crate) fn optionally_management_console(self, console: Option<String>) -> Self {
+        if let Some(console) = console {
+            Self { console, ..self }
+        } else {
+            self
+        }
+    }
+
     pub(crate) fn set_token(self, token: Option<String>) -> Self {
         let token = token.or(self.token);
         Self { token, ..self }
@@ -122,7 +135,7 @@ impl From<ConfigV2> for Config {
 impl From<ConfigV1> for Config {
     fn from(v1: ConfigV1) -> Self {
         Self {
-            version: v1.version,
+            version: String::from(Self::VERSION),
             api: v1.api,
             console: String::from(Self::DEFAULT_CONSOLE),
             token: v1.token,

@@ -27,6 +27,7 @@ pub use cluster::{
 pub use error::{Error, Permission, StatehubError};
 pub use gcp::GcpRegion;
 pub use helm::Helm;
+pub use login::Login;
 pub use state::{
     Condition, CreateStateDto, CreateStateLocationAwsDto, CreateStateLocationAzureDto,
     CreateStateLocationsDto, ProvisioningStatus, State, StateLocationAws, StateLocationAzure,
@@ -43,6 +44,7 @@ mod cluster;
 mod error;
 mod gcp;
 mod helm;
+mod login;
 mod state;
 mod volume;
 

@@ -5,6 +5,7 @@
 
 use std::time::Duration;
 
+use serde_json as json;
 use tokio::time;
 
 use super::*;
@@ -197,5 +198,15 @@ impl StateHub {
             }
         }
         Ok(())
+    }
+
+    pub(super) fn login_prompt_helper(&self) -> anyhow::Result<(String, String)> {
+        let username = whoami::username();
+        let hostname = whoami::hostname();
+        let login = v0::Login { username, hostname };
+        let text = json::to_string(&login)?;
+        let token = base64::encode(&text);
+        let id = format!("{}@{}", login.username, login.hostname);
+        Ok((token, id))
     }
 }

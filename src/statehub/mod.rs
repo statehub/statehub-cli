@@ -9,7 +9,7 @@ use std::io;
 
 use anyhow::Context;
 use console::Term;
-use dialoguer::{theme, Confirm};
+use dialoguer::{theme, Confirm, Input};
 use serde::{de::DeserializeOwned, Serialize};
 use structopt::StructOpt;
 // use structopt::clap;
@@ -40,6 +40,14 @@ pub(crate) struct Cli {
         env = "SHAPI"
     )]
     management: Option<String>,
+    #[structopt(
+        help = "Console server URL or address",
+        // default_value = "https://console.statehub.io",
+        short,
+        long,
+        env = "SHCONSOLE"
+    )]
+    console: Option<String>,
     #[structopt(help = "Authentication token", short, long, env = "SHTOKEN")]
     token: Option<String>,
     #[structopt(long, global = true, help = "Show results as JSON")]
@@ -52,6 +60,8 @@ pub(crate) struct Cli {
 
 #[derive(Debug, StructOpt)]
 enum Command {
+    #[structopt(about = "Authenticate against statehub service", display_order(0))]
+    Login,
     #[structopt(about = "Create new state", aliases = &["create-st", "cs"], display_order(20))]
     CreateState {
         #[structopt(help = "State name")]
@@ -324,6 +334,7 @@ impl Cli {
             .config()
             .await?
             .optionally_management_api(self.management)
+            .optionally_management_console(self.console)
             .set_token(self.token);
 
         let statehub = StateHub::new(config, self.json, self.verbose);
@@ -331,6 +342,7 @@ impl Cli {
         statehub.validate_auth().await?;
 
         match self.command {
+            Command::Login => statehub.login().await,
             Command::CreateState {
                 name,
                 owner,
@@ -466,6 +478,27 @@ impl StateHub {
             anyhow::bail!("Unauthorized - perhaps an invalid token?");
         }
 
+        Ok(())
+    }
+
+    async fn login(&self) -> anyhow::Result<()> {
+        let console = self.config.console();
+        let (token, id) = self.login_prompt_helper()?;
+
+        let prompt = format!(
+            "{}\n{}\n\n{}\n{}",
+            "Welcome to Statehub! Please login or sign up at:",
+            format_args!("{}/?cli={}", console, token),
+            "Waiting for authentication to complete in your browser...",
+            format_args!(
+                "Please paste the token generated for {} here, and press RETURN",
+                id
+            )
+        );
+
+        let token = self.input(prompt)?;
+
+        self.config.clone().set_token(Some(token)).save()?;
         Ok(())
     }
 
@@ -806,6 +839,12 @@ impl StateHub {
 
     fn inform(&self, text: impl fmt::Display) -> io::Result<()> {
         self.stdout.write_line(&text.to_string())
+    }
+
+    fn input(&self, prompt: impl Into<String>) -> io::Result<String> {
+        Input::with_theme(self.theme())
+            .with_prompt(prompt)
+            .interact_text_on(&self.stdout)
     }
 }
 
