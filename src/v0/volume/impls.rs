@@ -137,7 +137,7 @@ impl Show for LocationVolumeStatus {
 
 impl Show for StateLocationVolumeProgress {
     fn show(&self) -> String {
-        let progress = 100 * self.bytes_total / self.bytes_synchronized;
+        let progress = 100 * self.bytes_synchronized / self.bytes_total;
         format!("{}%", progress)
     }
 }
