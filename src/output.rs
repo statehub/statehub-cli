@@ -79,8 +79,7 @@ where
     T: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let text = format!("{:?}", self.0);
-        text.fmt(f)
+        self.0.fmt(f)
     }
 }
 
