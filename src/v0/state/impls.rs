@@ -150,12 +150,12 @@ impl State {
             .into_iter()
             .map(|(name, locations)| {
                 format!(
-                    "{}: {}",
+                    "  {}:\n    {}",
                     name,
                     locations
                         .iter()
                         .map(|(location, volume)| format!(
-                            "{}: {}",
+                            "{:#}: {}",
                             location,
                             volume.status.value.show()
                         ))
@@ -167,11 +167,12 @@ impl State {
 }
 
 impl StateLocationStatus {
-    const OK: Emoji<'static, 'static> = Emoji("🆗", "v");
-    const PROVISIONING: Emoji<'static, 'static> = Emoji("⤴ 🔜", "+");
-    const RECOVERING: Emoji<'static, 'static> = Emoji("🔄", "~");
-    const DELETING: Emoji<'static, 'static> = Emoji("⤵", "-");
-    const ERROR: Emoji<'static, 'static> = Emoji("❌", "x");
+    const OK: Emoji<'static, 'static> = Emoji("🆗", "[v]");
+    // const PROVISIONING: Emoji<'static, 'static> = Emoji("⤴ 🔜", "[+]");
+    const PROVISIONING: Emoji<'static, 'static> = Emoji("⤴", "[+]");
+    const RECOVERING: Emoji<'static, 'static> = Emoji("🔄", "[~]");
+    const DELETING: Emoji<'static, 'static> = Emoji("⤵", "[-]");
+    const ERROR: Emoji<'static, 'static> = Emoji("❌", "[x]");
 
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -237,9 +238,9 @@ impl StateLocations {
 }
 
 impl Condition {
-    pub const GREEN: Emoji<'static, 'static> = Emoji("🟢", "v");
-    pub const YELLOW: Emoji<'static, 'static> = Emoji("🟡", "!");
-    pub const RED: Emoji<'static, 'static> = Emoji("🔴", "x");
+    pub const GREEN: Emoji<'static, 'static> = Emoji("🟢", "[v]");
+    pub const YELLOW: Emoji<'static, 'static> = Emoji("🟡", "[!]");
+    pub const RED: Emoji<'static, 'static> = Emoji("🔴", "[x]");
 }
 
 impl Default for Condition {
