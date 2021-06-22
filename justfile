@@ -29,7 +29,7 @@ fixlock:
 
 branch := "develop"
 merge_request:
-    git push -o merge_request.create -o merge_request.target={{branch}}
+    git push -o merge_request.create -o merge_request.target={{branch}} -o merge_request.merge_when_pipeline_succeeds
 alias mr := merge_request
 release:
     cargo release patch
