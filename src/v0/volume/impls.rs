@@ -124,6 +124,35 @@ impl str::FromStr for VolumeStatus {
     }
 }
 
+impl Show for LocationVolumeStatus {
+    fn show(&self) -> String {
+        let msg = self
+            .msg
+            .as_ref()
+            .map(|msg| format!(" {}", msg))
+            .unwrap_or_default();
+        format!("{}{}", self.value.show(), msg)
+    }
+}
+
+impl Show for StateLocationVolumeProgress {
+    fn show(&self) -> String {
+        let progress = 100 * self.bytes_total / self.bytes_synchronized;
+        format!("{}%", progress)
+    }
+}
+
+impl Volume {
+    pub fn progress(&self) -> Option<(&LocationVolumeStatus, &StateLocationVolumeProgress)> {
+        self.locations.iter().find_map(|location| {
+            location
+                .progress
+                .as_ref()
+                .map(|progress| (&location.status, progress))
+        })
+    }
+}
+
 impl Show for Volume {
     fn show(&self) -> String {
         volume(self)
@@ -135,10 +164,18 @@ impl Show for Vec<Volume> {
         self.iter()
             .map(|volume| {
                 format!(
-                    "{:<32} {:>8} GiB active: {}",
+                    "{:<32} {:>8} GiB active: {}{}",
                     volume.name,
                     volume.size_gi,
                     volume.active_location.as_deref().unwrap_or("None"),
+                    volume
+                        .progress()
+                        .map(|(status, progress)| format!(
+                            " ({} {} done)",
+                            status.show(),
+                            progress.show()
+                        ))
+                        .unwrap_or_default()
                 )
             })
             .join("\n")
