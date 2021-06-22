@@ -76,7 +76,7 @@ where
 
 impl<T> fmt::Display for Output<T>
 where
-    T: fmt::Debug,
+    T: fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)

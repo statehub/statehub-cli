@@ -251,7 +251,7 @@ impl Api {
     where
         T: fmt::Debug,
     {
-        log::debug!("Output {}", output);
+        log::debug!("Output {:?}", output);
     }
 
     async fn del<P, T>(&self, path: P) -> ApiResult<T>
