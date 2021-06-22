@@ -6,10 +6,15 @@
 use std::str;
 
 use chrono_humanize::HumanTime;
+use console::Emoji;
 
 use crate::k8s;
 
 use super::*;
+
+impl Cluster {
+    const CLUSTER: Emoji<'static, 'static> = Emoji("☸", "*");
+}
 
 impl fmt::Display for Cluster {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -95,7 +100,12 @@ impl From<&[Location]> for ClusterLocations {
 
 impl Show for Cluster {
     fn show(&self) -> String {
-        format!("☸ {:>24} [{:#}]", self.name, self.locations.show())
+        format!(
+            "{} {:>24} [{:#}]",
+            Self::CLUSTER,
+            self.name,
+            self.locations.show()
+        )
     }
 
     fn detailed_show(&self) -> String {
