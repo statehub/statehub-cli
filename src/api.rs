@@ -425,11 +425,10 @@ trait ResponseExt: Sized {
         }
 
         if status.is_client_error() {
-            let unknown_error = |_| anyhow::anyhow!("Unexpected client error: {}", status);
-            let err = json::from_slice::<v0::Error>(&bytes)
-                .map_or_else(unknown_error, anyhow::Error::from);
+            let unknown_error = |_| v0::Error::unknown_error(status, &bytes);
+            let err = json::from_slice::<v0::Error>(&bytes).unwrap_or_else(unknown_error);
 
-            return Err(err);
+            anyhow::bail!(err);
         }
 
         Ok(bytes)

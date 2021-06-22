@@ -47,6 +47,17 @@ pub enum StatehubError {
     StateNotFound {
         state: StateName,
     },
+    AwsLocationExists {
+        state: StateName,
+        region: AwsRegion,
+    },
+    AzureLocationExists {
+        state: StateName,
+        region: AzureRegion,
+    },
+    UnknownError {
+        message: String,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, SerializeDisplay, DeserializeFromStr)]

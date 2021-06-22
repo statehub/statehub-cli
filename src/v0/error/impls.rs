@@ -3,7 +3,38 @@
 // Use is subject to license terms.
 //
 
+use std::borrow::Cow;
+
+use bytes::Bytes;
+use serde_json as json;
+
 use super::*;
+
+impl Error {
+    pub fn unknown_error(status: reqwest::StatusCode, bytes: &Bytes) -> Self {
+        let http_code = status.as_u16();
+        let http_status = status
+            .canonical_reason()
+            .unwrap_or_else(|| status.as_str())
+            .to_string();
+        let message = json::from_slice::<json::Value>(bytes)
+            .ok()
+            .as_ref()
+            .and_then(|value| value.get("msg"))
+            .and_then(|value| value.as_str())
+            .map(Cow::from)
+            .unwrap_or_else(|| String::from_utf8_lossy(bytes))
+            .to_string();
+        let msg = message.clone();
+        let error = StatehubError::UnknownError { message };
+        Self {
+            http_code,
+            http_status,
+            error,
+            msg,
+        }
+    }
+}
 
 impl Permission {
     pub fn as_str(&self) -> &'static str {
