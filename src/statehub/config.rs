@@ -157,7 +157,8 @@ impl ConfigV2 {
     fn validate_config(config: &toml::Value) -> anyhow::Result<Self> {
         let version = config.get("version").and_then(|version| version.as_str());
         anyhow::ensure!(version == Some(Self::VERSION), "Unknown version");
-        config.clone().try_into().context("Converting to ConfigV2")
+        let config = config.clone();
+        toml::Value::try_into(config).context("Converting to ConfigV2")
     }
 }
 
@@ -174,6 +175,7 @@ impl ConfigV1 {
     fn validate_config(config: &toml::Value) -> anyhow::Result<Self> {
         let version = config.get("version").and_then(|version| version.as_str());
         anyhow::ensure!(version == Some(Self::VERSION), "Unknown version");
-        config.clone().try_into().context("Converting to ConfigV1")
+        let config = config.clone();
+        toml::Value::try_into(config).context("Converting to ConfigV1")
     }
 }
