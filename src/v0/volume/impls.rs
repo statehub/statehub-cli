@@ -124,6 +124,12 @@ impl str::FromStr for VolumeStatus {
     }
 }
 
+impl LocationVolumeStatus {
+    pub fn is_deleting(&self) -> bool {
+        self.value.is_deleting()
+    }
+}
+
 impl Show for LocationVolumeStatus {
     fn show(&self) -> String {
         let msg = self
@@ -143,6 +149,12 @@ impl Show for StateLocationVolumeProgress {
 }
 
 impl Volume {
+    pub fn is_deleting(&self) -> bool {
+        self.locations
+            .iter()
+            .any(|location| location.status.is_deleting())
+    }
+
     pub fn progress(&self) -> Option<(&LocationVolumeStatus, &StateLocationVolumeProgress)> {
         self.locations.iter().find_map(|location| {
             location

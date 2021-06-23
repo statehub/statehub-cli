@@ -184,6 +184,10 @@ impl StateLocationStatus {
         }
     }
 
+    pub fn is_deleting(&self) -> bool {
+        *self == Self::Deleting
+    }
+
     pub fn is_final(&self) -> bool {
         match self {
             Self::Ok => true,

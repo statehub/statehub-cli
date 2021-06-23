@@ -11,7 +11,7 @@ mod impls;
 #[serde(rename_all = "camelCase")]
 pub struct Volume {
     pub id: Uuid,
-    pub name: String,
+    pub name: VolumeName,
     pub size_gi: u64,
     pub fs_type: String,
     pub active_location: Option<String>,

@@ -70,8 +70,8 @@ impl Api {
 
     pub(crate) async fn delete_volume(
         &self,
-        state: v0::StateName,
-        volume: v0::VolumeName,
+        state: &v0::StateName,
+        volume: &v0::VolumeName,
     ) -> ApiResult<v0::Volume> {
         let path = format!(
             "/states/{name}/volumes/{volume}",
@@ -96,7 +96,20 @@ impl Api {
         self.put(path).await
     }
 
-    pub(crate) async fn list_volumes(&self, state: v0::StateName) -> ApiResult<Vec<v0::Volume>> {
+    pub(crate) async fn get_volume(
+        &self,
+        state: &v0::StateName,
+        volume: &v0::VolumeName,
+    ) -> ApiResult<v0::Volume> {
+        let path = format!(
+            "/states/{state}/volumes/{volume}",
+            state = state,
+            volume = volume
+        );
+        self.get(path).await
+    }
+
+    pub(crate) async fn get_all_volumes(&self, state: v0::StateName) -> ApiResult<Vec<v0::Volume>> {
         let path = format!("/states/{state}/volumes", state = state,);
         self.get(path).await
     }

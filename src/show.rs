@@ -11,8 +11,10 @@ use itertools::{join, Itertools};
 use crate::traits::Show;
 
 pub(crate) use detailed::Detailed;
+pub(crate) use quiet::Quiet;
 
 mod detailed;
+mod quiet;
 
 impl Show for String {
     fn show(&self) -> String {

@@ -16,7 +16,7 @@ use structopt::StructOpt;
 
 use crate::api;
 use crate::k8s;
-use crate::show::Detailed;
+use crate::show::{Detailed, Quiet};
 use crate::traits::Show;
 use crate::v0;
 use crate::Location;
@@ -680,10 +680,23 @@ impl StateHub {
         state: v0::StateName,
         volume: v0::VolumeName,
     ) -> anyhow::Result<()> {
-        self.api
-            .delete_volume(state, volume)
-            .await
-            .handle_output(&self.stdout, self.json)
+        if let Ok(volume) = self.api.get_volume(&state, &volume).await {
+            if volume.is_deleting() {
+                self.verbosely(format_args!(
+                    "Volume {} is already being deleted",
+                    volume.name
+                ))?;
+            } else {
+                self.api
+                    .delete_volume(&state, &volume.name)
+                    .await
+                    .map(Quiet)
+                    .handle_output(&self.stdout, self.json)?;
+            }
+        } else {
+            self.verbosely("No such volume")?;
+        }
+        Ok(())
     }
 
     async fn set_volume_primary(
@@ -700,7 +713,7 @@ impl StateHub {
 
     async fn list_volumes(&self, state: v0::StateName) -> anyhow::Result<()> {
         self.api
-            .list_volumes(state)
+            .get_all_volumes(state)
             .await
             .handle_output(&self.stdout, self.json)
     }
@@ -873,6 +886,17 @@ where
 }
 
 impl<T> HandleOutput for Detailed<Output<T>>
+where
+    T: DeserializeOwned + Serialize + Show,
+{
+    fn handle_output(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
+        let text = self.into_text(json);
+        stdout.write_line(&text)?;
+        Ok(())
+    }
+}
+
+impl<T> HandleOutput for Quiet<Output<T>>
 where
     T: DeserializeOwned + Serialize + Show,
 {
