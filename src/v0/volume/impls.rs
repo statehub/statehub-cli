@@ -36,6 +36,12 @@ impl AsRef<str> for VolumeName {
     }
 }
 
+impl PartialEq<&str> for VolumeName {
+    fn eq(&self, other: &&str) -> bool {
+        self.0.eq(other)
+    }
+}
+
 #[derive(Debug, Error)]
 #[error(r#"Invalid file system type "{file_system}"#)]
 pub struct InvalidVolumeFileSystem {

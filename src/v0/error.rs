@@ -15,10 +15,10 @@ mod impls;
 #[serde(rename_all = "camelCase")]
 #[error("{msg}")]
 pub struct Error {
-    http_code: u16,
-    http_status: String,
-    error: StatehubError,
-    msg: String,
+    pub http_code: u16,
+    pub http_status: String,
+    pub error: StatehubError,
+    pub msg: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -54,6 +54,10 @@ pub enum StatehubError {
     AzureLocationExists {
         state: StateName,
         region: AzureRegion,
+    },
+    VolumeNotFound {
+        state: StateName,
+        volume: VolumeName,
     },
     UnknownError {
         message: String,

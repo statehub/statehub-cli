@@ -218,6 +218,8 @@ enum Command {
         state: v0::StateName,
         #[structopt(help = "Volume name")]
         volume: v0::VolumeName,
+        #[structopt(help = "Wait until volume is deleted", long)]
+        wait: bool,
     },
 
     #[structopt(
@@ -418,7 +420,11 @@ impl Cli {
                 size,
                 fs_type,
             } => statehub.create_volume(state, volume, size, fs_type).await,
-            Command::DeleteVolume { state, volume } => statehub.delete_volume(state, volume).await,
+            Command::DeleteVolume {
+                state,
+                volume,
+                wait,
+            } => statehub.delete_volume(state, volume, wait).await,
             Command::SetVolume {
                 state,
                 volume,
@@ -679,6 +685,7 @@ impl StateHub {
         self,
         state: v0::StateName,
         volume: v0::VolumeName,
+        wait: bool,
     ) -> anyhow::Result<()> {
         if let Ok(volume) = self.api.get_volume(&state, &volume).await {
             if volume.is_deleting() {
@@ -687,8 +694,7 @@ impl StateHub {
                     volume.name
                 ))?;
             } else {
-                self.api
-                    .delete_volume(&state, &volume.name)
+                self.delete_volume_helper(&state, &volume.name, wait)
                     .await
                     .map(Quiet)
                     .handle_output(&self.stdout, self.json)?;

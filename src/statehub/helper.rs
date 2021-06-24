@@ -200,6 +200,28 @@ impl StateHub {
         Ok(())
     }
 
+    pub(super) async fn delete_volume_helper(
+        &self,
+        state: &v0::StateName,
+        volume: &v0::VolumeName,
+        wait: bool,
+    ) -> anyhow::Result<Output<v0::Volume>> {
+        let mut volume = self.api.delete_volume(state, volume).await?;
+        if wait {
+            let delay = Duration::from_secs(5);
+            loop {
+                match self.api.get_volume(state, &volume.name).await {
+                    Ok(deleting) => volume = deleting,
+                    Err(err) if is_volume_not_found(&err) => break,
+                    _ => continue,
+                }
+            }
+            time::sleep(delay).await;
+        }
+
+        Ok(volume)
+    }
+
     pub(super) fn login_prompt_helper(&self) -> anyhow::Result<(String, String)> {
         let username = whoami::username();
         let hostname = whoami::hostname();
@@ -209,4 +231,10 @@ impl StateHub {
         let id = format!("{}@{}", login.username, login.hostname);
         Ok((token, id))
     }
+}
+
+fn is_volume_not_found(err: &anyhow::Error) -> bool {
+    err.downcast_ref::<v0::Error>()
+        .map(|err| err.is_volume_not_found())
+        .unwrap_or_default()
 }

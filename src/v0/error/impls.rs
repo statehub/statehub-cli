@@ -34,6 +34,10 @@ impl Error {
             msg,
         }
     }
+
+    pub fn is_volume_not_found(&self) -> bool {
+        matches!(self.error, StatehubError::VolumeNotFound { .. })
+    }
 }
 
 impl Permission {
@@ -199,6 +203,17 @@ mod tests {
         assert!(matches!(err.error, StatehubError::StateNameConflict { .. }));
         if let StatehubError::StateNameConflict { state } = err.error {
             assert_eq!(state, "time");
+        }
+    }
+
+    #[test]
+    fn volume_not_found() {
+        let text = r#"{"httpCode":404,"httpStatus":"Not Found","error":{"errorCode":"VolumeNotFound","state":"ttt","volume":"333"},"msg":"Volume 333 does not exist in state ttt"}"#;
+        let err: Error = json::from_str(text).unwrap();
+        assert!(matches!(err.error, StatehubError::VolumeNotFound { .. }));
+        if let StatehubError::VolumeNotFound { state, volume } = err.error {
+            assert_eq!(state, "ttt");
+            assert_eq!(volume, "333");
         }
     }
 }
