@@ -328,7 +328,8 @@ impl Cli {
     }
 
     async fn config(&self) -> anyhow::Result<Config> {
-        Config::load()
+        let config = Config::load().unwrap_or_default();
+        Ok(config)
     }
 
     async fn dispatch(self) -> anyhow::Result<()> {
