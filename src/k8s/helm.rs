@@ -3,7 +3,9 @@
 // Use is subject to license terms.
 //
 
-use std::process::Command;
+use std::io;
+use std::process::{Command, ExitStatus};
+
 use tokio::process::Command as AsyncCmd;
 
 use crate::traits::Show;
@@ -63,20 +65,31 @@ impl Helm {
         }
     }
 
-    pub(crate) async fn execute(&self, cluster: &v0::Cluster) -> anyhow::Result<()> {
+    pub(crate) async fn execute(&self, cluster: &v0::Cluster) -> io::Result<String> {
         let commands = self.command(cluster);
-        match self {
-            Helm::Skip { .. } => println!("Manually run\n{}", commands.show()),
+        let text = match self {
+            Helm::Skip { .. } => format!("Manually run\n{}", commands.show()),
             Helm::Do { .. } => {
+                let mut failure = String::new();
+                let mut success = String::new();
                 for cmd in commands {
                     let input = cmd.show();
-                    let output = AsyncCmd::from(cmd).output().await?;
-                    let stdout = String::from_utf8_lossy(&output.stdout);
+                    let (status, stdout, stderr) = self.exec(cmd).await?;
                     log::debug!("{}\n{}", input, stdout);
+                    if status.success() {
+                        success += &format!("{}\n{}\n", input, stdout);
+                    } else {
+                        failure += &format!("Running '{}' failed\n{}\n", input, stderr);
+                    }
+                }
+                if !failure.is_empty() {
+                    failure
+                } else {
+                    String::new()
                 }
             }
         };
-        Ok(())
+        Ok(text)
     }
 
     pub(crate) fn command(&self, cluster: &v0::Cluster) -> Vec<Command> {
@@ -100,5 +113,12 @@ impl Helm {
                 cmd
             })
             .collect()
+    }
+
+    async fn exec(&self, command: Command) -> io::Result<(ExitStatus, String, String)> {
+        let output = AsyncCmd::from(command).output().await?;
+        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        Ok((output.status, stdout, stderr))
     }
 }

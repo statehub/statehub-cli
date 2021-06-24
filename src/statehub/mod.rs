@@ -600,7 +600,9 @@ impl StateHub {
         self.setup_cluster_token_helper(&cluster, &helm).await?;
         self.setup_configmap_helper(&cluster, &helm).await?;
 
-        helm.execute(&cluster).await?;
+        helm.execute(&cluster)
+            .await
+            .and_then(|text| self.inform(text))?;
 
         if claim_unowned_states {
             self.claim_unowned_states_helper(&cluster, states).await?;
@@ -857,7 +859,11 @@ impl StateHub {
     }
 
     fn inform(&self, text: impl fmt::Display) -> io::Result<()> {
-        self.stdout.write_line(&text.to_string())
+        let text = text.to_string();
+        if !text.is_empty() {
+            self.stdout.write_line(&text)?;
+        }
+        Ok(())
     }
 
     fn input(&self, prompt: impl Into<String>) -> io::Result<String> {

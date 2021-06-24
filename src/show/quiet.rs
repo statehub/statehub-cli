@@ -3,6 +3,8 @@
 // Use is subject to license terms.
 //
 
+use std::ops;
+
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json as json;
 
@@ -28,5 +30,16 @@ where
         } else {
             String::new()
         }
+    }
+}
+
+impl<T> ops::Deref for Quiet<T>
+where
+    T: ops::Deref + DeserializeOwned + Serialize + Show,
+{
+    type Target = T::Target;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.deref()
     }
 }
