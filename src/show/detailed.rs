@@ -3,6 +3,8 @@
 // Use is subject to license terms.
 //
 
+use std::ops;
+
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json as json;
 
@@ -44,5 +46,16 @@ where
 
     fn detailed_show(&self) -> String {
         self.0.detailed_show()
+    }
+}
+
+impl<T> ops::Deref for Detailed<T>
+where
+    T: ops::Deref + DeserializeOwned + Serialize + Show,
+{
+    type Target = T::Target;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.deref()
     }
 }

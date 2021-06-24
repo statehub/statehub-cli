@@ -81,6 +81,12 @@ impl State {
         self.locations.contains(location)
     }
 
+    pub(crate) fn all_locations(&self) -> Vec<Location> {
+        let aws = self.locations.aws.iter().map(|aws| aws.region.into());
+        let azure = self.locations.azure.iter().map(|azure| azure.region.into());
+        aws.chain(azure).collect()
+    }
+
     fn show_owner(&self) -> String {
         self.owner
             .as_ref()

@@ -536,11 +536,12 @@ impl StateHub {
     }
 
     async fn show_state(self, state: &v0::StateName) -> anyhow::Result<()> {
-        self.api
-            .get_state(state)
-            .await
-            .map(Detailed)
-            .handle_output(&self.stdout, self.json)
+        let state = self.api.get_state(state).await.map(Detailed)?;
+        if let Ok(clusters) = self.api.get_all_clusters().await {
+            (state, clusters).handle_output(&self.stdout, self.json)
+        } else {
+            state.handle_output(&self.stdout, self.json)
+        }
     }
 
     async fn list_states(&self) -> anyhow::Result<()> {
@@ -582,7 +583,8 @@ impl StateHub {
         let cluster = self
             .api
             .register_cluster(&cluster, provider, &locations)
-            .await?;
+            .await
+            .map(Quiet)?;
 
         self.inform(format_args!(
             "Registering {:#} cluster {} in {}",
@@ -917,5 +919,26 @@ where
         let text = self.into_text(json);
         stdout.write_line(&text)?;
         Ok(())
+    }
+}
+
+impl HandleOutput for (Detailed<Output<v0::State>>, Output<Vec<v0::Cluster>>) {
+    fn handle_output(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
+        let (state, clusters) = self;
+        let state_locations = state.all_locations();
+
+        state.handle_output(stdout, json)?;
+
+        let clusters = clusters
+            .into_iter()
+            .filter(|cluster| {
+                cluster
+                    .all_locations()
+                    .into_iter()
+                    .any(|location| state_locations.contains(&location))
+            })
+            .collect::<Vec<_>>();
+
+        Output::from(clusters).handle_output(stdout, json)
     }
 }
