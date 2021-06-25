@@ -10,6 +10,7 @@ use std::io;
 use anyhow::Context;
 use console::Term;
 use dialoguer::{theme, Confirm, Input};
+use itertools::Itertools;
 use serde::{de::DeserializeOwned, Serialize};
 use structopt::StructOpt;
 // use structopt::clap;
@@ -615,11 +616,12 @@ impl StateHub {
     }
 
     async fn show_cluster(&self, name: v0::ClusterName) -> anyhow::Result<()> {
-        self.api
-            .get_cluster(&name)
-            .await
-            .map(Detailed)
-            .handle_output(&self.stdout, self.json)
+        let cluster = self.api.get_cluster(&name).await.map(Detailed)?;
+        if let Ok(states) = self.api.get_all_states().await {
+            (cluster, states).handle_output(&self.stdout, self.json)
+        } else {
+            cluster.handle_output(&self.stdout, self.json)
+        }
     }
 
     async fn unregister_cluster(&self, name: v0::ClusterName, force: bool) -> anyhow::Result<()> {
@@ -929,16 +931,41 @@ impl HandleOutput for (Detailed<Output<v0::State>>, Output<Vec<v0::Cluster>>) {
 
         state.handle_output(stdout, json)?;
 
-        let clusters = clusters
-            .into_iter()
+        let visible_clusters = clusters
+            .iter()
             .filter(|cluster| {
                 cluster
                     .all_locations()
-                    .into_iter()
-                    .any(|location| state_locations.contains(&location))
+                    .iter()
+                    .any(|location| state_locations.contains(location))
             })
-            .collect::<Vec<_>>();
+            .map(ToString::to_string)
+            .join(" ");
 
-        Output::from(clusters).handle_output(stdout, json)
+        stdout.write_line(&format!("Visible clusters:\n    {}", visible_clusters))?;
+        Ok(())
+    }
+}
+
+impl HandleOutput for (Detailed<Output<v0::Cluster>>, Output<Vec<v0::State>>) {
+    fn handle_output(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
+        let (cluster, states) = self;
+        let cluster_locations = cluster.all_locations();
+
+        cluster.handle_output(stdout, json)?;
+
+        let visible_states = states
+            .iter()
+            .filter(|state| {
+                state
+                    .all_locations()
+                    .iter()
+                    .any(|location| cluster_locations.contains(location))
+            })
+            .map(ToString::to_string)
+            .join(" ");
+
+        stdout.write_line(&format!("Visible states:\n    {}", visible_states))?;
+        Ok(())
     }
 }
