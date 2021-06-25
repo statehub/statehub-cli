@@ -235,7 +235,7 @@ impl StateHub {
 
 fn is_volume_not_found(err: &anyhow::Error) -> bool {
     err.downcast_ref::<v0::Error>()
-        .map(|err| err.is_volume_not_found())
+        .map(v0::Error::is_volume_not_found)
         .unwrap_or_default()
 }
 

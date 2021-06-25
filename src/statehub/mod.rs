@@ -395,7 +395,7 @@ impl Cli {
                 let default_state = if no_default_storage_class {
                     None
                 } else if default_storage_class.is_none() {
-                    states.first().map(|state| state.to_string())
+                    states.first().map(ToString::to_string)
                 } else {
                     default_storage_class
                 };
