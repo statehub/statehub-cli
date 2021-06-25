@@ -238,3 +238,9 @@ fn is_volume_not_found(err: &anyhow::Error) -> bool {
         .map(|err| err.is_volume_not_found())
         .unwrap_or_default()
 }
+
+#[derive(Clone, Debug)]
+pub(super) enum AddLocation {
+    FromLocation(Location),
+    FromCluster(v0::ClusterName),
+}

@@ -24,6 +24,7 @@ use crate::Location;
 use crate::Output;
 
 use config::Config;
+use helper::AddLocation;
 
 mod config;
 mod helper;
@@ -164,8 +165,20 @@ enum Command {
     AddLocation {
         #[structopt(help = "State name")]
         state: v0::StateName,
-        #[structopt(help = "Location specification")]
-        location: Location,
+        #[structopt(
+            help = "Location specification",
+            conflicts_with = "cluster",
+            required_unless = "cluster"
+        )]
+        location: Option<Location>,
+        #[structopt(
+            help = "Add locations from this cluster",
+            long,
+            short,
+            conflicts_with = "location",
+            required_unless = "location"
+        )]
+        cluster: Option<v0::ClusterName>,
         #[structopt(help = "Wait until new location is ready", long)]
         wait: bool,
     },
@@ -408,8 +421,17 @@ impl Cli {
             Command::AddLocation {
                 state,
                 location,
+                cluster,
                 wait,
-            } => statehub.add_location(state, location, wait).await,
+            } => {
+                let location = location.map(AddLocation::FromLocation);
+                let cluster = cluster.map(AddLocation::FromCluster);
+                if let Some(add_location) = location.or(cluster) {
+                    statehub.add_location(state, add_location, wait).await
+                } else {
+                    anyhow::bail!("Need to specify either location or --cluster");
+                }
+            }
             Command::RemoveLocation { state, location } => {
                 statehub.remove_location(state, location).await
             }
@@ -643,18 +665,33 @@ impl StateHub {
     async fn add_location(
         &self,
         state: v0::StateName,
-        location: Location,
+        add_location: AddLocation,
         wait: bool,
     ) -> anyhow::Result<()> {
-        let state = self.api.get_state(&state).await?;
-        if state.is_available_in(&location) {
-            self.inform(format_args!(
-                "State {} is already available in {:#}",
-                state, location
-            ))?;
-        } else {
-            self.inform(format_args!("Extending state {} to {:#}", state, location))?;
-            self.add_location_helper(&state, &location, wait).await?;
+        let locations = match add_location {
+            AddLocation::FromLocation(location) => vec![location],
+            AddLocation::FromCluster(cluster) => {
+                let locations = self.api.get_cluster(&cluster).await?.all_locations();
+                self.inform(&format!(
+                    "Cluster {} available in {}",
+                    cluster,
+                    locations.iter().map(ToString::to_string).join(" and ")
+                ))?;
+                locations
+            }
+        };
+
+        for location in locations {
+            let state = self.api.get_state(&state).await?;
+            if state.is_available_in(&location) {
+                self.inform(format_args!(
+                    "State {} is already available in {:#}",
+                    state, location
+                ))?;
+            } else {
+                self.inform(format_args!("Extending state {} to {:#}", state, location))?;
+                self.add_location_helper(&state, &location, wait).await?;
+            }
         }
         Ok(())
     }
