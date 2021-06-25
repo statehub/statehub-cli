@@ -5,6 +5,8 @@
 
 #![cfg_attr(feature = "pedantic", warn(clippy::pedantic))]
 #![warn(clippy::use_self)]
+#![warn(clippy::map_flatten)]
+#![warn(clippy::map_unwrap_or)]
 #![warn(deprecated_in_future)]
 #![warn(future_incompatible)]
 #![warn(unreachable_pub)]

@@ -88,35 +88,25 @@ impl State {
     }
 
     fn show_owner(&self) -> String {
-        self.owner
-            .as_ref()
-            .map(|cluster| format!("{}{}", Self::OWNED, cluster))
-            .unwrap_or_else(|| format!("{}", Self::UNOWNED))
+        self.owner.as_ref().map_or_else(
+            || format!("{}", Self::UNOWNED),
+            |cluster| format!("{}{}", Self::OWNED, cluster),
+        )
     }
 
     fn collect_volumes(&self) -> HashMap<String, HashMap<Location, &VolumeLocation>> {
-        let aws = self
-            .locations
-            .aws
-            .iter()
-            .map(|location| {
-                location
-                    .volumes
-                    .iter()
-                    .map(move |volume| (volume, location.region.into()))
-            })
-            .flatten();
-        let azure = self
-            .locations
-            .azure
-            .iter()
-            .map(|location| {
-                location
-                    .volumes
-                    .iter()
-                    .map(move |volume| (volume, location.region.into()))
-            })
-            .flatten();
+        let aws = self.locations.aws.iter().flat_map(|location| {
+            location
+                .volumes
+                .iter()
+                .map(move |volume| (volume, location.region.into()))
+        });
+        let azure = self.locations.azure.iter().flat_map(|location| {
+            location
+                .volumes
+                .iter()
+                .map(move |volume| (volume, location.region.into()))
+        });
 
         let mut volumes = HashMap::<_, HashMap<_, _>>::new();
         for (volume, location) in aws.chain(azure) {

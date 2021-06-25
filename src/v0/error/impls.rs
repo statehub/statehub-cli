@@ -22,8 +22,7 @@ impl Error {
             .as_ref()
             .and_then(|value| value.get("msg"))
             .and_then(|value| value.as_str())
-            .map(Cow::from)
-            .unwrap_or_else(|| String::from_utf8_lossy(bytes))
+            .map_or_else(|| String::from_utf8_lossy(bytes), Cow::from)
             .to_string();
         let msg = message.clone();
         let error = StatehubError::UnknownError { message };

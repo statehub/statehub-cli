@@ -22,8 +22,7 @@ impl Show for State {
         let storage_class = self
             .storage_class
             .as_ref()
-            .map(|sc| sc.name.as_str())
-            .unwrap_or("");
+            .map_or("", |sc| sc.name.as_str());
         format!(
             "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
             format_args!("State:         {}", self.name),
@@ -59,6 +58,7 @@ impl Show for StateLocations {
     }
 
     fn detailed_show(&self) -> String {
+        let none = || String::from("None");
         let aws = self.aws.iter().map(|location| {
             format!(
                 " {:#}:\n  {}\n  {}",
@@ -69,8 +69,7 @@ impl Show for StateLocations {
                     location
                         .private_link_service
                         .as_ref()
-                        .map(|pls| pls.detailed_show())
-                        .unwrap_or_else(|| String::from("None"))
+                        .map_or_else(none, |pls| pls.detailed_show())
                 ),
             )
         });
@@ -84,8 +83,7 @@ impl Show for StateLocations {
                     location
                         .private_link_service
                         .as_ref()
-                        .map(|pls| pls.detailed_show())
-                        .unwrap_or_else(|| String::from("None"))
+                        .map_or_else(none, |pls| pls.detailed_show())
                 )
             )
         });
