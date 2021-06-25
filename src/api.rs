@@ -418,9 +418,8 @@ impl Retry for reqwest::RequestBuilder {
                     continue;
                 }
                 break Ok(response);
-            } else {
-                break self.send().await;
             }
+            break self.send().await;
         }
     }
 }
