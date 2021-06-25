@@ -82,11 +82,7 @@ impl Helm {
                         failure += &format!("Running '{}' failed\n{}\n", input, stderr);
                     }
                 }
-                if !failure.is_empty() {
-                    failure
-                } else {
-                    String::new()
-                }
+                failure
             }
         };
         Ok(text)
