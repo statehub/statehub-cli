@@ -238,9 +238,9 @@ impl StateLocations {
 }
 
 impl Condition {
-    pub const GREEN: Emoji<'static, 'static> = Emoji("🟢", "[v]");
-    pub const YELLOW: Emoji<'static, 'static> = Emoji("🟡", "[!]");
-    pub const RED: Emoji<'static, 'static> = Emoji("🔴", "[x]");
+    pub const GREEN: Emoji<'static, 'static> = Emoji("🟢", "[GREEN] ");
+    pub const YELLOW: Emoji<'static, 'static> = Emoji("🟡", "[YELLOW]");
+    pub const RED: Emoji<'static, 'static> = Emoji("🔴", "[RED]   ");
 }
 
 impl Default for Condition {
