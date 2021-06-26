@@ -5,7 +5,7 @@
 
 use std::ops;
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de, Serialize};
 use serde_json as json;
 
 // use crate::output::Output;
@@ -13,13 +13,14 @@ use crate::traits::Show;
 
 // use super::*;
 
+#[derive(Debug, Serialize)]
 pub(crate) struct Detailed<T>(pub(crate) T)
 where
-    T: DeserializeOwned + Serialize + Show;
+    T: de::DeserializeOwned + Serialize + Show;
 
 impl<T> Detailed<T>
 where
-    T: DeserializeOwned + Serialize + Show,
+    T: de::DeserializeOwned + Serialize + Show,
 {
     pub(crate) fn into_text(self, json: bool) -> String
     where
@@ -38,7 +39,7 @@ where
 
 impl<T> Show for Detailed<T>
 where
-    T: DeserializeOwned + Serialize + Show,
+    T: de::DeserializeOwned + Serialize + Show,
 {
     fn show(&self) -> String {
         self.0.detailed_show()
@@ -51,7 +52,7 @@ where
 
 impl<T> ops::Deref for Detailed<T>
 where
-    T: ops::Deref + DeserializeOwned + Serialize + Show,
+    T: ops::Deref + de::DeserializeOwned + Serialize + Show,
 {
     type Target = T::Target;
 

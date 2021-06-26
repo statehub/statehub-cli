@@ -42,6 +42,10 @@ where
     pub(crate) fn from(inner: T) -> Self {
         Self(inner)
     }
+
+    pub(crate) fn into_inner(self) -> T {
+        self.0
+    }
 }
 
 impl<T> Show for Output<T>

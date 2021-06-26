@@ -11,7 +11,7 @@ use anyhow::Context;
 use console::Term;
 use dialoguer::{theme, Confirm, Input};
 use itertools::Itertools;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de, Deserialize, Serialize};
 use structopt::StructOpt;
 // use structopt::clap;
 
@@ -25,7 +25,7 @@ use crate::Output;
 
 use config::Config;
 use helper::AddLocation;
-use print::Print;
+use print::{ClusterAndStates, Print, StateAndClusters};
 
 mod config;
 mod helper;
@@ -563,7 +563,7 @@ impl StateHub {
     async fn show_state(self, state: &v0::StateName) -> anyhow::Result<()> {
         let state = self.api.get_state(state).await.map(Detailed)?;
         if let Ok(clusters) = self.api.get_all_clusters().await {
-            (state, clusters).print(&self.stdout, self.json)
+            StateAndClusters::new(state, clusters).print(&self.stdout, self.json)
         } else {
             state.print(&self.stdout, self.json)
         }
@@ -642,7 +642,7 @@ impl StateHub {
     async fn show_cluster(&self, name: v0::ClusterName) -> anyhow::Result<()> {
         let cluster = self.api.get_cluster(&name).await.map(Detailed)?;
         if let Ok(states) = self.api.get_all_states().await {
-            (cluster, states).print(&self.stdout, self.json)
+            ClusterAndStates::new(cluster, states).print(&self.stdout, self.json)
         } else {
             cluster.print(&self.stdout, self.json)
         }
@@ -807,7 +807,7 @@ impl StateHub {
 
     pub(crate) fn show<T>(&self, output: Output<T>) -> String
     where
-        T: DeserializeOwned + Serialize + Show,
+        T: de::DeserializeOwned + Serialize + Show,
     {
         output.into_text(self.json)
     }
