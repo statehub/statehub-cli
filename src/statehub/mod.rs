@@ -683,6 +683,8 @@ impl StateHub {
             }
         };
 
+        let wait = (locations.len() > 1) || wait;
+
         for location in locations {
             let state = self.api.get_state(&state).await?;
             if state.is_available_in(&location) {
