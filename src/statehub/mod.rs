@@ -548,22 +548,22 @@ impl StateHub {
         self.api
             .create_state(state)
             .await
-            .handle_output(&self.stdout, self.json)
+            .print(&self.stdout, self.json)
     }
 
     async fn delete_state(&self, name: v0::StateName) -> anyhow::Result<()> {
         self.api
             .delete_state(name)
             .await
-            .handle_output(&self.stdout, self.json)
+            .print(&self.stdout, self.json)
     }
 
     async fn show_state(self, state: &v0::StateName) -> anyhow::Result<()> {
         let state = self.api.get_state(state).await.map(Detailed)?;
         if let Ok(clusters) = self.api.get_all_clusters().await {
-            (state, clusters).handle_output(&self.stdout, self.json)
+            (state, clusters).print(&self.stdout, self.json)
         } else {
-            state.handle_output(&self.stdout, self.json)
+            state.print(&self.stdout, self.json)
         }
     }
 
@@ -571,14 +571,14 @@ impl StateHub {
         self.api
             .get_all_states()
             .await
-            .handle_output(&self.stdout, self.json)
+            .print(&self.stdout, self.json)
     }
 
     async fn list_clusters(&self) -> anyhow::Result<()> {
         self.api
             .get_all_clusters()
             .await
-            .handle_output(&self.stdout, self.json)
+            .print(&self.stdout, self.json)
     }
 
     async fn register_cluster(
@@ -634,15 +634,15 @@ impl StateHub {
             self.claim_unowned_states_helper(&cluster, states).await?;
         }
 
-        cluster.handle_output(&self.stdout, self.json)
+        cluster.print(&self.stdout, self.json)
     }
 
     async fn show_cluster(&self, name: v0::ClusterName) -> anyhow::Result<()> {
         let cluster = self.api.get_cluster(&name).await.map(Detailed)?;
         if let Ok(states) = self.api.get_all_states().await {
-            (cluster, states).handle_output(&self.stdout, self.json)
+            (cluster, states).print(&self.stdout, self.json)
         } else {
-            cluster.handle_output(&self.stdout, self.json)
+            cluster.print(&self.stdout, self.json)
         }
     }
 
@@ -656,7 +656,7 @@ impl StateHub {
             self.api
                 .unregister_cluster(name)
                 .await
-                .handle_output(&self.stdout, self.json)
+                .print(&self.stdout, self.json)
         } else {
             Ok(())
         }
@@ -722,7 +722,7 @@ impl StateHub {
         self.api
             .create_volume(state_name, volume)
             .await
-            .handle_output(&self.stdout, self.json)
+            .print(&self.stdout, self.json)
     }
 
     async fn delete_volume(
@@ -741,7 +741,7 @@ impl StateHub {
                 self.delete_volume_helper(&state, &volume.name, wait)
                     .await
                     .map(Quiet)
-                    .handle_output(&self.stdout, self.json)?;
+                    .print(&self.stdout, self.json)?;
             }
         } else {
             self.verbosely("No such volume")?;
@@ -758,14 +758,14 @@ impl StateHub {
         self.api
             .set_volume_primary(state, volume, primary)
             .await
-            .handle_output(&self.stdout, self.json)
+            .print(&self.stdout, self.json)
     }
 
     async fn list_volumes(&self, state: v0::StateName) -> anyhow::Result<()> {
         self.api
             .get_all_volumes(state)
             .await
-            .handle_output(&self.stdout, self.json)
+            .print(&self.stdout, self.json)
     }
 
     async fn set_availability(self) -> anyhow::Result<()> {
@@ -781,7 +781,7 @@ impl StateHub {
         self.api
             .set_owner(&state, &cluster)
             .await
-            .handle_output(&self.stdout, self.json)
+            .print(&self.stdout, self.json)
     }
 
     async fn unset_owner(
@@ -795,7 +795,7 @@ impl StateHub {
             self.api
                 .unset_owner(&state.name)
                 .await
-                .handle_output(&self.stdout, self.json)
+                .print(&self.stdout, self.json)
         } else {
             anyhow::bail!("Permission denied, you are not theowner of this state.")
         }
@@ -844,7 +844,7 @@ impl StateHub {
                     .collect::<HashMap<_, _>>()
             })
             .map(Output::from)
-            .handle_output(&self.stdout, self.json)
+            .print(&self.stdout, self.json)
     }
 
     async fn list_namespaces(&self) -> anyhow::Result<()> {
@@ -915,58 +915,58 @@ impl StateHub {
     }
 }
 
-trait HandleOutput {
-    fn handle_output(self, stdout: &Term, json: bool) -> anyhow::Result<()>;
+trait Print {
+    fn print(self, stdout: &Term, json: bool) -> anyhow::Result<()>;
 }
 
-impl<T> HandleOutput for anyhow::Result<T>
+impl<T> Print for anyhow::Result<T>
 where
-    T: HandleOutput,
+    T: Print,
 {
-    fn handle_output(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
-        self?.handle_output(stdout, json)
+    fn print(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
+        self?.print(stdout, json)
     }
 }
 
-impl<T> HandleOutput for Output<T>
+impl<T> Print for Output<T>
 where
     T: DeserializeOwned + Serialize + Show,
 {
-    fn handle_output(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
+    fn print(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
         let text = self.into_text(json);
         stdout.write_line(&text)?;
         Ok(())
     }
 }
 
-impl<T> HandleOutput for Detailed<Output<T>>
+impl<T> Print for Detailed<Output<T>>
 where
     T: DeserializeOwned + Serialize + Show,
 {
-    fn handle_output(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
+    fn print(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
         let text = self.into_text(json);
         stdout.write_line(&text)?;
         Ok(())
     }
 }
 
-impl<T> HandleOutput for Quiet<Output<T>>
+impl<T> Print for Quiet<Output<T>>
 where
     T: DeserializeOwned + Serialize + Show,
 {
-    fn handle_output(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
+    fn print(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
         let text = self.into_text(json);
         stdout.write_line(&text)?;
         Ok(())
     }
 }
 
-impl HandleOutput for (Detailed<Output<v0::State>>, Output<Vec<v0::Cluster>>) {
-    fn handle_output(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
+impl Print for (Detailed<Output<v0::State>>, Output<Vec<v0::Cluster>>) {
+    fn print(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
         let (state, clusters) = self;
         let state_locations = state.all_locations();
 
-        state.handle_output(stdout, json)?;
+        state.print(stdout, json)?;
 
         let visible_clusters = clusters
             .iter()
@@ -984,12 +984,12 @@ impl HandleOutput for (Detailed<Output<v0::State>>, Output<Vec<v0::Cluster>>) {
     }
 }
 
-impl HandleOutput for (Detailed<Output<v0::Cluster>>, Output<Vec<v0::State>>) {
-    fn handle_output(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
+impl Print for (Detailed<Output<v0::Cluster>>, Output<Vec<v0::State>>) {
+    fn print(self, stdout: &Term, json: bool) -> anyhow::Result<()> {
         let (cluster, states) = self;
         let cluster_locations = cluster.all_locations();
 
-        cluster.handle_output(stdout, json)?;
+        cluster.print(stdout, json)?;
 
         let visible_states = states
             .iter()
