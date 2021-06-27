@@ -101,7 +101,7 @@ impl Kubectl {
                 "cluster-name": cluster_name,
                 "default-state": default_state,
                 "api-url": api,
-                "cleanup-grace": 600,
+                "cleanup-grace": "600",
             }
         }))?;
         let pp = self.post_params();
