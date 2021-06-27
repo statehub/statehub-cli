@@ -3,11 +3,14 @@
 // Use is subject to license terms.
 //
 
+use std::env;
 use std::fs;
 use std::path::PathBuf;
 
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
+
+const STATEHUB_HOME: &str = "STATEHUB_HOME";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct Config {
@@ -18,7 +21,7 @@ pub(crate) struct Config {
 }
 
 impl Config {
-    const FILENAME: &'static str = "config.toml";
+    const CONFIG_FILE: &'static str = "config.toml";
     const VERSION: &'static str = "2";
     const DEFAULT_API: &'static str = "https://api.statehub.io";
     const DEFAULT_CONSOLE: &'static str = "https://console.statehub.io";
@@ -86,7 +89,7 @@ impl Config {
     }
 
     pub(crate) fn save(&self) -> anyhow::Result<PathBuf> {
-        let dir = Self::config_dir()?;
+        let dir = Self::statehub_home()?;
         fs::create_dir_all(dir).context("Creating config filesystem hierarchy")?;
         let path = Self::config_file()?;
         let contents = toml::to_string_pretty(self).context("Serializing config")?;
@@ -95,14 +98,16 @@ impl Config {
             .map(|_| path)
     }
 
-    fn config_dir() -> anyhow::Result<PathBuf> {
-        directories::ProjectDirs::from("io", "statehub", "statehub")
-            .map(|project| project.config_dir().to_path_buf())
-            .context("Config directory name")
+    fn statehub_home() -> anyhow::Result<PathBuf> {
+        let env = env::var(STATEHUB_HOME).ok().map(PathBuf::from);
+        let default = directories::UserDirs::new()
+            .map(|user| user.home_dir().to_path_buf().join(".statehub"));
+
+        env.or(default).context("Config directory name")
     }
 
     fn config_file() -> anyhow::Result<PathBuf> {
-        Self::config_dir().map(|dir| dir.join(Self::FILENAME))
+        Self::statehub_home().map(|dir| dir.join(Self::CONFIG_FILE))
     }
 }
 
