@@ -173,39 +173,34 @@ impl Volume {
 
 impl Show for Volume {
     fn show(&self) -> String {
-        volume(self)
+        format!(
+            "{:<32} {:>8} GiB {:>6} active: {}{}",
+            self.name,
+            self.size_gi,
+            self.fs_type,
+            self.active_location.as_deref().unwrap_or("None"),
+            self.progress()
+                .map(|(status, progress)| format!(" ({} {} done)", status.show(), progress.show()))
+                .unwrap_or_default()
+        )
+    }
+
+    fn detailed_show(&self) -> String {
+        format!(
+            "{}\n{}\n{}\n{}",
+            format_args!("Volume  :{:>60}\n", self.name),
+            format_args!("Size    :{:>56} GiB\n", self.size_gi),
+            format_args!("FS Type :{:>60}\n", self.fs_type),
+            format_args!(
+                "Active  :{:>60}",
+                self.active_location.as_deref().unwrap_or("None")
+            )
+        )
     }
 }
 
 impl Show for Vec<Volume> {
     fn show(&self) -> String {
-        self.iter()
-            .map(|volume| {
-                format!(
-                    "{:<32} {:>8} GiB active: {}{}",
-                    volume.name,
-                    volume.size_gi,
-                    volume.active_location.as_deref().unwrap_or("None"),
-                    volume
-                        .progress()
-                        .map(|(status, progress)| format!(
-                            " ({} {} done)",
-                            status.show(),
-                            progress.show()
-                        ))
-                        .unwrap_or_default()
-                )
-            })
-            .join("\n")
+        self.iter().map(Show::show).join("\n")
     }
-}
-
-pub(crate) fn volume(volume: &Volume) -> String {
-    let mut out = String::new();
-
-    out += &format!("Volume  :{:>60}\n", volume.name);
-    out += &format!("Size    :{:>56} GiB\n", volume.size_gi);
-    out += &format!("FS Type :{:>60}\n", volume.fs_type);
-
-    out
 }

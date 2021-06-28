@@ -22,7 +22,8 @@ impl Show for State {
         let storage_class = self
             .storage_class
             .as_ref()
-            .map_or("", |sc| sc.name.as_str());
+            .map(|sc| format!("{} ({})", sc.name, sc.fs_type))
+            .unwrap_or_default();
         format!(
             "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
             format_args!("State:         {}", self.name),

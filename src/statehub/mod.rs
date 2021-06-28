@@ -727,6 +727,7 @@ impl StateHub {
         self.api
             .create_volume(state_name, volume)
             .await
+            .map(Quiet)
             .print(&self.stdout, self.json)
     }
 
