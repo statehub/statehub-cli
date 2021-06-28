@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use k8s_openapi::api::core::v1::{ConfigMap, Namespace, Node, Pod, Secret};
 use kube::api::{self, Api};
 // use kube::api::{Api, ListParams, PostParams, Resource, WatchEvent};
+use itertools::Itertools;
 use kube::config::Kubeconfig;
 use kube::{Client, ResourceExt};
 use serde_json as json;
@@ -328,4 +329,22 @@ pub(crate) fn get_current_cluster_name() -> Option<v0::ClusterName> {
         .default_context()
         .map(kubeconfig::normalize_name)
         .map(v0::ClusterName::from)
+}
+
+pub(crate) fn get_all_contexts() -> Option<(Vec<String>, usize)> {
+    let config = Kubeconfig::read().ok()?;
+    let default = config.default_context();
+    let contexts = config
+        .all_contexts()
+        .into_iter()
+        .map(ToString::to_string)
+        .collect_vec();
+
+    let default = contexts
+        .iter()
+        .find_position(|item| Some(item.as_str()) == default)
+        .map(|(index, _)| index)
+        .unwrap_or_default();
+
+    Some((contexts, default))
 }
