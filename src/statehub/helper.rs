@@ -231,6 +231,18 @@ impl StateHub {
         let id = format!("{}@{}", login.username, login.hostname);
         Ok((token, id))
     }
+
+    pub(super) async fn helm_install_helper(
+        &self,
+        helm: &k8s::Helm,
+        cluster: &v0::Cluster,
+    ) -> anyhow::Result<()> {
+        let (stdout, stderr) = helm.execute(cluster).await?;
+
+        self.inform(stdout)?;
+        self.error(stderr)?;
+        Ok(())
+    }
 }
 
 fn is_volume_not_found(err: &anyhow::Error) -> bool {

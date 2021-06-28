@@ -483,6 +483,7 @@ pub(crate) struct StateHub {
     config: Config,
     api: api::Api,
     stdout: Term,
+    stderr: Term,
     theme: theme::SimpleTheme,
     json: bool,
     verbose: bool,
@@ -492,12 +493,14 @@ impl StateHub {
     fn new(config: Config, json: bool, verbose: bool) -> Self {
         let api = api::Api::new(config.api(), config.token());
         let stdout = Term::stdout();
+        let stderr = Term::stderr();
         let theme = theme::SimpleTheme;
 
         Self {
             config,
             api,
             stdout,
+            stderr,
             theme,
             json,
             verbose,
@@ -628,13 +631,11 @@ impl StateHub {
         self.setup_cluster_token_helper(&cluster, &helm).await?;
         self.setup_configmap_helper(&cluster, &helm).await?;
 
-        helm.execute(&cluster)
-            .await
-            .and_then(|text| self.inform(text))?;
-
         if claim_unowned_states {
             self.claim_unowned_states_helper(&cluster, states).await?;
         }
+
+        self.helm_install_helper(&helm, &cluster).await?;
 
         cluster.print(&self.stdout, self.json)
     }
@@ -908,6 +909,14 @@ impl StateHub {
         let text = text.to_string();
         if !text.is_empty() {
             self.stdout.write_line(&text)?;
+        }
+        Ok(())
+    }
+
+    fn error(&self, text: impl fmt::Display) -> io::Result<()> {
+        let text = text.to_string();
+        if !text.is_empty() {
+            self.stderr.write_line(&text)?;
         }
         Ok(())
     }

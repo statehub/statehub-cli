@@ -65,13 +65,13 @@ impl Helm {
         }
     }
 
-    pub(crate) async fn execute(&self, cluster: &v0::Cluster) -> io::Result<String> {
+    pub(crate) async fn execute(&self, cluster: &v0::Cluster) -> io::Result<(String, String)> {
         let commands = self.command(cluster);
-        let text = match self {
-            Helm::Skip { .. } => format!("Manually run\n{}", commands.show()),
+        let (stdout, stderr) = match self {
+            Helm::Skip { .. } => (String::new(), format!("Manually run\n{}", commands.show())),
             Helm::Do { .. } => {
-                let mut failure = String::new();
                 let mut success = String::new();
+                let mut failure = String::new();
                 for cmd in commands {
                     let input = cmd.show();
                     let (status, stdout, stderr) = self.exec(cmd).await?;
@@ -82,10 +82,10 @@ impl Helm {
                         failure += &format!("Running '{}' failed\n{}\n", input, stderr);
                     }
                 }
-                failure
+                (success, failure)
             }
         };
-        Ok(text)
+        Ok((stdout, stderr))
     }
 
     pub(crate) fn command(&self, cluster: &v0::Cluster) -> Vec<Command> {
