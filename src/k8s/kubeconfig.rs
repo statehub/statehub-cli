@@ -11,6 +11,8 @@ pub(super) trait KubeconfigExt {
     fn default_context(&self) -> Option<&str>;
     // fn validate_contexts(&self, names: Vec<String>) -> anyhow::Result<Vec<String>>;
     fn contains(&self, name: impl AsRef<str>) -> bool;
+    fn current_context(&self) -> Option<&str>;
+    fn all_contexts(&self) -> Vec<&str>;
 }
 
 impl KubeconfigExt for Kubeconfig {
@@ -38,6 +40,17 @@ impl KubeconfigExt for Kubeconfig {
         let all_contexts = self.contexts.iter().map(|context| &context.name);
         let all_clusters = self.clusters.iter().map(|cluster| &cluster.name);
         all_contexts.chain(all_clusters).any(|this| this == name)
+    }
+
+    fn current_context(&self) -> Option<&str> {
+        self.current_context.as_deref()
+    }
+
+    fn all_contexts(&self) -> Vec<&str> {
+        self.contexts
+            .iter()
+            .map(|context| context.name.as_str())
+            .collect()
     }
 }
 
