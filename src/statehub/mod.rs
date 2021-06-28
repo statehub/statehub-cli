@@ -384,7 +384,7 @@ impl Cli {
                 skip_helm,
                 provider,
             } => {
-                let name = name.or_else(k8s::get_cluster_name).ok_or_else(|| {
+                let name = name.or_else(k8s::get_current_cluster_name).ok_or_else(|| {
                     anyhow::anyhow!(
                         "No default Kubernetes context found, need to provide cluster name"
                     )
@@ -413,7 +413,7 @@ impl Cli {
             }
             Command::ListClusters => statehub.list_clusters().await,
             Command::ShowCluster { name } => {
-                let name = name.or_else(k8s::get_cluster_name).ok_or_else(|| {
+                let name = name.or_else(k8s::get_current_cluster_name).ok_or_else(|| {
                     anyhow::anyhow!(
                         "No default Kubernetes context found, need to provide cluster name"
                     )

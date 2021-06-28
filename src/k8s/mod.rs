@@ -18,9 +18,11 @@ use crate::Location;
 
 pub(crate) use helm::Helm;
 use helper::{group_nodes_by_region, group_nodes_by_zone, is_aks, is_eks};
+use kubeconfig::KubeconfigExt;
 
 mod helm;
 mod helper;
+mod kubeconfig;
 mod show;
 
 const DEFAULT_NS: &str = "default";
@@ -28,7 +30,6 @@ const KUBE_SYSTEM_NS: &str = "kube-system";
 const STATEHUB_CLUSTER_TOKEN_SECRET_TYPE: &str = "statehub.io/cluster-token";
 const STATEHUB_CLUSTER_TOKEN_SECRET_NAME: &str = "statehub-cluster-token";
 const STATEHUB_CLUSTER_CONFIGMAP_NAME: &str = "statehub";
-const CLUSTER_DELIMITER: char = '/';
 
 pub(crate) struct Kubectl {
     client: Client,
@@ -321,22 +322,10 @@ pub(crate) async fn get_cluster_provider(
     }
 }
 
-pub(crate) fn get_cluster_name() -> Option<v0::ClusterName> {
-    let config = Kubeconfig::read().ok()?;
-    let contexts = config.contexts;
-    let clusters = config.clusters;
-    config
-        .current_context
-        .or_else(|| contexts.into_iter().next().map(|context| context.name))
-        .or_else(|| clusters.into_iter().next().map(|cluster| cluster.name))
-        .map(rsplit_slash)
-        .map(v0::ClusterName)
-}
-
-fn rsplit_slash(text: String) -> String {
-    if let Some((_, name)) = text.rsplit_once(CLUSTER_DELIMITER) {
-        name.to_string()
-    } else {
-        text
-    }
+pub(crate) fn get_current_cluster_name() -> Option<v0::ClusterName> {
+    Kubeconfig::read()
+        .ok()?
+        .default_context()
+        .map(kubeconfig::normalize_name)
+        .map(v0::ClusterName::from)
 }
