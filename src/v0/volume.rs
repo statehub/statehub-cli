@@ -16,6 +16,7 @@ pub struct Volume {
     pub fs_type: String,
     pub active_location: Option<String>,
     pub locations: Vec<VolumeLocation>,
+    pub format: Option<DateTime<Utc>>,
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
 }

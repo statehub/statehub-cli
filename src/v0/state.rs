@@ -81,8 +81,9 @@ pub struct StateLocationAws {
 #[serde(rename_all = "camelCase")]
 pub struct StorageClass {
     pub name: String,
-    pub mount_options: Option<String>,
     pub volume_binding_mode: VolumeBindingMode,
+    pub fs_type: String,
+    pub mount_options: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
