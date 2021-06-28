@@ -239,7 +239,7 @@ impl StateHub {
     ) -> anyhow::Result<()> {
         let (stdout, stderr) = helm.execute(cluster).await?;
 
-        self.inform(stdout)?;
+        self.verbosely(stdout)?;
         self.error(stderr)?;
         Ok(())
     }

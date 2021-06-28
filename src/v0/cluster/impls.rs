@@ -124,7 +124,7 @@ impl Show for Cluster {
             format_args!("Locations:   {}", self.locations.show()),
             format_args!("Created:     {}", HumanTime::from(self.created)),
             format_args!("Modified:    {}", HumanTime::from(self.modified)),
-            format_args!("Helm install:\n{}", helm.show())
+            format_args!("Helm install:\n{}", helm.detailed_show())
         )
     }
 }

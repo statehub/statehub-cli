@@ -46,12 +46,20 @@ impl Show for HashMap<String, Vec<String>> {
 
 impl Show for Command {
     fn show(&self) -> String {
+        format!("{:?}", self).replace("\"", "")
+    }
+
+    fn detailed_show(&self) -> String {
         format!("             {:?}", self).replace("\"", "")
     }
 }
 
 impl Show for Vec<Command> {
     fn show(&self) -> String {
-        self.iter().map(|cmd| cmd.show()).join("\n")
+        self.iter().map(Show::show).join("\n")
+    }
+
+    fn detailed_show(&self) -> String {
+        self.iter().map(Show::detailed_show).join("\n")
     }
 }

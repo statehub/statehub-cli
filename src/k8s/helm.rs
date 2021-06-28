@@ -68,7 +68,10 @@ impl Helm {
     pub(crate) async fn execute(&self, cluster: &v0::Cluster) -> io::Result<(String, String)> {
         let commands = self.command(cluster);
         let (stdout, stderr) = match self {
-            Helm::Skip { .. } => (String::new(), format!("Manually run\n{}", commands.show())),
+            Helm::Skip { .. } => (
+                String::new(),
+                format!("Manually run\n{}", commands.detailed_show()),
+            ),
             Helm::Do { .. } => {
                 let mut success = String::new();
                 let mut failure = String::new();
@@ -79,7 +82,7 @@ impl Helm {
                     if status.success() {
                         success += &format!("{}\n{}\n", input, stdout);
                     } else {
-                        failure += &format!("Running '{}' failed\n{}\n", input, stderr);
+                        failure += &format!("Running '{}' failed:\n{}\n", input, stderr);
                     }
                 }
                 (success, failure)
