@@ -9,7 +9,7 @@ use std::io;
 
 use anyhow::Context;
 use console::Term;
-use dialoguer::{theme, Confirm, Input, Select};
+use dialoguer::{theme, Confirm, Input};
 use itertools::Itertools;
 use serde::{de, Deserialize, Serialize};
 use structopt::StructOpt;
@@ -384,13 +384,11 @@ impl Cli {
                 skip_helm,
                 provider,
             } => {
-                let name = name
-                    .or_else(|| statehub.get_cluster_name().map(v0::ClusterName))
-                    .ok_or_else(|| {
-                        anyhow::anyhow!(
-                            "No default Kubernetes context found, need to provide cluster name"
-                        )
-                    })?;
+                let name = name.or_else(k8s::get_current_cluster_name).ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "No default Kubernetes context found, need to provide cluster name"
+                    )
+                })?;
                 let no_default_storage_class = if no_state {
                     true
                 } else {
@@ -918,22 +916,5 @@ impl StateHub {
         Input::with_theme(self.theme())
             .with_prompt(prompt)
             .interact_text_on(&self.stdout)
-    }
-
-    fn select(&self, items: &[String], default: usize) -> io::Result<usize> {
-        Select::with_theme(self.theme())
-            .with_prompt("Select cluster to register")
-            .items(items)
-            .default(default)
-            .interact_on(&self.stdout)
-    }
-
-    fn get_cluster_name(&self) -> Option<String> {
-        if let Some((names, default)) = k8s::get_all_contexts() {
-            let index = self.select(&names, default).ok()?;
-            names.into_iter().nth(index)
-        } else {
-            None
-        }
     }
 }
