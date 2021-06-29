@@ -411,7 +411,11 @@ impl Inspector for reqwest::RequestBuilder {
             log::trace!("{} {}", request.method(), request.url());
 
             request.headers().iter().for_each(|(header, value)| {
-                log::trace!("{}: {}", header, String::from_utf8_lossy(value.as_bytes()))
+                if header == reqwest::header::AUTHORIZATION {
+                    log::trace!("{}: {}", header, "[REDACTED]");
+                } else {
+                    log::trace!("{}: {}", header, String::from_utf8_lossy(value.as_bytes()))
+                }
             });
         }
 
