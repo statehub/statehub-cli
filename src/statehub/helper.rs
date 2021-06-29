@@ -135,7 +135,10 @@ impl StateHub {
                     location
                 );
             } else {
-                self.inform(format!("Extdending state {} to {}", state.name, location))?;
+                self.inform(format_args!(
+                    "Extdending state {} to {}",
+                    state.name, location
+                ))?;
                 self.add_location_helper(&state, location, wait).await?;
             }
         }

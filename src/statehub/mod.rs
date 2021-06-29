@@ -675,7 +675,7 @@ impl StateHub {
             AddLocation::FromLocation(location) => vec![location],
             AddLocation::FromCluster(cluster) => {
                 let locations = self.api.get_cluster(&cluster).await?.all_locations();
-                self.inform(&format!(
+                self.inform(format_args!(
                     "Cluster {} available in {}",
                     cluster,
                     locations.iter().map(ToString::to_string).join(" and ")
