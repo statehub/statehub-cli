@@ -47,7 +47,7 @@ impl Api {
     }
 
     pub(crate) async fn is_unauthorized(&self) -> bool {
-        self.get_all_clusters()
+        self.head("/clusters")
             .await
             .err()
             .and_then(|e| e.downcast::<reqwest::Error>().ok())
@@ -293,6 +293,23 @@ impl Api {
         let url = self.url(path);
         self.client()?
             .get(url)
+            .optionally_bearer_auth(self.token.as_ref())
+            .inspect()
+            .retry()
+            .await?
+            .error_for_status2()
+            .await?
+            .try_into()
+            .inspect(|output| self.inspect(output))
+    }
+
+    async fn head<P>(&self, path: P) -> ApiResult<()>
+    where
+        P: fmt::Display,
+    {
+        let url = self.url(path);
+        self.client()?
+            .head(url)
             .optionally_bearer_auth(self.token.as_ref())
             .inspect()
             .retry()
