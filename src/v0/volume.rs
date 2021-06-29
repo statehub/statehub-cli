@@ -21,7 +21,7 @@ pub struct Volume {
     pub modified: DateTime<Utc>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum VolumeBindingMode {
     WaitForFirstConsumer,
     Immediate,
@@ -30,21 +30,21 @@ pub enum VolumeBindingMode {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct VolumeName(pub String);
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct VolumeLocation {
     pub status: LocationVolumeStatus,
     pub progress: Option<StateLocationVolumeProgress>,
     pub name: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StateLocationVolumeProgress {
     pub bytes_synchronized: u64,
     pub bytes_total: u64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct LocationVolumeStatus {
     pub value: StateLocationStatus,
     pub msg: Option<String>,

@@ -39,7 +39,7 @@ pub struct ClusterToken {
     pub token: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ClusterName(pub String);
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]

@@ -4,9 +4,10 @@
 //
 
 use super::*;
+
 mod impls;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct State {
     pub id: Uuid,
@@ -22,7 +23,7 @@ pub struct State {
     pub condition: Condition,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash)]
 pub struct StateName(pub String);
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -35,7 +36,7 @@ pub struct CreateStateDto {
     pub allowed_clusters: Option<Vec<ClusterName>>,
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum ProvisioningStatus {
     Ready,
@@ -43,7 +44,7 @@ pub enum ProvisioningStatus {
     Error,
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum Condition {
     Green,
@@ -51,7 +52,7 @@ pub enum Condition {
     Red,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct StateLocations {
     #[serde(default)]
     pub aws: Vec<StateLocationAws>,
@@ -59,7 +60,7 @@ pub struct StateLocations {
     pub azure: Vec<StateLocationAzure>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StateLocationAzure {
     pub region: AzureRegion,
@@ -68,7 +69,7 @@ pub struct StateLocationAzure {
     pub private_link_service: Option<PrivateLinkServiceAzure>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StateLocationAws {
     pub region: AwsRegion,
@@ -77,7 +78,7 @@ pub struct StateLocationAws {
     pub private_link_service: Option<PrivateLinkServiceAws>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StorageClass {
     pub name: String,
@@ -86,7 +87,7 @@ pub struct StorageClass {
     pub mount_options: Option<String>,
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum StateLocationStatus {
     Ok,

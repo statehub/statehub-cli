@@ -29,7 +29,7 @@ pub enum AwsRegion {
     UsWest2,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct PrivateLinkServiceAws {
     pub id: String,
     pub name: String,

@@ -23,7 +23,7 @@ pub enum AzureRegion {
     WestUs2,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct PrivateLinkServiceAzure {
     pub id: String,
 }
