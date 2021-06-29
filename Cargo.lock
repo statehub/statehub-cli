@@ -1319,6 +1319,7 @@ dependencies = [
  "dialoguer",
  "directories",
  "dotenv",
+ "indexmap",
  "inspector",
  "itertools",
  "k8s-openapi",

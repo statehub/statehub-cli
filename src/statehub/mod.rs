@@ -602,6 +602,13 @@ impl StateHub {
         };
 
         let locations = k8s::collect_node_locations().await?;
+
+        if let Some(ref states) = states {
+            self.adjust_all_states(states, &locations, false).await?;
+        } else {
+            self.verbosely("Skip adding this cluster to any state")?;
+        }
+
         let provider = if let Some(provider) = provider {
             provider
         } else {
@@ -620,11 +627,6 @@ impl StateHub {
             cluster.name,
             locations.show(),
         ))?;
-        if let Some(ref states) = states {
-            self.adjust_all_states(states, &locations).await?;
-        } else {
-            self.verbosely("Skip adding this cluster to any state")?;
-        }
 
         k8s::validate_namespace(helm.namespace()).await?;
 

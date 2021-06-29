@@ -77,6 +77,23 @@ impl State {
     const OWNED: Emoji<'static, 'static> = Emoji("🔒 ", "");
     const UNOWNED: Emoji<'static, 'static> = Emoji("🔓", "-");
 
+    #[cfg(test)]
+    pub(crate) fn new(name: impl AsRef<str>) -> Self {
+        let name = StateName::from(name.as_ref());
+        Self {
+            id: Uuid::default(),
+            name,
+            created: Utc::now(),
+            modified: Utc::now(),
+            storage_class: None,
+            locations: StateLocations::default(),
+            owner: None,
+            provisioning_status: ProvisioningStatus::default(),
+            allowed_clusters: None,
+            condition: Condition::Green,
+        }
+    }
+
     pub(crate) fn is_available_in(&self, location: &Location) -> bool {
         self.locations.contains(location)
     }
@@ -246,5 +263,11 @@ impl Condition {
 impl Default for Condition {
     fn default() -> Self {
         Self::Green
+    }
+}
+
+impl Default for ProvisioningStatus {
+    fn default() -> Self {
+        Self::Ready
     }
 }

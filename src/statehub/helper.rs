@@ -5,6 +5,7 @@
 
 use std::time::Duration;
 
+use indexmap::IndexMap;
 use serde_json as json;
 use tokio::time;
 
@@ -108,17 +109,85 @@ impl StateHub {
 
     pub(super) async fn adjust_all_states(
         &self,
-        names: &[v0::StateName],
+        states: &[v0::StateName],
         locations: &[Location],
+        wait: bool,
     ) -> anyhow::Result<()> {
-        for name in names {
-            self.adjust_state_locations(name, locations).await?;
+        let missing_locations = self.get_missing_locations(states, locations).await?;
+        let multiple_missing_locations = missing_locations
+            .iter()
+            .filter(|(_, locations)| locations.len() > 1)
+            .map(|(state, locations)| (state.clone(), locations.clone()))
+            .collect::<IndexMap<_, _>>();
+
+        if !wait && !multiple_missing_locations.is_empty() {
+            let add_locations = generate_add_location_commands(&missing_locations).join("\n");
+            let text = format!(
+                r#"Some states will need multiple locations to be added
+and it is not possible at the moment without '--wait' flag.
+
+You can either re-run this command with '--wait' flag
+or run following commands before running 'statehub register-cluster`
+
+{}
+"#,
+                add_locations
+            );
+            anyhow::bail!(text)
+        }
+
+        for (state, locations) in &missing_locations {
+            self.add_missing_locations(state, locations, wait).await?;
         }
 
         Ok(())
     }
 
-    async fn adjust_state_locations(
+    async fn get_missing_locations(
+        &self,
+        states: &[v0::StateName],
+        locations: &[Location],
+    ) -> anyhow::Result<IndexMap<v0::State, Vec<Location>>> {
+        let mut missing_locations = IndexMap::new();
+        for state in states {
+            let state = self.api.get_state(state).await?;
+            let missing = locations
+                .iter()
+                .filter(|location| !state.is_available_in(location))
+                .copied()
+                .collect();
+            let state = state.into_inner();
+            missing_locations.insert(state, missing);
+        }
+        Ok(missing_locations)
+    }
+
+    async fn add_missing_locations(
+        &self,
+        state: &v0::State,
+        locations: &[Location],
+        wait: bool,
+    ) -> anyhow::Result<()> {
+        for location in locations {
+            if state.is_available_in(location) {
+                log::info!(
+                    "Skipping state {} which is already available in {}",
+                    state.name,
+                    location
+                );
+            } else {
+                self.inform(format_args!(
+                    "Extdending state {} to {}",
+                    state.name, location
+                ))?;
+                self.add_location_helper(state, location, wait).await?;
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn _adjust_state_locations(
         &self,
         name: &v0::StateName,
         locations: &[Location],
@@ -258,4 +327,50 @@ fn is_volume_not_found(err: &anyhow::Error) -> bool {
 pub(super) enum AddLocation {
     FromLocation(Location),
     FromCluster(v0::ClusterName),
+}
+
+fn generate_add_location_commands(
+    missing_locations: &IndexMap<v0::State, Vec<Location>>,
+) -> Vec<String> {
+    missing_locations
+        .iter()
+        .flat_map(|(state, locations)| {
+            locations.iter().map(move |location| {
+                format!("statehub add-location --wait {} {}", state.name, location)
+            })
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generate_add_location_commands() {
+        let missing_locations = vec![
+            (
+                v0::State::new("alfa"),
+                vec![Location::Aws(v0::AwsRegion::UsWest2)],
+            ),
+            (
+                v0::State::new("bravo"),
+                vec![
+                    Location::Aws(v0::AwsRegion::UsEast1),
+                    Location::Azure(v0::AzureRegion::EastUs2),
+                ],
+            ),
+            (
+                v0::State::new("charlie"),
+                vec![Location::Aws(v0::AwsRegion::UsWest2)],
+            ),
+        ]
+        .into_iter()
+        .collect();
+        let cmds = super::generate_add_location_commands(&missing_locations);
+        assert_eq!(cmds[0], "statehub add-location --wait alfa us-west-2");
+        assert_eq!(cmds[1], "statehub add-location --wait bravo us-east-1");
+        assert_eq!(cmds[2], "statehub add-location --wait bravo eastus2");
+        assert_eq!(cmds[3], "statehub add-location --wait charlie us-west-2");
+    }
 }
