@@ -14,6 +14,7 @@
 #![warn(rust_2018_compatibility)]
 #![warn(rust_2018_idioms)]
 #![warn(unused)]
+#![allow(disjoint_capture_migration)]
 #![deny(warnings)]
 
 use location::Location;
