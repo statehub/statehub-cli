@@ -30,6 +30,7 @@ const KUBE_SYSTEM_NS: &str = "kube-system";
 const STATEHUB_CLUSTER_TOKEN_SECRET_TYPE: &str = "statehub.io/cluster-token";
 const STATEHUB_CLUSTER_TOKEN_SECRET_NAME: &str = "statehub-cluster-token";
 const STATEHUB_CLUSTER_CONFIGMAP_NAME: &str = "statehub";
+const STATEHUB_DEFAULT_CLEANUP_GRACE: &str = "600s";
 
 pub(crate) struct Kubectl {
     client: Client,
@@ -102,7 +103,7 @@ impl Kubectl {
                 "cluster-name": cluster_name,
                 "default-state": default_state,
                 "api-url": api,
-                "cleanup-grace": "600",
+                "cleanup-grace": STATEHUB_DEFAULT_CLEANUP_GRACE,
             }
         }))?;
         let pp = self.post_params();
