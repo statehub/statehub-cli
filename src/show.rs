@@ -11,9 +11,11 @@ use itertools::{join, Itertools};
 use crate::traits::Show;
 
 pub(crate) use detailed::Detailed;
+pub(crate) use fun::get_label;
 pub(crate) use quiet::Quiet;
 
 mod detailed;
+mod fun;
 mod quiet;
 
 impl Show for String {

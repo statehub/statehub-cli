@@ -9,7 +9,7 @@ impl Show for State {
     fn show(&self) -> String {
         format!(
             "{} {:>24} {} {:<12} [{:#}] ({})",
-            Self::STATE,
+            self.label(),
             self.name,
             self.condition.show(),
             self.count_volumes(),

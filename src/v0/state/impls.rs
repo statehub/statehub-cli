@@ -73,7 +73,6 @@ impl PartialEq<&str> for StateName {
 }
 
 impl State {
-    const STATE: Emoji<'static, 'static> = Emoji("☘", "o");
     const OWNED: Emoji<'static, 'static> = Emoji("🔒 ", "");
     const UNOWNED: Emoji<'static, 'static> = Emoji("🔓", "-");
 
@@ -92,6 +91,10 @@ impl State {
             allowed_clusters: None,
             condition: Condition::Green,
         }
+    }
+
+    fn label(&self) -> impl fmt::Display {
+        crate::show::get_label(&self.name)
     }
 
     pub(crate) fn is_available_in(&self, location: &Location) -> bool {
