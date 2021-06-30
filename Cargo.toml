@@ -4,6 +4,7 @@ version = "0.2.12"
 authors = ["The RepliXio developers <info@replix.io>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
+homepage = "http://get.statehub.io"
 repository = "https://gitlab.com/statehub/statehub-cli"
 categories = ["command-line-utilities"]
 description = "statehub CLI tool"
